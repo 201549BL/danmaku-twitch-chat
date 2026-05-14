@@ -20,9 +20,19 @@ class DanmakuController {
     this.detector.init((event) => this.onChannelChange(event));
 
     this.initSettingsPanel();
+    this.setupMessageListener();
     this.autoDetectUsername();
 
     console.log('[Danmaku] Extension initialized');
+  }
+
+  setupMessageListener() {
+    if (!chrome?.runtime?.onMessage?.addListener) return;
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg?.action === 'open-settings') {
+        this.settingsPanel?.open();
+      }
+    });
   }
 
   autoDetectUsername() {

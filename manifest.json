@@ -32,10 +32,6 @@
       "run_at": "document_idle"
     }
   ],
-  "options_ui": {
-    "page": "src/options/options.html",
-    "open_in_tab": true
-  },
   "action": {
     "default_icon": {
       "16": "assets/icon-16.png",

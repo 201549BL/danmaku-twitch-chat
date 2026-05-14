@@ -31,7 +31,7 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 1. Navigate to any Twitch channel (e.g. `twitch.tv/somechannel`).
 2. Chat messages appear as scrolling overlays on the video.
 3. **Hover the chat region** on the player to reveal the toolbar (rows ±, size ±, settings gear) and drag handles for resizing or moving the region.
-4. Click the gear icon to open the full settings panel.
+4. Click the gear icon to open the full settings panel. Clicking the extension's toolbar icon also opens the panel on the active Twitch tab.
 
 ## Settings
 
@@ -83,10 +83,8 @@ danmaku-twitch-chat/
 │   │   ├── settings-panel.js
 │   │   ├── overlay.css
 │   │   └── settings-panel.css
-│   ├── options/             # right-click extension icon → Options
-│   │   ├── options.html
-│   │   ├── options.js
-│   │   └── options.css
+│   ├── background/
+│   │   └── service-worker.js
 │   └── shared/
 │       ├── constants.js
 │       └── settings.js
