@@ -200,8 +200,13 @@ class DanmakuSettingsPanel {
     this.panel.querySelectorAll('[data-setting]').forEach((input) => {
       const key = input.getAttribute('data-setting');
       const value = danmakuSettings.get(key);
-      if (input.type === 'checkbox') input.checked = !!value;
-      else input.value = value;
+      if (input.type === 'checkbox') {
+        input.checked = !!value;
+      } else if (input.type === 'text' && input === document.activeElement) {
+        // Don't clobber the caret while the user is typing in a text field
+      } else {
+        input.value = value;
+      }
       this.updateDisplay(key, value);
     });
     this.updateAnimModeButtons();

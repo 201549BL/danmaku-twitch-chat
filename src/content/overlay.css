@@ -106,7 +106,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(-100% - 100vw));
+    transform: translateX(calc(-1 * var(--scroll-distance, 100vw)));
   }
 }
 
@@ -115,7 +115,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(100% + 100vw));
+    transform: translateX(var(--scroll-distance, 100vw));
   }
 }
 

@@ -127,6 +127,7 @@ class DanmakuRenderer {
       lane.occupants.push({ leftPx: xLeft, rightPx: xLeft + msgWidth, endTime });
       lane.lastMessageEndTime = endTime;
     } else {
+      element.style.setProperty('--scroll-distance', `${containerWidth + msgWidth}px`);
       const duration = danmakuSettings.get('duration') * 1000;
       lane.lastMessageEndTime = Date.now() + (duration * msgWidth) / (containerWidth + msgWidth);
     }
