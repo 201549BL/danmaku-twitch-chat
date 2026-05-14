@@ -1,0 +1,69 @@
+const DANMAKU_CONSTANTS = {
+  SELECTORS: {
+    PLAYER: '[data-a-target="video-player"]',
+    PLAYER_CONTAINER: '.video-player__container',
+    // Live chat selectors
+    CHAT_CONTAINER: '.chat-scrollable-area__message-container',
+    CHAT_LINE: '[data-a-target="chat-line-message"]',
+    CHAT_USERNAME: '[data-a-target="chat-message-username"]',
+    CHAT_TEXT: '[data-a-target="chat-line-message-body"]',
+    CHAT_BADGE: '.chat-badge',
+    CHAT_EMOTE: '.chat-image',
+    // VOD chat selectors
+    VOD_CHAT_CONTAINER: '.video-chat__message-list-wrapper',
+    VOD_CHAT_LINE: '.vod-message',
+    VOD_CHAT_USERNAME: '[data-a-target="chat-message-username"]',
+    VOD_CHAT_TEXT: '.video-chat__message',
+  },
+
+  DEFAULTS: {
+    enabled: true,
+    fullscreenOnly: false,
+    fontSize: 24,
+    rows: 3,
+    duration: 10,
+    opacity: 0.9,
+    maxMessageLength: 160,
+    showUsernames: true,
+    regionTop: 0,
+    regionHeight: 35,
+    maxActiveMessages: 50,
+    maxMessagesPerSecond: 5,
+    animationMode: 'scroll',
+    popFadeLifetime: 4,
+    showBadges: true,
+    pauseOnHover: true,
+    highlightUsername: '',
+  },
+
+  ANIMATION_MODES: ['scroll', 'reverse', 'drift', 'popFade', 'slideUp'],
+
+  STATIONARY_MODES: ['popFade', 'slideUp'],
+
+  LIMITS: {
+    minFontSize: 12,
+    maxFontSize: 48,
+    minRows: 1,
+    maxRows: 10,
+    minDuration: 3,
+    maxDuration: 30,
+    minOpacity: 0.1,
+    maxOpacity: 1,
+    minRegionTop: 0,
+    maxRegionTop: 100,
+    minRegionHeight: 5,
+    maxRegionHeight: 100,
+    minPopFadeLifetime: 1,
+    maxPopFadeLifetime: 15,
+    maxActiveMessages: 100,
+  },
+
+  REFERENCE_PLAYER_HEIGHT: 720,
+
+  REGION_PRESETS: {
+    top: { regionTop: 0, regionHeight: 35 },
+    middle: { regionTop: 33, regionHeight: 34 },
+    bottom: { regionTop: 65, regionHeight: 35 },
+    full: { regionTop: 0, regionHeight: 100 },
+  },
+};

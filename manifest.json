@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Danmaku Twitch Chat",
+  "version": "1.0.0",
+  "description": "Display Twitch chat as scrolling overlays on the video player. Configurable region, animations, and emote support (BTTV/FFZ/7TV).",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.twitch.tv/*"],
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.twitch.tv/*"],
+      "js": [
+        "src/shared/constants.js",
+        "src/shared/settings.js",
+        "src/content/twitch-detector.js",
+        "src/content/chat-observer.js",
+        "src/content/renderer.js",
+        "src/content/overlay.js",
+        "src/content/region-editor.js",
+        "src/content/mock-chat.js",
+        "src/content/settings-panel.js",
+        "src/content/index.js"
+      ],
+      "css": ["src/content/overlay.css", "src/content/settings-panel.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    },
+    "default_title": "Danmaku Twitch Chat"
+  }
+}
