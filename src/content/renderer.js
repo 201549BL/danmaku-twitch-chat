@@ -1,13 +1,15 @@
-const SPIKE_WINDOW_RECENT_MS = 3000;
-const SPIKE_WINDOW_BASELINE_MS = 60000;
-const SPIKE_TRIGGER_RATIO = 2.5;
-const SPIKE_RELEASE_RATIO = 1.5;
-const SPIKE_MIN_RATE = 3;
-const SPIKE_RELEASE_HOLD_MS = 1500;
-
-const HYPE_RATE_MULTIPLIER = 2;
-const HYPE_ROWS_BOOST = 2;
-const HYPE_MAX_PER_SECOND_CAP = 20;
+const HYPE_WINDOW_RECENT_MS = 3000;
+const HYPE_WINDOW_BASELINE_MS = 60000;
+const HYPE_MIN_RECENT_RATE = 2;
+const HYPE_MIN_BASELINE_RATE = 1;
+const HYPE_RATIO_FLOOR = 1.2;
+const HYPE_RATIO_CEIL = 4.0;
+const HYPE_RISE_ALPHA = 0.4;
+const HYPE_FALL_ALPHA = 0.25;
+const HYPE_SHOW_THRESHOLD = 0.2;
+const HYPE_RATE_MULTIPLIER_MAX = 2.5;
+const HYPE_ROWS_BOOST_MAX = 3;
+const HYPE_RATE_CAP = 20;
 
 class DanmakuRenderer {
   constructor(overlay) {
@@ -24,9 +26,8 @@ class DanmakuRenderer {
     this._tick = () => this.processQueue();
 
     this._messageTimes = [];
-    this._spikeState = 'idle';
-    this._spikeBelowSince = null;
-    this._spikeTickId = null;
+    this._smoothedPressure = 0;
+    this._hypeTickId = null;
     this._hypeTag = null;
   }
 
@@ -60,19 +61,37 @@ class DanmakuRenderer {
   init() {
     this.updateLanes();
     this._buildHypeTag();
-    this._spikeTickId = setInterval(() => this._tickSpike(), 500);
+    this._hypeTickId = setInterval(() => this._tickHype(), 500);
   }
 
   _effectiveRows() {
     const base = danmakuSettings.get('rows');
-    if (this._spikeState !== 'active') return base;
-    return Math.min(DANMAKU_CONSTANTS.LIMITS.maxRows, base + HYPE_ROWS_BOOST);
+    const p = this._smoothedPressure;
+    if (p <= 0) return base;
+    const extra = Math.round(HYPE_ROWS_BOOST_MAX * p);
+    return Math.min(DANMAKU_CONSTANTS.LIMITS.maxRows, base + extra);
   }
 
   _effectiveMaxMessagesPerSecond() {
     const base = danmakuSettings.get('maxMessagesPerSecond');
-    if (this._spikeState !== 'active') return base;
-    return Math.min(HYPE_MAX_PER_SECOND_CAP, base * HYPE_RATE_MULTIPLIER);
+    const p = this._smoothedPressure;
+    if (p <= 0) return base;
+    const boost = 1 + (HYPE_RATE_MULTIPLIER_MAX - 1) * p;
+    return Math.min(HYPE_RATE_CAP, base * boost);
+  }
+
+  _resizeLanes(newCount) {
+    if (newCount === this.lanes.length) return;
+    const old = this.lanes;
+    this.lanes = [];
+    for (let i = 0; i < newCount; i++) {
+      if (i < old.length) {
+        old[i].index = i;
+        this.lanes.push(old[i]);
+      } else {
+        this.lanes.push({ index: i, lastMessageEndTime: 0, occupants: [] });
+      }
+    }
   }
 
   updateLanes() {
@@ -158,7 +177,7 @@ class DanmakuRenderer {
   _recordArrival() {
     const now = Date.now();
     this._messageTimes.push(now);
-    while (this._messageTimes.length && now - this._messageTimes[0] > SPIKE_WINDOW_BASELINE_MS) {
+    while (this._messageTimes.length && now - this._messageTimes[0] > HYPE_WINDOW_BASELINE_MS) {
       this._messageTimes.shift();
     }
   }
@@ -167,64 +186,63 @@ class DanmakuRenderer {
     if (this._hypeTag || !this.overlay?.container) return;
     this._hypeTag = document.createElement('div');
     this._hypeTag.className = 'danmaku-hype-tag';
-    this._hypeTag.textContent = 'HYPE';
     this.overlay.container.appendChild(this._hypeTag);
     this._updateHypeTag();
   }
 
   _updateHypeTag() {
+    this._buildHypeTag();
     if (!this._hypeTag) return;
     const regionTop = danmakuSettings.get('regionTop');
     this._hypeTag.style.top = `${regionTop}%`;
-    this._hypeTag.classList.toggle('danmaku-hype-tag-active', this._spikeState === 'active');
+
+    const visible = this._smoothedPressure >= HYPE_SHOW_THRESHOLD;
+    if (visible) {
+      const base = Math.max(1, danmakuSettings.get('maxMessagesPerSecond'));
+      const ratio = this._effectiveMaxMessagesPerSecond() / base;
+      this._hypeTag.textContent = `×${ratio.toFixed(1)}`;
+      this._hypeTag.classList.add('danmaku-hype-tag-active');
+    } else {
+      this._hypeTag.classList.remove('danmaku-hype-tag-active');
+    }
   }
 
-  _setSpikeState(state) {
-    if (this._spikeState === state) return;
-    this._spikeState = state;
-    if (state === 'active') this._buildHypeTag();
-    this._updateHypeTag();
-    this.updateLanes();
-  }
-
-  _tickSpike() {
+  _tickHype() {
     if (!danmakuSettings.get('hypeMode')) {
-      if (this._spikeState === 'active') {
-        this._spikeBelowSince = null;
-        this._setSpikeState('idle');
+      if (this._smoothedPressure > 0) {
+        this._smoothedPressure = 0;
+        this._updateHypeTag();
+        const newRows = this._effectiveRows();
+        if (newRows !== this.lanes.length) this._resizeLanes(newRows);
       }
       return;
     }
 
     const now = Date.now();
-
-    while (this._messageTimes.length && now - this._messageTimes[0] > SPIKE_WINDOW_BASELINE_MS) {
+    while (this._messageTimes.length && now - this._messageTimes[0] > HYPE_WINDOW_BASELINE_MS) {
       this._messageTimes.shift();
     }
     const recentCount = this._messageTimes.reduce(
-      (n, t) => (now - t < SPIKE_WINDOW_RECENT_MS ? n + 1 : n),
+      (n, t) => (now - t < HYPE_WINDOW_RECENT_MS ? n + 1 : n),
       0
     );
-    const currentRate = recentCount / (SPIKE_WINDOW_RECENT_MS / 1000);
-    const baselineRate = this._messageTimes.length / (SPIKE_WINDOW_BASELINE_MS / 1000);
+    const recentRate = recentCount / (HYPE_WINDOW_RECENT_MS / 1000);
+    const baselineRate = this._messageTimes.length / (HYPE_WINDOW_BASELINE_MS / 1000);
 
-    if (this._spikeState === 'idle') {
-      if (currentRate >= SPIKE_MIN_RATE && currentRate > baselineRate * SPIKE_TRIGGER_RATIO) {
-        this._spikeBelowSince = null;
-        this._setSpikeState('active');
-      }
-    } else {
-      const below = currentRate < Math.max(baselineRate * SPIKE_RELEASE_RATIO, 1);
-      if (below) {
-        if (!this._spikeBelowSince) this._spikeBelowSince = now;
-        if (now - this._spikeBelowSince > SPIKE_RELEASE_HOLD_MS) {
-          this._spikeBelowSince = null;
-          this._setSpikeState('idle');
-        }
-      } else {
-        this._spikeBelowSince = null;
-      }
+    let target = 0;
+    if (recentRate >= HYPE_MIN_RECENT_RATE) {
+      const ratio = recentRate / Math.max(baselineRate, HYPE_MIN_BASELINE_RATE);
+      target = (ratio - HYPE_RATIO_FLOOR) / (HYPE_RATIO_CEIL - HYPE_RATIO_FLOOR);
+      target = Math.max(0, Math.min(1, target));
     }
+
+    const alpha = target > this._smoothedPressure ? HYPE_RISE_ALPHA : HYPE_FALL_ALPHA;
+    this._smoothedPressure += alpha * (target - this._smoothedPressure);
+    if (this._smoothedPressure < 0.01) this._smoothedPressure = 0;
+
+    this._updateHypeTag();
+    const newRows = this._effectiveRows();
+    if (newRows !== this.lanes.length) this._resizeLanes(newRows);
   }
 
   renderMessage(message) {
@@ -467,9 +485,9 @@ class DanmakuRenderer {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
     }
-    if (this._spikeTickId !== null) {
-      clearInterval(this._spikeTickId);
-      this._spikeTickId = null;
+    if (this._hypeTickId !== null) {
+      clearInterval(this._hypeTickId);
+      this._hypeTickId = null;
     }
     if (this._hypeTag) {
       this._hypeTag.remove();
@@ -478,8 +496,7 @@ class DanmakuRenderer {
     this.clear();
     this.lanes = [];
     this._messageTimes = [];
-    this._spikeState = 'idle';
-    this._spikeBelowSince = null;
+    this._smoothedPressure = 0;
   }
 
   onSettingsChange() {
