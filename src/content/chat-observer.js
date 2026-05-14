@@ -140,13 +140,13 @@ class ChatObserver {
       this.processedIds = new Set(idsArray.slice(-500));
     }
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       if (!chatLine.isConnected) return;
       const message = this.parseMessage(chatLine, messageId, isVodMessage);
       if (message && this.onMessage) {
         this.onMessage(message);
       }
-    }, 80);
+    });
   }
 
   parseMessage(element, id, isVodMessage = false) {

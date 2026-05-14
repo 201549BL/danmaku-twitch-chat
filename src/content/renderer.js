@@ -6,12 +6,12 @@ class DanmakuRenderer {
     this.messageQueue = [];
     this.droppedCount = 0;
     this.lastRenderTime = 0;
-    this.renderInterval = null;
+    this._rafId = null;
+    this._tick = () => this.processQueue();
   }
 
   init() {
     this.updateLanes();
-    this.startRenderLoop();
   }
 
   updateLanes() {
@@ -59,25 +59,28 @@ class DanmakuRenderer {
     return regionTopPx + laneIndex * laneSpacing;
   }
 
-  startRenderLoop() {
-    const fps = 60;
-    this.renderInterval = setInterval(() => this.processQueue(), 1000 / fps);
+  _scheduleTick() {
+    if (this._rafId !== null) return;
+    this._rafId = requestAnimationFrame(this._tick);
   }
 
   processQueue() {
+    this._rafId = null;
     if (this.messageQueue.length === 0) return;
 
-    const now = Date.now();
     const maxPerSecond = danmakuSettings.get('maxMessagesPerSecond');
     const minInterval = 1000 / maxPerSecond;
 
-    if (now - this.lastRenderTime < minInterval) return;
-
-    const message = this.messageQueue.shift();
-    if (message) {
+    while (this.messageQueue.length > 0) {
+      const now = Date.now();
+      if (now - this.lastRenderTime < minInterval) break;
+      const message = this.messageQueue.shift();
+      if (!message) break;
       this.renderMessage(message);
       this.lastRenderTime = now;
     }
+
+    if (this.messageQueue.length > 0) this._scheduleTick();
   }
 
   addMessage(message) {
@@ -87,6 +90,7 @@ class DanmakuRenderer {
       this.droppedCount++;
     }
     this.messageQueue.push(message);
+    this._scheduleTick();
   }
 
   renderMessage(message) {
@@ -324,9 +328,9 @@ class DanmakuRenderer {
   }
 
   destroy() {
-    if (this.renderInterval) {
-      clearInterval(this.renderInterval);
-      this.renderInterval = null;
+    if (this._rafId !== null) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
     }
     this.clear();
     this.lanes = [];
