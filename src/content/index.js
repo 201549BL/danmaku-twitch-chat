@@ -7,6 +7,7 @@ class DanmakuController {
     this.regionEditor = null;
     this.settingsPanel = null;
     this.mockChat = null;
+    this.playerToggle = null;
     this.initialized = false;
     this.isVod = false;
   }
@@ -19,6 +20,7 @@ class DanmakuController {
     this.detector.init((event) => this.onChannelChange(event));
 
     this.initSettingsPanel();
+    this.initPlayerToggle();
     this.setupMessageListener();
     this.autoDetectUsername();
 
@@ -134,6 +136,14 @@ class DanmakuController {
     this.settingsPanel.init();
   }
 
+  initPlayerToggle() {
+    if (this.playerToggle) return;
+    this.playerToggle = new DanmakuPlayerToggle({
+      onOpenSettings: () => this.settingsPanel?.open(),
+    });
+    this.playerToggle.init();
+  }
+
   injectMockMessage(msg) {
     if (!this.renderer || !this.overlay?.isReady()) return;
     this.renderer.addMessage(msg);
@@ -221,6 +231,10 @@ class DanmakuController {
     if (this.mockChat) {
       this.mockChat.destroy();
       this.mockChat = null;
+    }
+    if (this.playerToggle) {
+      this.playerToggle.destroy();
+      this.playerToggle = null;
     }
     if (this.settingsPanel) {
       this.settingsPanel.destroy();

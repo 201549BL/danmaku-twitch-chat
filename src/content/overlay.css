@@ -477,3 +477,74 @@
   background: rgba(255, 90, 90, 0.95);
   color: #ffffff;
 }
+
+.danmaku-player-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin-right: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #efeff1;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.danmaku-player-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.danmaku-player-toggle--off {
+  opacity: 0.5;
+}
+
+.danmaku-player-toggle--off:hover {
+  opacity: 0.8;
+}
+
+.danmaku-player-toggle-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #efeff1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 1000;
+}
+
+.danmaku-player-toggle-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.danmaku-player-toggle:hover .danmaku-player-toggle-tooltip {
+  opacity: 1;
+}
+
+.danmaku-player-toggle-tooltip-hint {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #adadb8;
+  margin-top: 2px;
+}

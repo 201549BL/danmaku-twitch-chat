@@ -5,33 +5,30 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 ## Features
 
 - **Five animation modes**: Scroll, Reverse, Drift (slow vertical wobble), Pop & fade, Slide up
+- **Dynamic mode**: automatically increases message rate and scroll speed when chat activity spikes
 - **Configurable region** with on-player drag handles — define exactly where chat appears; scales correctly across windowed, theater, and fullscreen
 - **In-region toolbar** (hover the chat area on the player) for quick rows / font-size adjustments and a settings shortcut
-- **Live preview** with mock chat messages
-- **Emote support**: Twitch native, BetterTTV, FrankerFaceZ, and 7TV — rendered inline as images
+- **@mention highlighting**: messages mentioning your username are visually distinguished
+- **Pause on hover**: animations freeze when you mouse over the chat region
+- **Live preview** with mock chat messages and a diagnostics panel showing drop statistics
+- **Emote and badge support**: Twitch native, BetterTTV, FrankerFaceZ, and 7TV emotes rendered inline; optional subscriber/moderator badges
+- **Player controls toggle**: quick enable/disable button in the Twitch player controls bar
 - **Fullscreen-ready**: overlay reparents into the fullscreen element automatically
 - **Auto-save** of all settings; nothing leaves your device
 
 ## Installation
 
-### From the Chrome Web Store
+### Chrome Web Store
 
 *(once published — link will go here)*
-
-### From source
-
-1. Clone or download this repository.
-2. Open `chrome://extensions` in Chrome.
-3. Enable **Developer mode** (top-right toggle).
-4. Click **Load unpacked**.
-5. Select the project folder.
 
 ## Usage
 
 1. Navigate to any Twitch channel (e.g. `twitch.tv/somechannel`).
 2. Chat messages appear as scrolling overlays on the video.
-3. **Hover the chat region** on the player to reveal the toolbar (rows ±, size ±, settings gear) and drag handles for resizing or moving the region.
-4. Click the gear icon to open the full settings panel. Clicking the extension's toolbar icon also opens the panel on the active Twitch tab.
+3. **Use the toggle button** in the player controls (bottom-right) to quickly enable/disable the overlay. Right-click or shift-click for settings.
+4. **Hover the chat region** on the player to reveal the toolbar (rows ±, size ±, settings gear) and drag handles for resizing or moving the region.
+5. Click the gear icon to open the full settings panel. Clicking the extension's toolbar icon also opens the panel on the active Twitch tab.
 
 ## Settings
 
@@ -42,6 +39,10 @@ All changes apply live and auto-save.
 | Enable overlay | Master on/off |
 | Fullscreen only | Hide overlay outside fullscreen |
 | Show usernames | Show "username:" prefix on each message |
+| Show badges | Display subscriber, moderator, etc. badges |
+| Pause on hover | Freeze animations when hovering the chat region |
+| Dynamic mode | Auto-boost rate and speed when chat activity spikes |
+| Highlight @mentions | Your Twitch username; messages mentioning you are highlighted |
 | Font size | Reference pixel size at a 720p player; scales with the player |
 | Rows | Number of message lanes |
 | Region top / height | Where the chat band sits on the player, as % |
@@ -59,7 +60,7 @@ See [`PRIVACY.md`](PRIVACY.md). Short version: the extension does not collect, t
 ## Known limitations
 
 - Relies on Twitch's chat DOM structure. If Twitch ships major DOM changes the extension may need a selector update.
-- Badges (subscriber, moderator, etc.) are not displayed.
+- On live streams, chat is read from a hidden popout iframe to avoid interfering with the main chat panel. If Twitch changes the popout URL structure, the extension falls back to the main page chat.
 
 ## Development
 
@@ -81,6 +82,7 @@ danmaku-twitch-chat/
 │   │   ├── region-editor.js
 │   │   ├── mock-chat.js
 │   │   ├── settings-panel.js
+│   │   ├── player-toggle.js
 │   │   ├── overlay.css
 │   │   └── settings-panel.css
 │   ├── background/

@@ -26,6 +26,7 @@
         "src/content/region-editor.js",
         "src/content/mock-chat.js",
         "src/content/settings-panel.js",
+        "src/content/player-toggle.js",
         "src/content/index.js"
       ],
       "css": ["src/content/overlay.css", "src/content/settings-panel.css"],
