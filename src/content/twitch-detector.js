@@ -8,6 +8,7 @@ class TwitchDetector {
     this._origPushState = null;
     this._origReplaceState = null;
     this._popstateHandler = null;
+    this._urlPollId = null;
   }
 
   init(onChannelChange) {
@@ -85,6 +86,9 @@ class TwitchDetector {
     this._origReplaceState = history.replaceState;
     const detector = this;
 
+    // Twitch's router likely cached history.pushState before our content
+    // script ran at document_idle, so this patch catches some navigations
+    // but not all. The interval poll below is the reliable signal.
     history.pushState = function (...args) {
       detector._origPushState.apply(this, args);
       detector.checkCurrentPage();
@@ -97,6 +101,8 @@ class TwitchDetector {
 
     this._popstateHandler = () => this.checkCurrentPage();
     window.addEventListener('popstate', this._popstateHandler);
+
+    this._urlPollId = setInterval(() => this.checkCurrentPage(), 1000);
   }
 
   destroy() {
@@ -111,6 +117,10 @@ class TwitchDetector {
     if (this._popstateHandler) {
       window.removeEventListener('popstate', this._popstateHandler);
       this._popstateHandler = null;
+    }
+    if (this._urlPollId !== null) {
+      clearInterval(this._urlPollId);
+      this._urlPollId = null;
     }
   }
 
