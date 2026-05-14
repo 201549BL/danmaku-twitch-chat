@@ -78,9 +78,9 @@ class DanmakuSettingsPanel {
             <span>Pause on hover</span>
             <input type="checkbox" data-setting="pauseOnHover" />
           </label>
-          <label class="dsp-row" title="Briefly boosts rate and rows when chat is more active than usual, with a small HYPE tag in the band">
-            <span>Auto hype mode</span>
-            <input type="checkbox" data-setting="hypeMode" />
+          <label class="dsp-row" title="Adapts rate and scroll speed when chat is more active than usual">
+            <span>Dynamic mode</span>
+            <input type="checkbox" data-setting="dynamicMode" />
           </label>
           <div class="dsp-row dsp-row-vertical">
             <div class="dsp-row-label"><span>Highlight @mentions to</span></div>
@@ -162,7 +162,7 @@ class DanmakuSettingsPanel {
           <div class="dsp-preview-row">
             <button class="dsp-btn" type="button" data-action="mock-one">Send mock</button>
             <button class="dsp-btn" type="button" data-action="mock-burst">Burst x10</button>
-            <button class="dsp-btn" type="button" data-action="mock-spam" title="Floods chat to test hype mode">Test hype</button>
+            <button class="dsp-btn" type="button" data-action="mock-spam" title="Floods chat to test dynamic mode">Test dynamic</button>
             <button class="dsp-btn" type="button" data-action="clear">Clear</button>
           </div>
           <label class="dsp-row">
@@ -268,7 +268,7 @@ class DanmakuSettingsPanel {
         break;
       case 'mock-spam': {
         const ok = this.callbacks.onMockSpam?.();
-        if (ok === false) this.flashStatus('Open a stream to test hype');
+        if (ok === false) this.flashStatus('Open a stream to test dynamic mode');
         break;
       }
       case 'clear':

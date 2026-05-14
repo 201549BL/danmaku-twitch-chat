@@ -9,7 +9,7 @@
   z-index: 1000;
 }
 
-.danmaku-hype-tag {
+.danmaku-dynamic-tag {
   position: absolute;
   right: 12px;
   margin-top: 6px;
@@ -31,18 +31,18 @@
   z-index: 1080;
 }
 
-.danmaku-hype-tag::before {
-  content: '🔥';
+.danmaku-dynamic-tag::before {
+  content: '⚡';
   margin-right: 4px;
 }
 
-.danmaku-hype-tag-active {
+.danmaku-dynamic-tag-active {
   opacity: 1;
   transform: scale(1);
-  animation: danmaku-hype-pulse 1.4s ease-in-out infinite;
+  animation: danmaku-dynamic-pulse 1.4s ease-in-out infinite;
 }
 
-@keyframes danmaku-hype-pulse {
+@keyframes danmaku-dynamic-pulse {
   0%,
   100% {
     box-shadow: 0 2px 12px rgba(255, 100, 0, 0.55);

@@ -1,15 +1,15 @@
-const HYPE_WINDOW_RECENT_MS = 3000;
-const HYPE_WINDOW_BASELINE_MS = 60000;
-const HYPE_MIN_RECENT_RATE = 2;
-const HYPE_MIN_BASELINE_RATE = 1;
-const HYPE_RATIO_FLOOR = 1.2;
-const HYPE_RATIO_CEIL = 4.0;
-const HYPE_RISE_ALPHA = 0.4;
-const HYPE_FALL_ALPHA = 0.25;
-const HYPE_SHOW_THRESHOLD = 0.2;
-const HYPE_RATE_MULTIPLIER_MAX = 2.5;
-const HYPE_RATE_CAP = 20;
-const HYPE_DURATION_REDUCTION_MAX = 0.3;
+const DYNAMIC_WINDOW_RECENT_MS = 3000;
+const DYNAMIC_WINDOW_BASELINE_MS = 60000;
+const DYNAMIC_MIN_RECENT_RATE = 2;
+const DYNAMIC_MIN_BASELINE_RATE = 1;
+const DYNAMIC_RATIO_FLOOR = 1.2;
+const DYNAMIC_RATIO_CEIL = 4.0;
+const DYNAMIC_RISE_ALPHA = 0.4;
+const DYNAMIC_FALL_ALPHA = 0.25;
+const DYNAMIC_SHOW_THRESHOLD = 0.2;
+const DYNAMIC_RATE_MULTIPLIER_MAX = 2.5;
+const DYNAMIC_RATE_CAP = 20;
+const DYNAMIC_DURATION_REDUCTION_MAX = 0.3;
 
 class DanmakuRenderer {
   constructor(overlay) {
@@ -27,8 +27,8 @@ class DanmakuRenderer {
 
     this._messageTimes = [];
     this._smoothedPressure = 0;
-    this._hypeTickId = null;
-    this._hypeTag = null;
+    this._dynamicTickId = null;
+    this._dynamicTag = null;
   }
 
   _recordDrop(reason) {
@@ -60,23 +60,23 @@ class DanmakuRenderer {
 
   init() {
     this.updateLanes();
-    this._buildHypeTag();
-    this._hypeTickId = setInterval(() => this._tickHype(), 500);
+    this._buildDynamicTag();
+    this._dynamicTickId = setInterval(() => this._tickDynamic(), 500);
   }
 
   _effectiveMaxMessagesPerSecond() {
     const base = danmakuSettings.get('maxMessagesPerSecond');
     const p = this._smoothedPressure;
     if (p <= 0) return base;
-    const boost = 1 + (HYPE_RATE_MULTIPLIER_MAX - 1) * p;
-    return Math.min(HYPE_RATE_CAP, base * boost);
+    const boost = 1 + (DYNAMIC_RATE_MULTIPLIER_MAX - 1) * p;
+    return Math.min(DYNAMIC_RATE_CAP, base * boost);
   }
 
   _effectiveDuration() {
     const base = danmakuSettings.get('duration');
     const p = this._smoothedPressure;
     if (p <= 0) return base;
-    return base * (1 - HYPE_DURATION_REDUCTION_MAX * p);
+    return base * (1 - DYNAMIC_DURATION_REDUCTION_MAX * p);
   }
 
   updateLanes() {
@@ -162,68 +162,68 @@ class DanmakuRenderer {
   _recordArrival() {
     const now = Date.now();
     this._messageTimes.push(now);
-    while (this._messageTimes.length && now - this._messageTimes[0] > HYPE_WINDOW_BASELINE_MS) {
+    while (this._messageTimes.length && now - this._messageTimes[0] > DYNAMIC_WINDOW_BASELINE_MS) {
       this._messageTimes.shift();
     }
   }
 
-  _buildHypeTag() {
-    if (this._hypeTag || !this.overlay?.container) return;
-    this._hypeTag = document.createElement('div');
-    this._hypeTag.className = 'danmaku-hype-tag';
-    this.overlay.container.appendChild(this._hypeTag);
-    this._updateHypeTag();
+  _buildDynamicTag() {
+    if (this._dynamicTag || !this.overlay?.container) return;
+    this._dynamicTag = document.createElement('div');
+    this._dynamicTag.className = 'danmaku-dynamic-tag';
+    this.overlay.container.appendChild(this._dynamicTag);
+    this._updateDynamicTag();
   }
 
-  _updateHypeTag() {
-    this._buildHypeTag();
-    if (!this._hypeTag) return;
+  _updateDynamicTag() {
+    this._buildDynamicTag();
+    if (!this._dynamicTag) return;
     const regionTop = danmakuSettings.get('regionTop');
-    this._hypeTag.style.top = `${regionTop}%`;
+    this._dynamicTag.style.top = `${regionTop}%`;
 
-    const visible = this._smoothedPressure >= HYPE_SHOW_THRESHOLD;
+    const visible = this._smoothedPressure >= DYNAMIC_SHOW_THRESHOLD;
     if (visible) {
       const base = Math.max(1, danmakuSettings.get('maxMessagesPerSecond'));
       const ratio = this._effectiveMaxMessagesPerSecond() / base;
-      this._hypeTag.textContent = `×${ratio.toFixed(1)}`;
-      this._hypeTag.classList.add('danmaku-hype-tag-active');
+      this._dynamicTag.textContent = `×${ratio.toFixed(1)}`;
+      this._dynamicTag.classList.add('danmaku-dynamic-tag-active');
     } else {
-      this._hypeTag.classList.remove('danmaku-hype-tag-active');
+      this._dynamicTag.classList.remove('danmaku-dynamic-tag-active');
     }
   }
 
-  _tickHype() {
-    if (!danmakuSettings.get('hypeMode')) {
+  _tickDynamic() {
+    if (!danmakuSettings.get('dynamicMode')) {
       if (this._smoothedPressure > 0) {
         this._smoothedPressure = 0;
-        this._updateHypeTag();
+        this._updateDynamicTag();
       }
       return;
     }
 
     const now = Date.now();
-    while (this._messageTimes.length && now - this._messageTimes[0] > HYPE_WINDOW_BASELINE_MS) {
+    while (this._messageTimes.length && now - this._messageTimes[0] > DYNAMIC_WINDOW_BASELINE_MS) {
       this._messageTimes.shift();
     }
     const recentCount = this._messageTimes.reduce(
-      (n, t) => (now - t < HYPE_WINDOW_RECENT_MS ? n + 1 : n),
+      (n, t) => (now - t < DYNAMIC_WINDOW_RECENT_MS ? n + 1 : n),
       0
     );
-    const recentRate = recentCount / (HYPE_WINDOW_RECENT_MS / 1000);
-    const baselineRate = this._messageTimes.length / (HYPE_WINDOW_BASELINE_MS / 1000);
+    const recentRate = recentCount / (DYNAMIC_WINDOW_RECENT_MS / 1000);
+    const baselineRate = this._messageTimes.length / (DYNAMIC_WINDOW_BASELINE_MS / 1000);
 
     let target = 0;
-    if (recentRate >= HYPE_MIN_RECENT_RATE) {
-      const ratio = recentRate / Math.max(baselineRate, HYPE_MIN_BASELINE_RATE);
-      target = (ratio - HYPE_RATIO_FLOOR) / (HYPE_RATIO_CEIL - HYPE_RATIO_FLOOR);
+    if (recentRate >= DYNAMIC_MIN_RECENT_RATE) {
+      const ratio = recentRate / Math.max(baselineRate, DYNAMIC_MIN_BASELINE_RATE);
+      target = (ratio - DYNAMIC_RATIO_FLOOR) / (DYNAMIC_RATIO_CEIL - DYNAMIC_RATIO_FLOOR);
       target = Math.max(0, Math.min(1, target));
     }
 
-    const alpha = target > this._smoothedPressure ? HYPE_RISE_ALPHA : HYPE_FALL_ALPHA;
+    const alpha = target > this._smoothedPressure ? DYNAMIC_RISE_ALPHA : DYNAMIC_FALL_ALPHA;
     this._smoothedPressure += alpha * (target - this._smoothedPressure);
     if (this._smoothedPressure < 0.01) this._smoothedPressure = 0;
 
-    this._updateHypeTag();
+    this._updateDynamicTag();
   }
 
   renderMessage(message) {
@@ -466,13 +466,13 @@ class DanmakuRenderer {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
     }
-    if (this._hypeTickId !== null) {
-      clearInterval(this._hypeTickId);
-      this._hypeTickId = null;
+    if (this._dynamicTickId !== null) {
+      clearInterval(this._dynamicTickId);
+      this._dynamicTickId = null;
     }
-    if (this._hypeTag) {
-      this._hypeTag.remove();
-      this._hypeTag = null;
+    if (this._dynamicTag) {
+      this._dynamicTag.remove();
+      this._dynamicTag = null;
     }
     this.clear();
     this.lanes = [];
@@ -482,6 +482,6 @@ class DanmakuRenderer {
 
   onSettingsChange() {
     this.updateLanes();
-    this._updateHypeTag();
+    this._updateDynamicTag();
   }
 }

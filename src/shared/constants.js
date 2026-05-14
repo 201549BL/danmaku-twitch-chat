@@ -34,7 +34,7 @@ const DANMAKU_CONSTANTS = {
     showBadges: true,
     pauseOnHover: true,
     highlightUsername: '',
-    hypeMode: true,
+    dynamicMode: true,
   },
 
   ANIMATION_MODES: ['scroll', 'reverse', 'drift', 'popFade', 'slideUp'],
