@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Danmaku Twitch Chat",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Display Twitch chat as scrolling overlays on the video player. Configurable region, animations, and emote support (BTTV/FFZ/7TV).",
   "permissions": ["storage"],
   "host_permissions": ["https://www.twitch.tv/*"],
