@@ -1,29 +1,25 @@
-const fields = [
-  'enabled',
-  'fullscreenOnly',
-  'showUsernames',
+const checkboxFields = ['enabled', 'fullscreenOnly', 'showUsernames'];
+const floatFields = ['opacity'];
+const intFields = [
   'fontSize',
   'rows',
   'regionTop',
   'regionHeight',
-  'opacity',
   'duration',
   'maxMessagesPerSecond',
   'maxMessageLength',
 ];
-
-const checkboxFields = ['enabled', 'fullscreenOnly', 'showUsernames'];
+const allFields = [...checkboxFields, ...floatFields, ...intFields];
 
 async function loadSettings() {
-  const result = await chrome.storage.local.get('danmakuSettings');
-  const settings = { ...DANMAKU_CONSTANTS.DEFAULTS, ...result.danmakuSettings };
+  await danmakuSettings.load();
+  const settings = danmakuSettings.getAll();
 
-  for (const field of fields) {
+  for (const field of allFields) {
     const el = document.getElementById(field);
     if (!el) continue;
-
     if (checkboxFields.includes(field)) {
-      el.checked = settings[field];
+      el.checked = !!settings[field];
     } else {
       el.value = settings[field];
     }
@@ -32,33 +28,29 @@ async function loadSettings() {
   updateOpacityDisplay();
 }
 
-function getSettings() {
-  const settings = {};
-
-  for (const field of fields) {
-    const el = document.getElementById(field);
-    if (!el) continue;
-
-    if (checkboxFields.includes(field)) {
-      settings[field] = el.checked;
-    } else if (field === 'opacity') {
-      settings[field] = parseFloat(el.value);
-    } else {
-      settings[field] = parseInt(el.value, 10);
-    }
-  }
-
-  return settings;
+function readField(field) {
+  const el = document.getElementById(field);
+  if (!el) return undefined;
+  if (checkboxFields.includes(field)) return el.checked;
+  if (floatFields.includes(field)) return parseFloat(el.value);
+  return parseInt(el.value, 10);
 }
 
 async function saveSettings() {
-  const settings = getSettings();
-  await chrome.storage.local.set({ danmakuSettings: settings });
+  const patch = {};
+  for (const field of allFields) {
+    const value = readField(field);
+    if (value === undefined || Number.isNaN(value)) continue;
+    patch[field] = value;
+  }
+  danmakuSettings.setMany(patch);
+  await danmakuSettings.save();
   showStatus('Settings saved!');
 }
 
 async function resetSettings() {
-  await chrome.storage.local.set({ danmakuSettings: DANMAKU_CONSTANTS.DEFAULTS });
+  danmakuSettings.setMany(DANMAKU_CONSTANTS.DEFAULTS);
+  await danmakuSettings.save();
   await loadSettings();
   showStatus('Settings reset to defaults');
 }

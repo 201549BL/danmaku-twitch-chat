@@ -4,6 +4,7 @@ class DanmakuSettings {
     this.listeners = new Set();
     this._saveTimer = null;
     this._saveDebounceMs = 400;
+    this._storageListenerInstalled = false;
   }
 
   async load() {
@@ -15,7 +16,32 @@ class DanmakuSettings {
     } catch (e) {
       console.warn('[Danmaku] Failed to load settings:', e);
     }
+    this._installStorageListener();
     return this.settings;
+  }
+
+  _installStorageListener() {
+    if (this._storageListenerInstalled) return;
+    if (!chrome?.storage?.onChanged?.addListener) return;
+    this._storageListenerInstalled = true;
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes.danmakuSettings) return;
+      const next = changes.danmakuSettings.newValue;
+      if (!next) return;
+      const merged = { ...DANMAKU_CONSTANTS.DEFAULTS, ...next };
+      if (this._shallowEqual(merged, this.settings)) return;
+      this.settings = merged;
+      this.notifyListeners();
+    });
+  }
+
+  _shallowEqual(a, b) {
+    const keysA = Object.keys(a);
+    if (keysA.length !== Object.keys(b).length) return false;
+    for (const k of keysA) {
+      if (a[k] !== b[k]) return false;
+    }
+    return true;
   }
 
   async save() {
@@ -46,6 +72,21 @@ class DanmakuSettings {
     const clamped = this.clampValue(key, value);
     if (this.settings[key] !== clamped) {
       this.settings[key] = clamped;
+      this.notifyListeners();
+      this.scheduleSave();
+    }
+  }
+
+  setMany(obj) {
+    let changed = false;
+    for (const [key, value] of Object.entries(obj)) {
+      const clamped = this.clampValue(key, value);
+      if (this.settings[key] !== clamped) {
+        this.settings[key] = clamped;
+        changed = true;
+      }
+    }
+    if (changed) {
       this.notifyListeners();
       this.scheduleSave();
     }
