@@ -73,26 +73,8 @@ class MockChatGenerator {
   }
 
   emitSpam(count = 14) {
-    // Public Twitch CDN URL for PogChamp (legacy v1 path); used only as a
-    // recognizable image so the renderer can hash + aggregate it.
-    const src = 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/static/light/2.0';
-    const alt = 'PogChamp';
     for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        if (!this.onMessage) return;
-        const user = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
-        this.onMessage({
-          id: `mock_spam_${Date.now()}_${this.counter++}`,
-          username: user.name,
-          displayName: user.name,
-          text: alt,
-          segments: [{ type: 'image', src, alt }],
-          badges: [],
-          color: user.color,
-          timestamp: Date.now(),
-          rawElement: null,
-        });
-      }, i * 80);
+      setTimeout(() => this.emitOne(), i * 80);
     }
   }
 

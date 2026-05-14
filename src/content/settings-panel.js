@@ -266,9 +266,11 @@ class DanmakuSettingsPanel {
           setTimeout(() => this.callbacks.onMockMessage?.(), i * 120);
         }
         break;
-      case 'mock-spam':
-        this.callbacks.onMockSpam?.();
+      case 'mock-spam': {
+        const ok = this.callbacks.onMockSpam?.();
+        if (ok === false) this.flashStatus('Open a stream to test hype');
         break;
+      }
       case 'clear':
         this.callbacks.onClearMessages?.();
         break;
