@@ -124,6 +124,7 @@ class DanmakuController {
       onMockMessage: () => this.mockChat.emitOne(),
       onClearMessages: () => this.renderer?.clear(),
       onAutoMock: (on) => (on ? this.mockChat.start(1000) : this.mockChat.stop()),
+      getStats: () => this.renderer?.getDropStats() || null,
     });
     this.settingsPanel.init();
   }
@@ -165,6 +166,7 @@ class DanmakuController {
 
     this.regionEditor = new DanmakuRegionEditor({
       onOpenSettings: () => this.settingsPanel?.open(),
+      getStats: () => this.renderer?.getDropStats() || null,
     });
     this.regionEditor.attach(this.overlay);
 

@@ -9,6 +9,7 @@ const ANIM_DESCRIPTIONS = {
 class DanmakuSettingsPanel {
   constructor(callbacks = {}) {
     this.callbacks = callbacks;
+    this.getStats = callbacks.getStats || (() => null);
     this.panel = null;
     this.opened = false;
     this.autoMockOn = false;
@@ -22,6 +23,7 @@ class DanmakuSettingsPanel {
     };
     this._statusTimer = null;
     this._savedFlashTimer = null;
+    this._statsPollId = null;
   }
 
   scheduleSavedFlash() {
@@ -143,6 +145,12 @@ class DanmakuSettingsPanel {
             <div class="dsp-row-label"><span>Max msg length</span><em data-display="maxMessageLength"></em></div>
             <input type="range" data-setting="maxMessageLength" min="20" max="500" step="10" />
           </div>
+        </section>
+
+        <section class="dsp-section">
+          <h3>Diagnostics</h3>
+          <p class="dsp-diag-status" data-diag-status>No messages dropped recently.</p>
+          <ul class="dsp-diag-list" data-diag-list></ul>
         </section>
 
         <section class="dsp-section">
@@ -306,11 +314,71 @@ class DanmakuSettingsPanel {
   open() {
     this.panel.style.display = 'flex';
     this.opened = true;
+    this.updateDiagnostics();
+    if (this._statsPollId === null) {
+      this._statsPollId = setInterval(() => this.updateDiagnostics(), 1000);
+    }
   }
 
   close() {
     this.panel.style.display = 'none';
     this.opened = false;
+    if (this._statsPollId !== null) {
+      clearInterval(this._statsPollId);
+      this._statsPollId = null;
+    }
+  }
+
+  updateDiagnostics() {
+    if (!this.panel) return;
+    const status = this.panel.querySelector('[data-diag-status]');
+    const list = this.panel.querySelector('[data-diag-list]');
+    if (!status || !list) return;
+
+    const stats = this.getStats();
+    if (!stats) {
+      status.textContent = 'No stream attached.';
+      list.innerHTML = '';
+      return;
+    }
+
+    const { recent } = stats;
+    if (recent.total === 0) {
+      status.textContent = 'No messages dropped in the last 10 s.';
+      list.innerHTML = '';
+      return;
+    }
+
+    status.textContent = `${recent.total} message${recent.total === 1 ? '' : 's'} dropped in the last 10 s:`;
+    const reasons = [
+      {
+        key: 'queue',
+        label: 'Rate limit',
+        hint: 'Chat is arriving faster than the renderer drains it. Raise "Max msgs/sec".',
+      },
+      {
+        key: 'lane',
+        label: 'Lane saturation',
+        hint: 'All rows are busy. Add rows or lower "Duration".',
+      },
+      {
+        key: 'active',
+        label: 'Active message cap',
+        hint: 'Internal ceiling reached; usually only on wide players with long durations.',
+      },
+    ];
+
+    list.innerHTML = '';
+    for (const r of reasons.filter((r) => recent[r.key] > 0).sort((a, b) => recent[b.key] - recent[a.key])) {
+      const li = document.createElement('li');
+      const label = document.createElement('strong');
+      label.textContent = `${r.label} ×${recent[r.key]}`;
+      const hint = document.createElement('span');
+      hint.textContent = ` — ${r.hint}`;
+      li.appendChild(label);
+      li.appendChild(hint);
+      list.appendChild(li);
+    }
   }
 
   startDrag(e) {
@@ -363,6 +431,10 @@ class DanmakuSettingsPanel {
     document.removeEventListener('webkitfullscreenchange', this._boundOnFullscreen);
     if (this._statusTimer) clearTimeout(this._statusTimer);
     if (this._savedFlashTimer) clearTimeout(this._savedFlashTimer);
+    if (this._statsPollId !== null) {
+      clearInterval(this._statsPollId);
+      this._statsPollId = null;
+    }
     if (this.panel) this.panel.remove();
     this.panel = null;
   }

@@ -4,10 +4,40 @@ class DanmakuRenderer {
     this.activeMessages = [];
     this.lanes = [];
     this.messageQueue = [];
-    this.droppedCount = 0;
+    this.dropsQueue = 0;
+    this.dropsLane = 0;
+    this.dropsActive = 0;
+    this._dropTimestamps = [];
     this.lastRenderTime = 0;
     this._rafId = null;
     this._tick = () => this.processQueue();
+  }
+
+  _recordDrop(reason) {
+    const now = Date.now();
+    if (reason === 'queue') this.dropsQueue++;
+    else if (reason === 'lane') this.dropsLane++;
+    else if (reason === 'active') this.dropsActive++;
+    this._dropTimestamps.push({ time: now, reason });
+    while (this._dropTimestamps.length > 0 && now - this._dropTimestamps[0].time > 10000) {
+      this._dropTimestamps.shift();
+    }
+  }
+
+  getDropStats() {
+    const now = Date.now();
+    while (this._dropTimestamps.length > 0 && now - this._dropTimestamps[0].time > 10000) {
+      this._dropTimestamps.shift();
+    }
+    const recent = { queue: 0, lane: 0, active: 0, total: 0 };
+    for (const e of this._dropTimestamps) {
+      recent[e.reason]++;
+      recent.total++;
+    }
+    return {
+      total: { queue: this.dropsQueue, lane: this.dropsLane, active: this.dropsActive },
+      recent,
+    };
   }
 
   init() {
@@ -87,7 +117,7 @@ class DanmakuRenderer {
     const maxQueue = 20;
     if (this.messageQueue.length >= maxQueue) {
       this.messageQueue.shift();
-      this.droppedCount++;
+      this._recordDrop('queue');
     }
     this.messageQueue.push(message);
     this._scheduleTick();
@@ -98,7 +128,7 @@ class DanmakuRenderer {
 
     const maxActive = danmakuSettings.get('maxActiveMessages');
     if (this.activeMessages.length >= maxActive) {
-      this.droppedCount++;
+      this._recordDrop('active');
       return;
     }
 
@@ -107,7 +137,7 @@ class DanmakuRenderer {
 
     const lane = isStationary ? this.findStationaryLane() : this.findScrollLane();
     if (!lane) {
-      this.droppedCount++;
+      this._recordDrop('lane');
       return;
     }
 

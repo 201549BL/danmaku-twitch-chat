@@ -1,12 +1,14 @@
 class DanmakuRegionEditor {
   constructor(options = {}) {
     this.onOpenSettings = options.onOpenSettings || null;
+    this.getStats = options.getStats || (() => null);
     this.overlay = null;
     this.container = null;
     this.rowGuides = null;
     this.hovered = false;
     this.dragState = null;
     this.resizeObserver = null;
+    this._statsPollId = null;
     this._boundOnMouseMove = (e) => this.onMouseMove(e);
     this._boundOnMouseUp = () => this.endDrag();
     this._settingsListener = () => this.update();
@@ -22,6 +24,7 @@ class DanmakuRegionEditor {
     document.addEventListener('mouseup', this._boundOnMouseUp);
     this.resizeObserver = new ResizeObserver(() => this.update());
     this.resizeObserver.observe(this.overlay.container);
+    this._statsPollId = setInterval(() => this.updateDropsBadge(), 1000);
   }
 
   build() {
@@ -45,6 +48,7 @@ class DanmakuRegionEditor {
           <span class="dre-quick-label">Size <em data-quick-value="fontSize"></em></span>
           <button class="dre-quick-btn" type="button" data-quick-action="font-inc" title="Larger text">+</button>
         </div>
+        <span class="dre-drops" data-drops title="Messages dropped in the last 10 seconds. Open settings for details." hidden></span>
         <button class="dre-settings-btn" type="button" data-action="open-settings" title="Open danmaku settings">⚙</button>
       </div>
     `;
@@ -100,6 +104,22 @@ class DanmakuRegionEditor {
     const fontEl = this.container.querySelector('[data-quick-value="fontSize"]');
     if (rowsEl) rowsEl.textContent = danmakuSettings.get('rows');
     if (fontEl) fontEl.textContent = `${danmakuSettings.get('fontSize')}px`;
+  }
+
+  updateDropsBadge() {
+    const badge = this.container?.querySelector('[data-drops]');
+    if (!badge) return;
+    const stats = this.getStats();
+    const n = stats?.recent?.total || 0;
+    if (n === 0) {
+      badge.hidden = true;
+      badge.textContent = '';
+      badge.classList.remove('dre-drops-heavy');
+      return;
+    }
+    badge.hidden = false;
+    badge.textContent = `⚠ ${n} dropped/10s`;
+    badge.classList.toggle('dre-drops-heavy', n >= 20);
   }
 
   onMouseMove(e) {
@@ -239,6 +259,10 @@ class DanmakuRegionEditor {
     danmakuSettings.removeListener(this._settingsListener);
     document.removeEventListener('mousemove', this._boundOnMouseMove);
     document.removeEventListener('mouseup', this._boundOnMouseUp);
+    if (this._statsPollId !== null) {
+      clearInterval(this._statsPollId);
+      this._statsPollId = null;
+    }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
