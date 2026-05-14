@@ -122,27 +122,6 @@ npx -y svgexport assets/icon.svg assets/icon-48.png  48:48
 npx -y svgexport assets/icon.svg assets/icon-128.png 128:128
 ```
 
-### Store listing checklist
-
-These are filled in on the Chrome Web Store dashboard, not in the zip:
-
-- **128×128 store icon** — use `assets/icon-128.png`
-- **Screenshots** — at least one 1280×800 or 640×400 PNG/JPG showing the overlay over a live Twitch player
-- **Short description** — up to 132 characters
-- **Detailed description** — feature list and usage; the README's Features section is a fine starting point
-- **Single purpose** — "Display Twitch chat as scrolling overlays on the video player"
-- **Permissions justification**:
-  - `storage` — saves user preferences locally
-  - `host_permissions: https://www.twitch.tv/*` — required to read the chat DOM and inject the overlay on Twitch stream pages
-- **Privacy practices** — declare "Does not collect user data" (matches `PRIVACY.md`)
-
-### Submission
-
-1. Sign up at the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) (one-time $5 fee).
-2. Click **New item** → upload the zip.
-3. Fill out the listing fields above.
-4. Submit for review. First review typically takes 1–3 days.
-
 ## License
 
 MIT
