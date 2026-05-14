@@ -1,3 +1,15 @@
+const SPIKE_WINDOW_RECENT_MS = 3000;
+const SPIKE_WINDOW_BASELINE_MS = 60000;
+const SPIKE_TRIGGER_RATIO = 2.5;
+const SPIKE_RELEASE_RATIO = 1.5;
+const SPIKE_MIN_RATE = 3;
+const SPIKE_RELEASE_HOLD_MS = 1500;
+
+const EMOTE_WINDOW_MS = 3000;
+const EMOTE_TRIGGER_COUNT = 5;
+const EMOTE_AGGREGATE_IDLE_MS = 1500;
+const EMOTE_AGGREGATE_MAX_MS = 10000;
+
 class DanmakuRenderer {
   constructor(overlay) {
     this.overlay = overlay;
@@ -11,6 +23,13 @@ class DanmakuRenderer {
     this.lastRenderTime = 0;
     this._rafId = null;
     this._tick = () => this.processQueue();
+
+    this._messageTimes = [];
+    this._emoteWindow = [];
+    this._activeAggregate = null;
+    this._spikeState = 'idle';
+    this._spikeBelowSince = null;
+    this._spikeTickId = null;
   }
 
   _recordDrop(reason) {
@@ -42,6 +61,7 @@ class DanmakuRenderer {
 
   init() {
     this.updateLanes();
+    this._spikeTickId = setInterval(() => this._tickSpike(), 500);
   }
 
   updateLanes() {
@@ -114,6 +134,9 @@ class DanmakuRenderer {
   }
 
   addMessage(message) {
+    const emote = this._recordIncoming(message);
+    if (this._tryRouteToAggregate(message, emote)) return;
+
     const maxQueue = 20;
     if (this.messageQueue.length >= maxQueue) {
       this.messageQueue.shift();
@@ -121,6 +144,168 @@ class DanmakuRenderer {
     }
     this.messageQueue.push(message);
     this._scheduleTick();
+  }
+
+  _getDominantEmote(message) {
+    if (!Array.isArray(message?.segments)) return null;
+    for (const seg of message.segments) {
+      if (seg.type === 'image' && seg.src) {
+        return { src: seg.src, alt: seg.alt || '' };
+      }
+    }
+    return null;
+  }
+
+  _recordIncoming(message) {
+    const now = Date.now();
+    this._messageTimes.push(now);
+    const emote = this._getDominantEmote(message);
+    if (emote) {
+      this._emoteWindow.push({ time: now, src: emote.src, alt: emote.alt });
+    }
+    this._pruneWindows(now);
+    return emote;
+  }
+
+  _pruneWindows(now) {
+    while (this._messageTimes.length && now - this._messageTimes[0] > SPIKE_WINDOW_BASELINE_MS) {
+      this._messageTimes.shift();
+    }
+    while (this._emoteWindow.length && now - this._emoteWindow[0].time > EMOTE_WINDOW_MS) {
+      this._emoteWindow.shift();
+    }
+  }
+
+  _countEmoteInWindow(src) {
+    let count = 0;
+    for (const e of this._emoteWindow) {
+      if (e.src === src) count++;
+    }
+    return count;
+  }
+
+  _tryRouteToAggregate(message, emote) {
+    if (!danmakuSettings.get('spikeEffectsEnabled')) return false;
+    if (!emote) return false;
+
+    if (this._activeAggregate && this._activeAggregate.src === emote.src) {
+      this._activeAggregate.count++;
+      this._activeAggregate.lastSeenAt = Date.now();
+      this._updateAggregateUI();
+      return true;
+    }
+
+    if (!this._activeAggregate) {
+      const count = this._countEmoteInWindow(emote.src);
+      if (count >= EMOTE_TRIGGER_COUNT) {
+        this._startAggregate(emote, count);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  _startAggregate(emote, initialCount) {
+    if (!this.overlay?.container) return;
+    const el = document.createElement('div');
+    el.className = 'danmaku-aggregate';
+
+    const img = document.createElement('img');
+    img.src = emote.src;
+    img.alt = emote.alt;
+    img.className = 'danmaku-aggregate-emote';
+
+    const counter = document.createElement('span');
+    counter.className = 'danmaku-aggregate-count';
+    counter.textContent = `×${initialCount}`;
+
+    el.appendChild(img);
+    el.appendChild(counter);
+    this.overlay.container.appendChild(el);
+
+    const now = Date.now();
+    this._activeAggregate = {
+      src: emote.src,
+      alt: emote.alt,
+      count: initialCount,
+      startedAt: now,
+      lastSeenAt: now,
+      el,
+      counterEl: counter,
+    };
+  }
+
+  _updateAggregateUI() {
+    const agg = this._activeAggregate;
+    if (!agg) return;
+    agg.counterEl.textContent = `×${agg.count}`;
+    agg.el.classList.remove('danmaku-aggregate-bump');
+    void agg.el.offsetWidth;
+    agg.el.classList.add('danmaku-aggregate-bump');
+  }
+
+  _endAggregate() {
+    const agg = this._activeAggregate;
+    if (!agg) return;
+    this._activeAggregate = null;
+    agg.el.classList.add('danmaku-aggregate-leaving');
+    setTimeout(() => agg.el.remove(), 400);
+  }
+
+  _setSpikeClass(active) {
+    const el = this.overlay?.container;
+    if (!el) return;
+    el.classList.toggle('danmaku-overlay--spike', active);
+  }
+
+  _tickSpike() {
+    if (!danmakuSettings.get('spikeEffectsEnabled')) {
+      if (this._activeAggregate) this._endAggregate();
+      if (this._spikeState === 'active') {
+        this._spikeState = 'idle';
+        this._spikeBelowSince = null;
+        this._setSpikeClass(false);
+      }
+      return;
+    }
+
+    const now = Date.now();
+
+    if (this._activeAggregate) {
+      const idle = now - this._activeAggregate.lastSeenAt;
+      const lifetime = now - this._activeAggregate.startedAt;
+      if (idle > EMOTE_AGGREGATE_IDLE_MS || lifetime > EMOTE_AGGREGATE_MAX_MS) {
+        this._endAggregate();
+      }
+    }
+
+    this._pruneWindows(now);
+    const recentCount = this._messageTimes.reduce(
+      (n, t) => (now - t < SPIKE_WINDOW_RECENT_MS ? n + 1 : n),
+      0
+    );
+    const currentRate = recentCount / (SPIKE_WINDOW_RECENT_MS / 1000);
+    const baselineRate = this._messageTimes.length / (SPIKE_WINDOW_BASELINE_MS / 1000);
+
+    if (this._spikeState === 'idle') {
+      if (currentRate >= SPIKE_MIN_RATE && currentRate > baselineRate * SPIKE_TRIGGER_RATIO) {
+        this._spikeState = 'active';
+        this._spikeBelowSince = null;
+        this._setSpikeClass(true);
+      }
+    } else {
+      const below = currentRate < Math.max(baselineRate * SPIKE_RELEASE_RATIO, 1);
+      if (below) {
+        if (!this._spikeBelowSince) this._spikeBelowSince = now;
+        if (now - this._spikeBelowSince > SPIKE_RELEASE_HOLD_MS) {
+          this._spikeState = 'idle';
+          this._spikeBelowSince = null;
+          this._setSpikeClass(false);
+        }
+      } else {
+        this._spikeBelowSince = null;
+      }
+    }
   }
 
   renderMessage(message) {
@@ -356,6 +541,7 @@ class DanmakuRenderer {
       lane.lastMessageEndTime = 0;
       lane.occupants = [];
     });
+    this._endAggregate();
   }
 
   destroy() {
@@ -363,8 +549,17 @@ class DanmakuRenderer {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
     }
+    if (this._spikeTickId !== null) {
+      clearInterval(this._spikeTickId);
+      this._spikeTickId = null;
+    }
+    this._setSpikeClass(false);
     this.clear();
     this.lanes = [];
+    this._messageTimes = [];
+    this._emoteWindow = [];
+    this._spikeState = 'idle';
+    this._spikeBelowSince = null;
   }
 
   onSettingsChange() {

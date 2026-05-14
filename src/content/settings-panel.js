@@ -78,6 +78,10 @@ class DanmakuSettingsPanel {
             <span>Pause on hover</span>
             <input type="checkbox" data-setting="pauseOnHover" />
           </label>
+          <label class="dsp-row">
+            <span>Spike effects (emote highlight, edge pulse)</span>
+            <input type="checkbox" data-setting="spikeEffectsEnabled" />
+          </label>
           <div class="dsp-row dsp-row-vertical">
             <div class="dsp-row-label"><span>Highlight @mentions to</span></div>
             <input type="text" data-setting="highlightUsername" placeholder="your twitch username" class="dsp-text-input" />
@@ -158,6 +162,7 @@ class DanmakuSettingsPanel {
           <div class="dsp-preview-row">
             <button class="dsp-btn" type="button" data-action="mock-one">Send mock</button>
             <button class="dsp-btn" type="button" data-action="mock-burst">Burst x10</button>
+            <button class="dsp-btn" type="button" data-action="mock-spam">Spam emote</button>
             <button class="dsp-btn" type="button" data-action="clear">Clear</button>
           </div>
           <label class="dsp-row">
@@ -260,6 +265,9 @@ class DanmakuSettingsPanel {
         for (let i = 0; i < 10; i++) {
           setTimeout(() => this.callbacks.onMockMessage?.(), i * 120);
         }
+        break;
+      case 'mock-spam':
+        this.callbacks.onMockSpam?.();
         break;
       case 'clear':
         this.callbacks.onClearMessages?.();

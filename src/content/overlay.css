@@ -9,6 +9,112 @@
   z-index: 1000;
 }
 
+.danmaku-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 0 rgba(145, 71, 255, 0);
+  transition: box-shadow 400ms ease;
+  z-index: 1040;
+}
+
+.danmaku-overlay--spike::after {
+  animation: danmaku-spike-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes danmaku-spike-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 60px 0 rgba(145, 71, 255, 0.35);
+  }
+  50% {
+    box-shadow: inset 0 0 110px 0 rgba(145, 71, 255, 0.6);
+  }
+}
+
+.danmaku-aggregate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  box-shadow:
+    0 6px 28px rgba(145, 71, 255, 0.5),
+    0 0 80px rgba(145, 71, 255, 0.3);
+  pointer-events: none;
+  z-index: 1200;
+  animation: danmaku-aggregate-enter 280ms ease-out forwards;
+  user-select: none;
+}
+
+.danmaku-aggregate-emote {
+  height: 4em;
+  width: auto;
+  display: block;
+}
+
+.danmaku-aggregate-count {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #ffffff;
+  font-size: 2.2em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 10px rgba(0, 0, 0, 0.75);
+}
+
+.danmaku-aggregate-bump {
+  animation: danmaku-aggregate-bump 220ms ease-out;
+}
+
+.danmaku-aggregate-leaving {
+  animation: danmaku-aggregate-leave 380ms ease-in forwards !important;
+}
+
+@keyframes danmaku-aggregate-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes danmaku-aggregate-bump {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes danmaku-aggregate-leave {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
 .danmaku-message {
   position: absolute;
   white-space: nowrap;

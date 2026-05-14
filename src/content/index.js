@@ -122,6 +122,7 @@ class DanmakuController {
     this.mockChat = new MockChatGenerator((msg) => this.injectMockMessage(msg));
     this.settingsPanel = new DanmakuSettingsPanel({
       onMockMessage: () => this.mockChat.emitOne(),
+      onMockSpam: () => this.mockChat.emitSpam(14),
       onClearMessages: () => this.renderer?.clear(),
       onAutoMock: (on) => (on ? this.mockChat.start(1000) : this.mockChat.stop()),
       getStats: () => this.renderer?.getDropStats() || null,
