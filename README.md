@@ -110,7 +110,7 @@ zip -r danmaku-twitch-chat.zip manifest.json src/ assets/ \
 
 (The SVG source is fine to ship but isn't referenced by Chrome — excluding keeps the zip smaller.)
 
-Exclude these in any case: `.git/`, `.claude/`, `.gitignore`, `PLAN.md`, `README.md`, `PRIVACY.md`, `*.zip`.
+Exclude these in any case: `.git/`, `.claude/`, `.gitignore`, `README.md`, `PRIVACY.md`, `*.zip`.
 
 ### Regenerating icons
 

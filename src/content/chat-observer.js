@@ -94,6 +94,12 @@ class ChatObserver {
       this.retryCount++;
       if (this.retryCount < this.maxRetries) {
         this.retryTimeout = setTimeout(() => this.findAndObserveChat(), 1000);
+      } else {
+        console.warn(
+          '[Danmaku] Chat container not found after',
+          this.maxRetries,
+          'retries — Twitch DOM selectors may have changed'
+        );
       }
     }
   }
@@ -283,10 +289,4 @@ class ChatObserver {
     this.onMessage = null;
   }
 
-  reconnect(isVod = null) {
-    this.disconnect();
-    this.retryCount = 0;
-    if (isVod !== null) this.isVod = isVod;
-    this.findAndObserveChat();
-  }
 }

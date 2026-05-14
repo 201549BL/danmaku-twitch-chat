@@ -18,6 +18,8 @@
 
 When rendering an emote (Twitch native, BetterTTV, FrankerFaceZ, or 7TV), the extension uses the image URL already present in the chat DOM. Your browser then loads that image from the original provider — exactly as it does for Twitch's native chat panel. The extension does not proxy, log, or modify these requests.
 
+On live channels the extension reads chat from a hidden popout-chat iframe (`https://www.twitch.tv/popout/{channel}/chat`). This iframe is loaded by your browser as a normal Twitch page; Twitch will see it as an additional popout-chat view. No third-party domains are contacted as a result.
+
 ## Permissions used
 
 - `storage` — to persist your preferences locally on your device.

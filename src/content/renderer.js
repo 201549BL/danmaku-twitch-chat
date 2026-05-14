@@ -340,12 +340,4 @@ class DanmakuRenderer {
   onSettingsChange() {
     this.updateLanes();
   }
-
-  getStats() {
-    return {
-      active: this.activeMessages.length,
-      queued: this.messageQueue.length,
-      dropped: this.droppedCount,
-    };
-  }
 }
