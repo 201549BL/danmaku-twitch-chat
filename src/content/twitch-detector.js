@@ -5,6 +5,9 @@ class TwitchDetector {
     this.isVodPage = false;
     this.onChannelChange = null;
     this.lastUrl = null;
+    this._origPushState = null;
+    this._origReplaceState = null;
+    this._popstateHandler = null;
   }
 
   init(onChannelChange) {
@@ -77,38 +80,37 @@ class TwitchDetector {
   }
 
   setupNavigationListener() {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    if (this._origPushState) return;
+    this._origPushState = history.pushState;
+    this._origReplaceState = history.replaceState;
     const detector = this;
 
     history.pushState = function (...args) {
-      originalPushState.apply(this, args);
+      detector._origPushState.apply(this, args);
       detector.checkCurrentPage();
     };
 
     history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
+      detector._origReplaceState.apply(this, args);
       detector.checkCurrentPage();
     };
 
-    window.addEventListener('popstate', () => this.checkCurrentPage());
-
-    this.navigationObserver = new MutationObserver(() => {
-      if (window.location.href !== this.lastUrl) {
-        this.checkCurrentPage();
-      }
-    });
-
-    this.navigationObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    this._popstateHandler = () => this.checkCurrentPage();
+    window.addEventListener('popstate', this._popstateHandler);
   }
 
   destroy() {
-    if (this.navigationObserver) {
-      this.navigationObserver.disconnect();
-      this.navigationObserver = null;
+    if (this._origPushState) {
+      history.pushState = this._origPushState;
+      this._origPushState = null;
+    }
+    if (this._origReplaceState) {
+      history.replaceState = this._origReplaceState;
+      this._origReplaceState = null;
+    }
+    if (this._popstateHandler) {
+      window.removeEventListener('popstate', this._popstateHandler);
+      this._popstateHandler = null;
     }
   }
 

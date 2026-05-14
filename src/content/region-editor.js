@@ -14,6 +14,7 @@ class DanmakuRegionEditor {
 
   attach(overlay) {
     if (!overlay || !overlay.container) return;
+    if (this.container) return;
     this.overlay = overlay;
     this.build();
     danmakuSettings.addListener(this._settingsListener);

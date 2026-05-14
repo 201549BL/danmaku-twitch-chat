@@ -9,6 +9,7 @@ class DanmakuController {
     this.mockChat = null;
     this.initialized = false;
     this.isVod = false;
+    this._pendingInitToken = null;
   }
 
   async start() {
@@ -131,8 +132,15 @@ class DanmakuController {
         this.shutdown();
       }
       this.isVod = event.isVod || false;
-      setTimeout(() => this.initialize(), 500);
+      const token = Symbol('init');
+      this._pendingInitToken = token;
+      setTimeout(() => {
+        if (this._pendingInitToken !== token) return;
+        this._pendingInitToken = null;
+        this.initialize();
+      }, 500);
     } else {
+      this._pendingInitToken = null;
       this.shutdown();
     }
   }
