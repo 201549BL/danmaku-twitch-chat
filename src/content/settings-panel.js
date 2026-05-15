@@ -38,8 +38,25 @@ class DanmakuSettingsPanel {
   init() {
     this.build();
     this.attach();
+    this.buildBadgeChips();
     this.bindEvents();
     this.loadValues();
+  }
+
+  buildBadgeChips() {
+    const container = this.panel.querySelector('[data-badge-chips]');
+    if (!container) return;
+    const roles = DANMAKU_CONSTANTS.HIGHLIGHT_BADGE_ROLES || [];
+    container.innerHTML = '';
+    for (const role of roles) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dsp-btn dsp-btn-sm';
+      btn.setAttribute('data-action', 'highlight-badge');
+      btn.setAttribute('data-role', role.key);
+      btn.textContent = role.label;
+      container.appendChild(btn);
+    }
   }
 
   build() {
@@ -86,6 +103,17 @@ class DanmakuSettingsPanel {
             <div class="dsp-row-label"><span>Highlight @mentions to</span></div>
             <input type="text" data-setting="highlightUsername" placeholder="your twitch username" class="dsp-text-input" />
           </div>
+        </section>
+
+        <section class="dsp-section">
+          <h3>Highlight favorites</h3>
+          <div class="dsp-row dsp-row-vertical">
+            <div class="dsp-row-label"><span>Usernames</span></div>
+            <input type="text" data-setting="highlightUsers" placeholder="e.g. friend1, friend2" class="dsp-text-input" />
+          </div>
+          <div class="dsp-row-label"><span>Badge roles</span></div>
+          <div class="dsp-preset-row" data-badge-chips></div>
+          <p class="dsp-hint">Favorites get a cyan glow and are prioritized over normal chat when the renderer is at capacity.</p>
         </section>
 
         <section class="dsp-section">
@@ -163,6 +191,7 @@ class DanmakuSettingsPanel {
             <button class="dsp-btn" type="button" data-action="mock-one">Send mock</button>
             <button class="dsp-btn" type="button" data-action="mock-burst">Burst x10</button>
             <button class="dsp-btn" type="button" data-action="mock-spam" title="Floods chat to test dynamic mode">Test dynamic</button>
+            <button class="dsp-btn" type="button" data-action="mock-highlight" title="Sends one baseline message plus one per enabled badge role and favorite username">Test highlights</button>
             <button class="dsp-btn" type="button" data-action="clear">Clear</button>
           </div>
           <label class="dsp-row">
@@ -223,6 +252,16 @@ class DanmakuSettingsPanel {
       this.updateDisplay(key, value);
     });
     this.updateAnimModeButtons();
+    this.updateBadgeChips();
+  }
+
+  updateBadgeChips() {
+    if (!this.panel) return;
+    const selected = new Set(danmakuSettings.get('highlightBadges') || []);
+    this.panel.querySelectorAll('[data-action="highlight-badge"]').forEach((btn) => {
+      const role = btn.getAttribute('data-role');
+      btn.classList.toggle('dsp-btn-active', selected.has(role));
+    });
   }
 
   onInput(e) {
@@ -271,6 +310,12 @@ class DanmakuSettingsPanel {
         if (ok === false) this.flashStatus('Open a stream to test dynamic mode');
         break;
       }
+      case 'mock-highlight': {
+        const result = this.callbacks.onMockHighlight?.();
+        if (result === false) this.flashStatus('Open a stream to test highlights');
+        else if (result === 0) this.flashStatus('Enable a badge role or add a username first');
+        break;
+      }
       case 'clear':
         this.callbacks.onClearMessages?.();
         break;
@@ -290,6 +335,16 @@ class DanmakuSettingsPanel {
       case 'anim-mode': {
         const mode = e.currentTarget.getAttribute('data-mode');
         if (mode) danmakuSettings.set('animationMode', mode);
+        break;
+      }
+      case 'highlight-badge': {
+        const role = e.currentTarget.getAttribute('data-role');
+        if (!role) break;
+        const current = new Set(danmakuSettings.get('highlightBadges') || []);
+        if (current.has(role)) current.delete(role);
+        else current.add(role);
+        danmakuSettings.set('highlightBadges', Array.from(current));
+        this.updateBadgeChips();
         break;
       }
       case 'reset':

@@ -133,6 +133,10 @@
   animation-play-state: paused;
 }
 
+.danmaku-message--favorite {
+  z-index: 5;
+}
+
 .danmaku-message--mention {
   color: #fff7c8;
   text-shadow:

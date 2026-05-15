@@ -78,6 +78,62 @@ class MockChatGenerator {
     }
   }
 
+  emitHighlightTest() {
+    if (!this.onMessage) return 0;
+    const roles = DANMAKU_CONSTANTS.HIGHLIGHT_BADGE_ROLES || [];
+    const enabledRoles = new Set(danmakuSettings.get('highlightBadges') || []);
+    const usersRaw = danmakuSettings.get('highlightUsers') || '';
+    const usernames = String(usersRaw)
+      .split(/[,\s]+/)
+      .map((s) => s.trim().replace(/^@/, ''))
+      .filter(Boolean)
+      .slice(0, 3);
+
+    const out = [];
+    const now = Date.now();
+    out.push({
+      id: `mock_hl_${now}_baseline`,
+      username: 'RegularChatter',
+      displayName: 'RegularChatter',
+      text: 'normal message (baseline)',
+      color: '#bbbbbb',
+      badges: [],
+      timestamp: now,
+      rawElement: null,
+    });
+    for (const role of roles) {
+      if (!enabledRoles.has(role.key)) continue;
+      out.push({
+        id: `mock_hl_${now}_${role.key}`,
+        username: `Test_${role.key}`,
+        displayName: `Test_${role.key}`,
+        text: `${role.label} badge highlight`,
+        color: '#9147FF',
+        badges: [{ src: '', alt: role.match }],
+        timestamp: now,
+        rawElement: null,
+      });
+    }
+    for (const name of usernames) {
+      out.push({
+        id: `mock_hl_${now}_user_${name}`,
+        username: name,
+        displayName: name,
+        text: `username highlight (@${name})`,
+        color: '#FF69B4',
+        badges: [],
+        timestamp: now,
+        rawElement: null,
+      });
+    }
+
+    if (out.length <= 1) return 0;
+    for (let i = 0; i < out.length; i++) {
+      setTimeout(() => this.onMessage && this.onMessage(out[i]), i * 400);
+    }
+    return out.length;
+  }
+
   start(intervalMs = 1200) {
     this.stop();
     this.intervalId = setInterval(() => this.emitOne(), intervalMs);

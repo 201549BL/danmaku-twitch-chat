@@ -129,6 +129,10 @@ class DanmakuController {
         this.mockChat.emitSpam(14);
         return true;
       },
+      onMockHighlight: () => {
+        if (!this.renderer || !this.overlay?.isReady()) return false;
+        return this.mockChat.emitHighlightTest();
+      },
       onClearMessages: () => this.renderer?.clear(),
       onAutoMock: (on) => (on ? this.mockChat.start(1000) : this.mockChat.stop()),
       getStats: () => this.renderer?.getDropStats() || null,

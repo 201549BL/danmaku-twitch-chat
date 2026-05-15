@@ -113,6 +113,22 @@ class DanmakuSettings {
         return DANMAKU_CONSTANTS.ANIMATION_MODES.includes(value) ? value : 'scroll';
       case 'maxActiveMessages':
         return Math.max(1, Math.min(limits.maxActiveMessages, value));
+      case 'highlightBadges': {
+        const known = new Set(
+          (DANMAKU_CONSTANTS.HIGHLIGHT_BADGE_ROLES || []).map((r) => r.key)
+        );
+        const arr = Array.isArray(value) ? value : [];
+        const seen = new Set();
+        const out = [];
+        for (const v of arr) {
+          const k = String(v || '').toLowerCase();
+          if (known.has(k) && !seen.has(k)) {
+            seen.add(k);
+            out.push(k);
+          }
+        }
+        return out;
+      }
       default:
         return value;
     }

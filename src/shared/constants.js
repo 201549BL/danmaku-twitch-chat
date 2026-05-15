@@ -34,12 +34,25 @@ const DANMAKU_CONSTANTS = {
     showBadges: true,
     pauseOnHover: true,
     highlightUsername: '',
+    highlightUsers: '',
+    highlightBadges: ['broadcaster', 'moderator', 'vip'],
     dynamicMode: true,
   },
 
   ANIMATION_MODES: ['scroll', 'reverse', 'drift', 'popFade', 'slideUp'],
 
   STATIONARY_MODES: ['popFade', 'slideUp'],
+
+  HIGHLIGHT_BADGE_ROLES: [
+    { key: 'broadcaster', label: 'Broadcaster', match: 'broadcaster' },
+    { key: 'moderator', label: 'Mod', match: 'moderator' },
+    { key: 'vip', label: 'VIP', match: 'vip' },
+    { key: 'subscriber', label: 'Sub', match: 'subscriber' },
+    { key: 'founder', label: 'Founder', match: 'founder' },
+    { key: 'verified', label: 'Verified', match: 'verified' },
+    { key: 'staff', label: 'Staff', match: 'staff' },
+    { key: 'artist', label: 'Artist', match: 'artist' },
+  ],
 
   LIMITS: {
     minFontSize: 12,

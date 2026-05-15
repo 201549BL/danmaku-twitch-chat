@@ -102,6 +102,35 @@ class DanmakuRenderer {
     return new RegExp(`@${escaped}\\b`, 'i').test(text);
   }
 
+  isFavorite(message) {
+    const usersRaw = danmakuSettings.get('highlightUsers');
+    if (usersRaw) {
+      const username = String(message.username || '').toLowerCase();
+      if (username) {
+        const list = String(usersRaw)
+          .split(/[,\s]+/)
+          .map((s) => s.trim().replace(/^@/, '').toLowerCase())
+          .filter(Boolean);
+        if (list.includes(username)) return true;
+      }
+    }
+
+    const badgeRoles = danmakuSettings.get('highlightBadges');
+    if (Array.isArray(badgeRoles) && badgeRoles.length && Array.isArray(message.badges)) {
+      const roles = DANMAKU_CONSTANTS.HIGHLIGHT_BADGE_ROLES || [];
+      const wanted = new Set(badgeRoles);
+      const matchers = roles.filter((r) => wanted.has(r.key)).map((r) => r.match);
+      if (matchers.length) {
+        for (const b of message.badges) {
+          const alt = String(b.alt || '').toLowerCase();
+          if (!alt) continue;
+          if (matchers.some((m) => alt.includes(m))) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   getFontSizePx() {
     const fontSize = danmakuSettings.get('fontSize');
     const playerH =
@@ -152,7 +181,9 @@ class DanmakuRenderer {
     this._recordArrival();
     const maxQueue = 20;
     if (this.messageQueue.length >= maxQueue) {
-      this.messageQueue.shift();
+      let dropIdx = this.messageQueue.findIndex((m) => !this.isFavorite(m));
+      if (dropIdx === -1) dropIdx = 0;
+      this.messageQueue.splice(dropIdx, 1);
       this._recordDrop('queue');
     }
     this.messageQueue.push(message);
@@ -230,7 +261,9 @@ class DanmakuRenderer {
     if (!this.overlay || !this.overlay.container) return;
 
     const maxActive = danmakuSettings.get('maxActiveMessages');
-    if (this.activeMessages.length >= maxActive) {
+    const favorite = this.isFavorite(message);
+    const activeCap = favorite ? maxActive + 10 : maxActive;
+    if (this.activeMessages.length >= activeCap) {
       this._recordDrop('active');
       return;
     }
@@ -244,7 +277,7 @@ class DanmakuRenderer {
       return;
     }
 
-    const element = this.createMessageElement(message, lane, mode);
+    const element = this.createMessageElement(message, lane, mode, favorite);
     this.overlay.container.appendChild(element);
 
     const containerWidth = this.overlay.container.offsetWidth;
@@ -340,9 +373,12 @@ class DanmakuRenderer {
     return last.left;
   }
 
-  createMessageElement(message, lane, mode = 'scroll') {
+  createMessageElement(message, lane, mode = 'scroll', favorite = false) {
     const el = document.createElement('div');
     el.className = `danmaku-message danmaku-message--${mode}`;
+    if (favorite) {
+      el.classList.add('danmaku-message--favorite');
+    }
     if (this.isSelfMention(message)) {
       el.classList.add('danmaku-message--mention');
     }
@@ -399,6 +435,7 @@ class DanmakuRenderer {
 
     const textSpan = document.createElement('span');
     textSpan.className = 'danmaku-text';
+    if (favorite) textSpan.style.color = message.color;
     this.fillMessageBody(textSpan, message, maxLength);
     contentParent.appendChild(textSpan);
 
