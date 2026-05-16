@@ -1,0 +1,37 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Optional "Favorites only" sub-toggle under "Show usernames" — when on, only highlighted (favorite) chatters get their username and badges shown; everyone else's message renders without a name prefix.
+
+## [1.2.0] - 2026-05-15
+
+### Added
+- Highlight favorite chatters by username or badge role. Favorites get a cyan glow and are prioritized over normal chat when the queue or active-message cap is reached.
+- Toggle button in the player controls bar to enable/disable the overlay without opening the settings panel.
+
+## [1.1.0] - 2026-05-14
+
+First Chrome Web Store submission.
+
+### Added
+- Dynamic mode (rate and scroll-speed adapt when chat is more active than usual).
+- Diagnostics surfacing dropped-message counts and reasons in the toolbar and settings panel.
+- Channel-change detection via URL polling so the overlay re-initializes when navigating between streams.
+
+### Changed
+- Render loop switched to `requestAnimationFrame`; dropped the 80 ms inter-message delay.
+- Toolbar icon now opens the floating in-player settings panel directly; the standalone options page was removed.
+
+### Fixed
+- Caret jump in text inputs, scroll-distance calculation, dead toolbar icon, leaked listeners on navigation.
+
+## [1.0.0] - 2026-05-14
+
+Initial import of the danmaku-twitch-chat source.
