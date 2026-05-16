@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-16
+
 ### Added
 - Optional "Favorites only" sub-toggle under "Show usernames" — when on, only highlighted (favorite) chatters get their username and badges shown; everyone else's message renders without a name prefix.
 - "Pause with video (VOD)" setting (default on) — on VOD pages, the overlay freezes while the video is paused and resumes when it plays. Live streams are unaffected, since their chat doesn't pause with the player.
