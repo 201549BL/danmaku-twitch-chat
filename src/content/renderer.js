@@ -385,7 +385,9 @@ class DanmakuRenderer {
 
     const fontSizePx = this.getFontSizePx();
     const opacity = danmakuSettings.get('opacity');
-    const showUsernames = danmakuSettings.get('showUsernames');
+    const favoritesOnlyUsernames = danmakuSettings.get('showUsernamesFavoritesOnly');
+    const showUsernames =
+      danmakuSettings.get('showUsernames') && (!favoritesOnlyUsernames || favorite);
     const showBadges = danmakuSettings.get('showBadges');
     const maxLength = danmakuSettings.get('maxMessageLength');
 

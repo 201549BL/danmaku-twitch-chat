@@ -25,6 +25,7 @@ const DANMAKU_CONSTANTS = {
     opacity: 0.9,
     maxMessageLength: 160,
     showUsernames: true,
+    showUsernamesFavoritesOnly: false,
     regionTop: 0,
     regionHeight: 35,
     maxActiveMessages: 50,

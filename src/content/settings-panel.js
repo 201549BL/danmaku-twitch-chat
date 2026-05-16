@@ -87,6 +87,10 @@ class DanmakuSettingsPanel {
             <span>Show usernames</span>
             <input type="checkbox" data-setting="showUsernames" />
           </label>
+          <label class="dsp-row dsp-row-sub" title="When on, only highlighted (favorite) chatters get their username shown">
+            <span>Favorites only</span>
+            <input type="checkbox" data-setting="showUsernamesFavoritesOnly" />
+          </label>
           <label class="dsp-row">
             <span>Show badges</span>
             <input type="checkbox" data-setting="showBadges" />
