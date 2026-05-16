@@ -10,6 +10,9 @@ class DanmakuController {
     this.playerToggle = null;
     this.initialized = false;
     this.isVod = false;
+    this._videoEl = null;
+    this._videoListeners = null;
+    this._videoFindTimeoutId = null;
   }
 
   async start() {
@@ -189,8 +192,73 @@ class DanmakuController {
     });
     this.regionEditor.attach(this.overlay);
 
+    this._attachVideoPauseWatcher();
+
     this.initialized = true;
     console.log('[Danmaku] Components initialized, isVod:', this.isVod);
+  }
+
+  _attachVideoPauseWatcher() {
+    this._detachVideoPauseWatcher();
+    if (!this.isVod) return;
+
+    let attempts = 0;
+    const tryFind = () => {
+      this._videoFindTimeoutId = null;
+      if (!this.initialized && attempts > 0) return;
+      const video = this._findVideoElement();
+      if (video) {
+        this._wireVideoPause(video);
+        return;
+      }
+      if (++attempts < 20) {
+        this._videoFindTimeoutId = setTimeout(tryFind, 500);
+      }
+    };
+    tryFind();
+  }
+
+  _findVideoElement() {
+    const playerContainer =
+      document.querySelector(DANMAKU_CONSTANTS.SELECTORS.PLAYER_CONTAINER) ||
+      document.querySelector(DANMAKU_CONSTANTS.SELECTORS.PLAYER);
+    return (playerContainer && playerContainer.querySelector('video')) || null;
+  }
+
+  _wireVideoPause(video) {
+    this._videoEl = video;
+    const handler = () => this._applyVideoPauseState();
+    video.addEventListener('play', handler);
+    video.addEventListener('pause', handler);
+    video.addEventListener('playing', handler);
+    this._videoListeners = { handler };
+    this._applyVideoPauseState();
+  }
+
+  _applyVideoPauseState() {
+    const container = this.overlay?.container;
+    if (!container) return;
+    const enabled = danmakuSettings.get('pauseOnVideoPause');
+    const paused = !!(this.isVod && enabled && this._videoEl && this._videoEl.paused);
+    container.classList.toggle('danmaku-paused-video', paused);
+  }
+
+  _detachVideoPauseWatcher() {
+    if (this._videoFindTimeoutId !== null) {
+      clearTimeout(this._videoFindTimeoutId);
+      this._videoFindTimeoutId = null;
+    }
+    if (this._videoEl && this._videoListeners) {
+      const { handler } = this._videoListeners;
+      this._videoEl.removeEventListener('play', handler);
+      this._videoEl.removeEventListener('pause', handler);
+      this._videoEl.removeEventListener('playing', handler);
+    }
+    this._videoEl = null;
+    this._videoListeners = null;
+    if (this.overlay?.container) {
+      this.overlay.container.classList.remove('danmaku-paused-video');
+    }
   }
 
   onChatMessage(message) {
@@ -207,9 +275,11 @@ class DanmakuController {
     if (this.overlay) {
       this.overlay.updateVisibility();
     }
+    this._applyVideoPauseState();
   }
 
   shutdown() {
+    this._detachVideoPauseWatcher();
     if (this.observer) {
       this.observer.destroy();
       this.observer = null;

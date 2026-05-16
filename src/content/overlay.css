@@ -115,21 +115,31 @@
 .danmaku-emote {
   height: 1.4em;
   width: auto;
+  max-width: none;
+  min-width: 0;
   vertical-align: middle;
   margin: 0 2px;
   display: inline-block;
+  object-fit: contain;
+  flex: none;
 }
 
 .danmaku-badge {
   height: 1em;
   width: auto;
+  max-width: none;
+  min-width: 0;
   vertical-align: middle;
   margin-right: 4px;
   display: inline-block;
+  object-fit: contain;
+  flex: none;
 }
 
 .danmaku-overlay.danmaku-paused .danmaku-message,
-.danmaku-overlay.danmaku-paused .danmaku-drift-inner {
+.danmaku-overlay.danmaku-paused .danmaku-drift-inner,
+.danmaku-overlay.danmaku-paused-video .danmaku-message,
+.danmaku-overlay.danmaku-paused-video .danmaku-drift-inner {
   animation-play-state: paused;
 }
 

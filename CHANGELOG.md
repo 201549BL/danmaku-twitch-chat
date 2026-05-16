@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Optional "Favorites only" sub-toggle under "Show usernames" — when on, only highlighted (favorite) chatters get their username and badges shown; everyone else's message renders without a name prefix.
+- "Pause with video (VOD)" setting (default on) — on VOD pages, the overlay freezes while the video is paused and resumes when it plays. Live streams are unaffected, since their chat doesn't pause with the player.
+
+### Changed
+- "Pause on hover" now defaults to off for new installs (existing users keep their saved setting).
+- Default region height shrunk from 35% to 13% so the three default rows sit nearly flush at the top of the player instead of spread across the upper third.
+
+### Fixed
+- Single-emote messages no longer appear horizontally squished. Emote and badge images now use `object-fit: contain` and explicitly clear `max-width`, so they can't be distorted by upstream Twitch styling that constrained the image box.
 
 ## [1.2.0] - 2026-05-15
 

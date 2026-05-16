@@ -99,6 +99,10 @@ class DanmakuSettingsPanel {
             <span>Pause on hover</span>
             <input type="checkbox" data-setting="pauseOnHover" />
           </label>
+          <label class="dsp-row" title="On VODs only: freeze the overlay when the video is paused">
+            <span>Pause with video (VOD)</span>
+            <input type="checkbox" data-setting="pauseOnVideoPause" />
+          </label>
           <label class="dsp-row" title="Adapts rate and scroll speed when chat is more active than usual">
             <span>Dynamic mode</span>
             <input type="checkbox" data-setting="dynamicMode" />
