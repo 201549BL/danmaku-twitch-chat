@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f1129"/>
+      <stop offset="1" stop-color="#0a0a0e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.35" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#9147ff" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#9147ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="streak-cyan" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#5ce1ff" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#5ce1ff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#5ce1ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="streak-pink" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#ff66c4" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#ff66c4" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ff66c4" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="streak-yellow" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#ffd166" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#ffd166" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="440" height="280" fill="url(#bg)"/>
+  <rect width="440" height="280" fill="url(#glow)"/>
+
+  <!-- App icon -->
+  <g transform="translate(28, 88)">
+    <rect width="104" height="104" rx="20" fill="#9147ff"/>
+    <circle cx="18" cy="29" r="6" fill="#ff66c4"/>
+    <rect x="28" y="24" width="70" height="10" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+    <circle cx="33" cy="52" r="6" fill="#5be07a"/>
+    <rect x="43" y="47" width="48" height="10" rx="3" fill="#ffffff" fill-opacity="0.85"/>
+    <circle cx="14" cy="75" r="6" fill="#ffd166"/>
+    <rect x="24" y="70" width="64" height="10" rx="3" fill="#ffffff" fill-opacity="0.72"/>
+  </g>
+
+  <!-- Wordmark + tagline -->
+  <g font-family="Arial, Helvetica, sans-serif" fill="#ffffff">
+    <text x="150" y="138" font-size="32" font-weight="900" letter-spacing="-0.5">DANMAKU</text>
+    <text x="150" y="170" font-size="22" font-weight="700" fill="#bf94ff" letter-spacing="0.5">TWITCH CHAT</text>
+    <text x="150" y="195" font-size="12" font-weight="400" fill="#a8a8b8">Scrolling chat over your video</text>
+  </g>
+
+  <!-- Faux Twitch chat lines with colored streak backgrounds -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="13">
+    <!-- Top: mod, cyan -->
+    <g transform="translate(160, 30)">
+      <rect x="0" y="0" width="280" height="22" rx="3" fill="url(#streak-cyan)"/>
+      <rect x="6" y="4.5" width="14" height="14" rx="2" fill="#00ad03"/>
+      <text x="13" y="15" font-size="10" font-weight="900" fill="#ffffff" text-anchor="middle">M</text>
+      <text x="26" y="16">
+        <tspan font-weight="700" fill="#5ce1ff">mod_07</tspan><tspan fill="#ffffff">: KEKW that was wild</tspan>
+      </text>
+    </g>
+    <!-- Middle: pink -->
+    <g transform="translate(190, 218)" opacity="0.95">
+      <rect x="0" y="0" width="240" height="22" rx="3" fill="url(#streak-pink)"/>
+      <text x="8" y="16">
+        <tspan font-weight="700" fill="#ff66c4">viewer_42</tspan><tspan fill="#ffffff">: POGGERS POGGERS</tspan>
+      </text>
+    </g>
+    <!-- Bottom: sub, yellow -->
+    <g transform="translate(140, 246)">
+      <rect x="0" y="0" width="260" height="22" rx="3" fill="url(#streak-yellow)"/>
+      <rect x="6" y="4.5" width="14" height="14" rx="2" fill="#9147ff"/>
+      <text x="13" y="15" font-size="10" font-weight="900" fill="#ffffff" text-anchor="middle">S</text>
+      <text x="26" y="16">
+        <tspan font-weight="700" fill="#ffd166">sub_99</tspan><tspan fill="#ffffff">: LMAO gg gg gg</tspan>
+      </text>
+    </g>
+  </g>
+</svg>
