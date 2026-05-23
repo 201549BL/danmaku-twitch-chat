@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Reply context on live chat. When a message is a reply, the danmaku is prefixed with a small "↳ @user" plus a truncated snippet of the quoted message, so replies have visible context instead of appearing as a bare line. VOD chat is unchanged for now.
+
 ## [1.3.0] - 2026-05-16
 
 ### Added

@@ -418,6 +418,9 @@ class DanmakuRenderer {
     }
 
     if (showUsernames) {
+      if (message.replyTo) {
+        this.appendReplyChip(contentParent, message.replyTo);
+      }
       if (showBadges && Array.isArray(message.badges) && message.badges.length) {
         for (const b of message.badges) {
           if (!b.src) continue;
@@ -442,6 +445,29 @@ class DanmakuRenderer {
     contentParent.appendChild(textSpan);
 
     return el;
+  }
+
+  appendReplyChip(parent, replyTo) {
+    const chip = document.createElement('span');
+    chip.className = 'danmaku-reply';
+
+    const userSpan = document.createElement('span');
+    userSpan.className = 'danmaku-reply-user';
+    userSpan.textContent = `↳ @${replyTo.username}`;
+    chip.appendChild(userSpan);
+
+    if (replyTo.quote) {
+      const max = 20;
+      const q = replyTo.quote;
+      const truncated = q.length > max ? q.substring(0, max) + '…' : q;
+      const quoteSpan = document.createElement('span');
+      quoteSpan.className = 'danmaku-reply-quote';
+      quoteSpan.textContent = ` ${truncated}`;
+      chip.appendChild(quoteSpan);
+    }
+
+    chip.appendChild(document.createTextNode(' '));
+    parent.appendChild(chip);
   }
 
   fillMessageBody(parent, message, maxLength) {

@@ -56,6 +56,14 @@ class MockChatGenerator {
   generate() {
     const user = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
     const text = MOCK_MESSAGES[Math.floor(Math.random() * MOCK_MESSAGES.length)];
+    let replyTo = null;
+    if (Math.random() < 0.15) {
+      const target = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
+      const quote = MOCK_MESSAGES[Math.floor(Math.random() * MOCK_MESSAGES.length)];
+      if (target.name !== user.name) {
+        replyTo = { username: target.name, quote };
+      }
+    }
     return {
       id: `mock_${Date.now()}_${this.counter++}`,
       username: user.name,
@@ -63,6 +71,7 @@ class MockChatGenerator {
       text,
       color: user.color,
       emotes: [],
+      replyTo,
       timestamp: Date.now(),
       rawElement: null,
     };

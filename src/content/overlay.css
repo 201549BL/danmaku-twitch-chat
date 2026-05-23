@@ -108,6 +108,21 @@
   font-weight: 700;
 }
 
+.danmaku-reply {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  margin-right: 4px;
+}
+
+.danmaku-reply-user {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.danmaku-reply-quote {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .danmaku-text {
   font-weight: 500;
 }

@@ -172,6 +172,7 @@ class ChatObserver {
     const color = usernameEl.style.color || this.getColorFromElement(usernameEl);
     const badges = this.extractBadges(element);
     const segments = this.extractSegments(textContainer);
+    const replyTo = isVodMessage ? null : this.extractReply(element);
 
     if (segments.length > 0 && segments[0].type === 'text') {
       segments[0].value = segments[0].value.replace(/^:\s*/, '');
@@ -193,10 +194,30 @@ class ChatObserver {
       text,
       segments,
       badges,
+      replyTo,
       color: color || '#ffffff',
       timestamp: Date.now(),
       rawElement: element,
     };
+  }
+
+  extractReply(chatLine) {
+    const bodySelector = DANMAKU_CONSTANTS.SELECTORS.CHAT_TEXT;
+    for (const p of chatLine.querySelectorAll('p')) {
+      if (p.closest(bodySelector)) continue;
+      const text = (p.textContent || '').trim();
+      if (!text.startsWith('Replying to')) continue;
+      const m = text.match(/@(\w+)\s*:?\s*(.*)$/);
+      if (!m) continue;
+      const quote = (p.getAttribute('title') || m[2] || '').trim();
+      return { username: m[1], quote };
+    }
+
+    const aria = chatLine.getAttribute('aria-label') || '';
+    const am = aria.match(/^Replying to (\w+)/i);
+    if (am) return { username: am[1], quote: '' };
+
+    return null;
   }
 
   extractBadges(chatLine) {
