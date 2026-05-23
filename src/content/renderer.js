@@ -417,10 +417,11 @@ class DanmakuRenderer {
       contentParent = inner;
     }
 
+    if (message.replyTo && danmakuSettings.get('showReplyContext')) {
+      this.appendReplyChip(contentParent, message.replyTo);
+    }
+
     if (showUsernames) {
-      if (message.replyTo) {
-        this.appendReplyChip(contentParent, message.replyTo);
-      }
       if (showBadges && Array.isArray(message.badges) && message.badges.length) {
         for (const b of message.badges) {
           if (!b.src) continue;

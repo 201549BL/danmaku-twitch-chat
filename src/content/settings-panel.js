@@ -95,6 +95,10 @@ class DanmakuSettingsPanel {
             <span>Show badges</span>
             <input type="checkbox" data-setting="showBadges" />
           </label>
+          <label class="dsp-row" title="When a message is a reply, prefix the danmaku with the replied-to user and a snippet of the quoted message">
+            <span>Show reply context</span>
+            <input type="checkbox" data-setting="showReplyContext" />
+          </label>
           <label class="dsp-row">
             <span>Pause on hover</span>
             <input type="checkbox" data-setting="pauseOnHover" />

@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Reply context on live chat. When a message is a reply, the danmaku is prefixed with a small "↳ @user" plus a truncated snippet of the quoted message, so replies have visible context instead of appearing as a bare line. VOD chat is unchanged for now.
+- Reply context on live chat. When a message is a reply, the danmaku is prefixed with a small "↳ @user" plus a truncated snippet of the quoted message, so replies have visible context instead of appearing as a bare line. Controlled by a new "Show reply context" toggle in the settings panel (default on), independent of "Show usernames". VOD chat is unchanged for now.
+
+### Fixed
+- Region-resize drag no longer "sticks" when the cursor outpaces the shrinking band. Drag now uses pointer capture, so release is detected reliably even if the cursor ends up over Twitch UI or another element.
+- Region overlay (handles, toolbar, row guides) no longer flickers as the cursor crosses the resize handles, and a short hover-off delay keeps the overlay from vanishing when briefly moving onto Twitch's player header controls.
 
 ## [1.3.0] - 2026-05-16
 

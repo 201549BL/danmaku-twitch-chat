@@ -9,8 +9,10 @@ class DanmakuRegionEditor {
     this.dragState = null;
     this.resizeObserver = null;
     this._statsPollId = null;
+    this._hoverOffTimer = null;
     this._boundOnMouseMove = (e) => this.onMouseMove(e);
-    this._boundOnMouseUp = () => this.endDrag();
+    this._boundOnDragMove = (e) => this.onDrag(e);
+    this._boundOnDragEnd = (e) => this.endDrag();
     this._settingsListener = () => this.update();
   }
 
@@ -21,7 +23,6 @@ class DanmakuRegionEditor {
     this.build();
     danmakuSettings.addListener(this._settingsListener);
     document.addEventListener('mousemove', this._boundOnMouseMove);
-    document.addEventListener('mouseup', this._boundOnMouseUp);
     this.resizeObserver = new ResizeObserver(() => this.update());
     this.resizeObserver.observe(this.overlay.container);
     this._statsPollId = setInterval(() => this.updateDropsBadge(), 1000);
@@ -55,13 +56,13 @@ class DanmakuRegionEditor {
     this.overlay.container.appendChild(this.container);
 
     this.container.querySelectorAll('[data-edge]').forEach((handle) => {
-      handle.addEventListener('mousedown', (e) =>
-        this.startDrag(e, handle.getAttribute('data-edge'))
+      handle.addEventListener('pointerdown', (e) =>
+        this.startDrag(e, handle, handle.getAttribute('data-edge'))
       );
     });
 
     const settingsBtn = this.container.querySelector('[data-action="open-settings"]');
-    settingsBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    settingsBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
     settingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -69,7 +70,7 @@ class DanmakuRegionEditor {
     });
 
     this.container.querySelectorAll('[data-quick-action]').forEach((btn) => {
-      btn.addEventListener('mousedown', (e) => e.stopPropagation());
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation());
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -123,7 +124,6 @@ class DanmakuRegionEditor {
   }
 
   onMouseMove(e) {
-    this.onDrag(e);
     if (this.dragState) return;
     if (!this.container) return;
     const rect = this.container.getBoundingClientRect();
@@ -131,19 +131,35 @@ class DanmakuRegionEditor {
       this.setHover(false);
       return;
     }
+    const HOVER_PAD_Y = 10;
     const inside =
       e.clientX >= rect.left &&
       e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom;
+      e.clientY >= rect.top - HOVER_PAD_Y &&
+      e.clientY <= rect.bottom + HOVER_PAD_Y;
     this.setHover(inside);
   }
 
   setHover(on) {
-    if (this.hovered === on) return;
-    this.hovered = on;
-    this.applyActive();
-    this.applyPauseState();
+    if (on) {
+      if (this._hoverOffTimer !== null) {
+        clearTimeout(this._hoverOffTimer);
+        this._hoverOffTimer = null;
+      }
+      if (this.hovered) return;
+      this.hovered = true;
+      this.applyActive();
+      this.applyPauseState();
+      return;
+    }
+    if (!this.hovered) return;
+    if (this._hoverOffTimer !== null) return;
+    this._hoverOffTimer = setTimeout(() => {
+      this._hoverOffTimer = null;
+      this.hovered = false;
+      this.applyActive();
+      this.applyPauseState();
+    }, 250);
   }
 
   applyActive() {
@@ -211,16 +227,24 @@ class DanmakuRegionEditor {
     }
   }
 
-  startDrag(e, edge) {
+  startDrag(e, handle, edge) {
     if (e.button !== 0 || !this.overlay?.container) return;
     const rect = this.overlay.container.getBoundingClientRect();
     this.dragState = {
       edge,
+      handle,
+      pointerId: e.pointerId,
       overlayHeight: rect.height,
       startY: e.clientY,
       origTop: danmakuSettings.get('regionTop'),
       origHeight: danmakuSettings.get('regionHeight'),
     };
+    try {
+      handle.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    handle.addEventListener('pointermove', this._boundOnDragMove);
+    handle.addEventListener('pointerup', this._boundOnDragEnd);
+    handle.addEventListener('pointercancel', this._boundOnDragEnd);
     this.container.classList.add('dre-dragging');
     this.applyActive();
     e.preventDefault();
@@ -250,6 +274,15 @@ class DanmakuRegionEditor {
 
   endDrag() {
     if (!this.dragState) return;
+    const { handle, pointerId } = this.dragState;
+    if (handle) {
+      handle.removeEventListener('pointermove', this._boundOnDragMove);
+      handle.removeEventListener('pointerup', this._boundOnDragEnd);
+      handle.removeEventListener('pointercancel', this._boundOnDragEnd);
+      try {
+        handle.releasePointerCapture(pointerId);
+      } catch (_) {}
+    }
     this.dragState = null;
     if (this.container) this.container.classList.remove('dre-dragging');
     this.applyActive();
@@ -258,7 +291,11 @@ class DanmakuRegionEditor {
   destroy() {
     danmakuSettings.removeListener(this._settingsListener);
     document.removeEventListener('mousemove', this._boundOnMouseMove);
-    document.removeEventListener('mouseup', this._boundOnMouseUp);
+    if (this._hoverOffTimer !== null) {
+      clearTimeout(this._hoverOffTimer);
+      this._hoverOffTimer = null;
+    }
+    if (this.dragState) this.endDrag();
     if (this._statsPollId !== null) {
       clearInterval(this._statsPollId);
       this._statsPollId = null;
