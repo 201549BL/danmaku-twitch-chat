@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-16
+
 ### Fixed
 - VOD chat animations no longer remain frozen after Twitch replaces its internal video element. The pause watcher now follows the current video and resynchronizes playback state automatically.
 
