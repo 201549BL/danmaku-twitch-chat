@@ -202,20 +202,15 @@ class DanmakuController {
     this._detachVideoPauseWatcher();
     if (!this.isVod) return;
 
-    let attempts = 0;
-    const tryFind = () => {
+    let ticks = 0;
+    const sync = () => {
       this._videoFindTimeoutId = null;
-      if (!this.initialized && attempts > 0) return;
-      const video = this._findVideoElement();
-      if (video) {
-        this._wireVideoPause(video);
-        return;
-      }
-      if (++attempts < 20) {
-        this._videoFindTimeoutId = setTimeout(tryFind, 500);
-      }
+      if (!this.initialized && ticks > 0) return;
+      ticks++;
+      this._syncVideoPauseState();
+      this._videoFindTimeoutId = setTimeout(sync, 500);
     };
-    tryFind();
+    sync();
   }
 
   _findVideoElement() {
@@ -226,12 +221,26 @@ class DanmakuController {
   }
 
   _wireVideoPause(video) {
+    if (this._videoEl === video) {
+      this._applyVideoPauseState();
+      return;
+    }
+    this._removeVideoPauseListeners();
     this._videoEl = video;
-    const handler = () => this._applyVideoPauseState();
+    const handler = () => this._syncVideoPauseState();
     video.addEventListener('play', handler);
     video.addEventListener('pause', handler);
     video.addEventListener('playing', handler);
     this._videoListeners = { handler };
+    this._applyVideoPauseState();
+  }
+
+  _syncVideoPauseState() {
+    const currentVideo = this._findVideoElement();
+    if (currentVideo && currentVideo !== this._videoEl) {
+      this._wireVideoPause(currentVideo);
+      return;
+    }
     this._applyVideoPauseState();
   }
 
@@ -248,17 +257,21 @@ class DanmakuController {
       clearTimeout(this._videoFindTimeoutId);
       this._videoFindTimeoutId = null;
     }
+    this._removeVideoPauseListeners();
+    this._videoEl = null;
+    if (this.overlay?.container) {
+      this.overlay.container.classList.remove('danmaku-paused-video');
+    }
+  }
+
+  _removeVideoPauseListeners() {
     if (this._videoEl && this._videoListeners) {
       const { handler } = this._videoListeners;
       this._videoEl.removeEventListener('play', handler);
       this._videoEl.removeEventListener('pause', handler);
       this._videoEl.removeEventListener('playing', handler);
     }
-    this._videoEl = null;
     this._videoListeners = null;
-    if (this.overlay?.container) {
-      this.overlay.container.classList.remove('danmaku-paused-video');
-    }
   }
 
   onChatMessage(message) {
