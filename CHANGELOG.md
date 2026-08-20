@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-21
+
+### Changed
+- Reworked the settings panel around a smaller set of everyday controls, with placement tuning, message content, favorites, advanced options, and diagnostics grouped into clear disclosures.
+- Replaced the ambiguous username toggles with one choice: show names for everyone, favorite chatters only, or nobody.
+- Dynamic mode now reacts to sudden bursts, sustained fast chat, and queue backlog. At peak pressure it can process up to four times the configured message rate and substantially shorten message travel or display time.
+
+### Fixed
+- Messages now wait in the queue when all lanes are briefly occupied instead of being removed and immediately dropped.
+- Favorite chatter configuration now clearly identifies usernames and badge roles as the people to prioritize during busy chat.
+
 ## [1.4.1] - 2026-08-16
 
 ### Fixed

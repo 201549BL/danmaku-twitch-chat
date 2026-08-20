@@ -7,9 +7,17 @@ const DYNAMIC_RATIO_CEIL = 4.0;
 const DYNAMIC_RISE_ALPHA = 0.4;
 const DYNAMIC_FALL_ALPHA = 0.25;
 const DYNAMIC_SHOW_THRESHOLD = 0.2;
-const DYNAMIC_RATE_MULTIPLIER_MAX = 2.5;
-const DYNAMIC_RATE_CAP = 20;
-const DYNAMIC_DURATION_REDUCTION_MAX = 0.3;
+const DYNAMIC_LOAD_FLOOR = 0.75;
+const DYNAMIC_LOAD_CEIL = 2.5;
+const DYNAMIC_QUEUE_FULL_PRESSURE = 12;
+const DYNAMIC_RATE_MULTIPLIER_MAX = 4;
+const DYNAMIC_RATE_CAP = 30;
+const DYNAMIC_DURATION_REDUCTION_MAX = 0.55;
+const DYNAMIC_LIFETIME_REDUCTION_MAX = 0.45;
+const DYNAMIC_MIN_DURATION = 2.5;
+const DYNAMIC_MIN_LIFETIME = 1.5;
+const MESSAGE_QUEUE_MAX = 20;
+const MESSAGE_QUEUE_DYNAMIC_MAX = 40;
 
 class DanmakuRenderer {
   constructor(overlay) {
@@ -76,7 +84,14 @@ class DanmakuRenderer {
     const base = danmakuSettings.get('duration');
     const p = this._smoothedPressure;
     if (p <= 0) return base;
-    return base * (1 - DYNAMIC_DURATION_REDUCTION_MAX * p);
+    return Math.max(DYNAMIC_MIN_DURATION, base * (1 - DYNAMIC_DURATION_REDUCTION_MAX * p));
+  }
+
+  _effectiveStationaryLifetime() {
+    const base = danmakuSettings.get('popFadeLifetime');
+    const p = this._smoothedPressure;
+    if (p <= 0) return base;
+    return Math.max(DYNAMIC_MIN_LIFETIME, base * (1 - DYNAMIC_LIFETIME_REDUCTION_MAX * p));
   }
 
   updateLanes() {
@@ -168,9 +183,10 @@ class DanmakuRenderer {
     while (this.messageQueue.length > 0) {
       const now = Date.now();
       if (now - this.lastRenderTime < minInterval) break;
-      const message = this.messageQueue.shift();
+      const message = this.messageQueue[0];
       if (!message) break;
-      this.renderMessage(message);
+      if (!this.renderMessage(message)) break;
+      this.messageQueue.shift();
       this.lastRenderTime = now;
     }
 
@@ -179,7 +195,8 @@ class DanmakuRenderer {
 
   addMessage(message) {
     this._recordArrival();
-    const maxQueue = 20;
+    const dynamic = danmakuSettings.get('dynamicMode');
+    const maxQueue = dynamic ? MESSAGE_QUEUE_DYNAMIC_MAX : MESSAGE_QUEUE_MAX;
     if (this.messageQueue.length >= maxQueue) {
       let dropIdx = this.messageQueue.findIndex((m) => !this.isFavorite(m));
       if (dropIdx === -1) dropIdx = 0;
@@ -187,6 +204,7 @@ class DanmakuRenderer {
       this._recordDrop('queue');
     }
     this.messageQueue.push(message);
+    if (dynamic) this._updateDynamicPressure();
     this._scheduleTick();
   }
 
@@ -232,6 +250,30 @@ class DanmakuRenderer {
       return;
     }
 
+    this._updateDynamicPressure();
+  }
+
+  _calculateDynamicTarget(recentRate, baselineRate) {
+    if (recentRate < DYNAMIC_MIN_RECENT_RATE) return 0;
+
+    const ratio = recentRate / Math.max(baselineRate, DYNAMIC_MIN_BASELINE_RATE);
+    const burstPressure = Math.max(
+      0,
+      Math.min(1, (ratio - DYNAMIC_RATIO_FLOOR) / (DYNAMIC_RATIO_CEIL - DYNAMIC_RATIO_FLOOR))
+    );
+
+    const baseRate = Math.max(1, danmakuSettings.get('maxMessagesPerSecond'));
+    const load = recentRate / baseRate;
+    const loadPressure = Math.max(
+      0,
+      Math.min(1, (load - DYNAMIC_LOAD_FLOOR) / (DYNAMIC_LOAD_CEIL - DYNAMIC_LOAD_FLOOR))
+    );
+    const queuePressure = Math.min(1, this.messageQueue.length / DYNAMIC_QUEUE_FULL_PRESSURE);
+
+    return Math.max(burstPressure, loadPressure, queuePressure);
+  }
+
+  _updateDynamicPressure() {
     const now = Date.now();
     while (this._messageTimes.length && now - this._messageTimes[0] > DYNAMIC_WINDOW_BASELINE_MS) {
       this._messageTimes.shift();
@@ -243,12 +285,7 @@ class DanmakuRenderer {
     const recentRate = recentCount / (DYNAMIC_WINDOW_RECENT_MS / 1000);
     const baselineRate = this._messageTimes.length / (DYNAMIC_WINDOW_BASELINE_MS / 1000);
 
-    let target = 0;
-    if (recentRate >= DYNAMIC_MIN_RECENT_RATE) {
-      const ratio = recentRate / Math.max(baselineRate, DYNAMIC_MIN_BASELINE_RATE);
-      target = (ratio - DYNAMIC_RATIO_FLOOR) / (DYNAMIC_RATIO_CEIL - DYNAMIC_RATIO_FLOOR);
-      target = Math.max(0, Math.min(1, target));
-    }
+    const target = this._calculateDynamicTarget(recentRate, baselineRate);
 
     const alpha = target > this._smoothedPressure ? DYNAMIC_RISE_ALPHA : DYNAMIC_FALL_ALPHA;
     this._smoothedPressure += alpha * (target - this._smoothedPressure);
@@ -258,14 +295,13 @@ class DanmakuRenderer {
   }
 
   renderMessage(message) {
-    if (!this.overlay || !this.overlay.container) return;
+    if (!this.overlay || !this.overlay.container) return false;
 
     const maxActive = danmakuSettings.get('maxActiveMessages');
     const favorite = this.isFavorite(message);
     const activeCap = favorite ? maxActive + 10 : maxActive;
     if (this.activeMessages.length >= activeCap) {
-      this._recordDrop('active');
-      return;
+      return false;
     }
 
     const mode = danmakuSettings.get('animationMode');
@@ -273,8 +309,7 @@ class DanmakuRenderer {
 
     const lane = isStationary ? this.findStationaryLane() : this.findScrollLane();
     if (!lane) {
-      this._recordDrop('lane');
-      return;
+      return false;
     }
 
     const element = this.createMessageElement(message, lane, mode, favorite);
@@ -288,7 +323,7 @@ class DanmakuRenderer {
       const offset = xLeft + msgWidth / 2 - containerWidth / 2;
       element.style.setProperty('--xoffset', `${offset}px`);
 
-      const lifetime = danmakuSettings.get('popFadeLifetime') * 1000;
+      const lifetime = this._effectiveStationaryLifetime() * 1000;
       const endTime = Date.now() + lifetime;
       lane.occupants.push({ leftPx: xLeft, rightPx: xLeft + msgWidth, endTime });
       lane.lastMessageEndTime = endTime;
@@ -308,6 +343,7 @@ class DanmakuRenderer {
     element.addEventListener('animationend', () => {
       this.removeMessage(element);
     });
+    return true;
   }
 
   findScrollLane() {
@@ -392,7 +428,7 @@ class DanmakuRenderer {
     const maxLength = danmakuSettings.get('maxMessageLength');
 
     if (DANMAKU_CONSTANTS.STATIONARY_MODES.includes(mode)) {
-      const lifetime = danmakuSettings.get('popFadeLifetime');
+      const lifetime = this._effectiveStationaryLifetime();
       el.style.cssText = `
         top: ${this.getLaneTopPx(lane.index)}px;
         font-size: ${fontSizePx}px;

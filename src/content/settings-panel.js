@@ -69,12 +69,12 @@ class DanmakuSettingsPanel {
   template() {
     return `
       <div class="dsp-header" data-drag-handle>
-        <span class="dsp-title">Danmaku Settings</span>
-        <button class="dsp-close" type="button" title="Close">×</button>
+        <span class="dsp-title">Danmaku</span>
+        <button class="dsp-close" type="button" title="Close settings" aria-label="Close settings">×</button>
       </div>
       <div class="dsp-body">
         <section class="dsp-section">
-          <h3>General</h3>
+          <h3>Overlay</h3>
           <label class="dsp-row">
             <span>Enabled</span>
             <input type="checkbox" data-setting="enabled" />
@@ -83,59 +83,16 @@ class DanmakuSettingsPanel {
             <span>Fullscreen only</span>
             <input type="checkbox" data-setting="fullscreenOnly" />
           </label>
-          <label class="dsp-row">
-            <span>Show usernames</span>
-            <input type="checkbox" data-setting="showUsernames" />
-          </label>
-          <label class="dsp-row dsp-row-sub" title="When on, only highlighted (favorite) chatters get their username shown">
-            <span>Favorites only</span>
-            <input type="checkbox" data-setting="showUsernamesFavoritesOnly" />
-          </label>
-          <label class="dsp-row">
-            <span>Show badges</span>
-            <input type="checkbox" data-setting="showBadges" />
-          </label>
-          <label class="dsp-row" title="When a message is a reply, prefix the danmaku with the replied-to user and a snippet of the quoted message">
-            <span>Show reply context</span>
-            <input type="checkbox" data-setting="showReplyContext" />
-          </label>
-          <label class="dsp-row">
-            <span>Pause on hover</span>
-            <input type="checkbox" data-setting="pauseOnHover" />
-          </label>
-          <label class="dsp-row" title="On VODs only: freeze the overlay when the video is paused">
-            <span>Pause with video (VOD)</span>
-            <input type="checkbox" data-setting="pauseOnVideoPause" />
-          </label>
-          <label class="dsp-row" title="Adapts rate and scroll speed when chat is more active than usual">
-            <span>Dynamic mode</span>
-            <input type="checkbox" data-setting="dynamicMode" />
-          </label>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Highlight @mentions to</span></div>
-            <input type="text" data-setting="highlightUsername" placeholder="your twitch username" class="dsp-text-input" />
-          </div>
-        </section>
-
-        <section class="dsp-section">
-          <h3>Highlight favorites</h3>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Usernames</span></div>
-            <input type="text" data-setting="highlightUsers" placeholder="e.g. friend1, friend2" class="dsp-text-input" />
-          </div>
-          <div class="dsp-row-label"><span>Badge roles</span></div>
-          <div class="dsp-preset-row" data-badge-chips></div>
-          <p class="dsp-hint">Favorites get a cyan glow and are prioritized over normal chat when the renderer is at capacity.</p>
         </section>
 
         <section class="dsp-section">
           <h3>Appearance</h3>
           <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Font size</span><em data-display="fontSize"></em></div>
+            <div class="dsp-row-label"><span>Text size</span><em data-display="fontSize"></em></div>
             <input type="range" data-setting="fontSize" min="12" max="48" step="1" />
           </div>
           <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Rows</span><em data-display="rows"></em></div>
+            <div class="dsp-row-label"><span>Message rows</span><em data-display="rows"></em></div>
             <input type="range" data-setting="rows" min="1" max="10" step="1" />
           </div>
           <div class="dsp-row dsp-row-vertical">
@@ -145,72 +102,140 @@ class DanmakuSettingsPanel {
         </section>
 
         <section class="dsp-section">
-          <h3>Region</h3>
-          <div class="dsp-preset-row">
+          <h3>Placement</h3>
+          <div class="dsp-segmented" aria-label="Overlay placement presets">
             <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="top">Top</button>
             <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="middle">Middle</button>
             <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="bottom">Bottom</button>
             <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="full">Full</button>
           </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Region top</span><em data-display="regionTop"></em></div>
-            <input type="range" data-setting="regionTop" min="0" max="100" step="1" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Region height</span><em data-display="regionHeight"></em></div>
-            <input type="range" data-setting="regionHeight" min="5" max="100" step="1" />
-          </div>
-          <p class="dsp-hint">Hover the chat area on the player to drag the region or open settings from there.</p>
+          <details class="dsp-disclosure dsp-inline-disclosure">
+            <summary>Fine-tune placement</summary>
+            <div class="dsp-disclosure-body">
+              <div class="dsp-row dsp-row-vertical">
+                <div class="dsp-row-label"><span>Top edge</span><em data-display="regionTop"></em></div>
+                <input type="range" data-setting="regionTop" min="0" max="100" step="1" />
+              </div>
+              <div class="dsp-row dsp-row-vertical">
+                <div class="dsp-row-label"><span>Height</span><em data-display="regionHeight"></em></div>
+                <input type="range" data-setting="regionHeight" min="5" max="100" step="1" />
+              </div>
+            </div>
+          </details>
         </section>
 
         <section class="dsp-section">
-          <h3>Animation</h3>
-          <div class="dsp-preset-row">
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="anim-mode" data-mode="scroll" title="Classic right-to-left scroll across the player.">Scroll</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="anim-mode" data-mode="reverse" title="Same as scroll but left-to-right.">Reverse</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="anim-mode" data-mode="drift" title="Right-to-left scroll with a slow vertical wobble.">Drift</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="anim-mode" data-mode="popFade" title="Messages pop in at a random spot, hold briefly, then fade out.">Pop &amp; fade</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="anim-mode" data-mode="slideUp" title="Messages slide in from below, hold, then drift up and fade.">Slide up</button>
-          </div>
+          <h3>Motion</h3>
+          <label class="dsp-field">
+            <span>Style</span>
+            <select data-setting="animationMode">
+              <option value="scroll">Scroll</option>
+              <option value="reverse">Reverse</option>
+              <option value="drift">Drift</option>
+              <option value="popFade">Pop &amp; fade</option>
+              <option value="slideUp">Slide up</option>
+            </select>
+          </label>
           <p class="dsp-anim-desc" data-anim-desc></p>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Duration (scroll)</span><em data-display="duration"></em></div>
-            <input type="range" data-setting="duration" min="3" max="30" step="1" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Lifetime (pop &amp; fade)</span><em data-display="popFadeLifetime"></em></div>
-            <input type="range" data-setting="popFadeLifetime" min="1" max="15" step="0.5" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Max msgs/sec</span><em data-display="maxMessagesPerSecond"></em></div>
-            <input type="range" data-setting="maxMessagesPerSecond" min="1" max="20" step="1" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Max msg length</span><em data-display="maxMessageLength"></em></div>
-            <input type="range" data-setting="maxMessageLength" min="20" max="500" step="10" />
-          </div>
-        </section>
-
-        <section class="dsp-section">
-          <h3>Diagnostics</h3>
-          <p class="dsp-diag-status" data-diag-status>No messages dropped recently.</p>
-          <ul class="dsp-diag-list" data-diag-list></ul>
-        </section>
-
-        <section class="dsp-section">
-          <h3>Preview</h3>
-          <div class="dsp-preview-row">
-            <button class="dsp-btn" type="button" data-action="mock-one">Send mock</button>
-            <button class="dsp-btn" type="button" data-action="mock-burst">Burst x10</button>
-            <button class="dsp-btn" type="button" data-action="mock-spam" title="Floods chat to test dynamic mode">Test dynamic</button>
-            <button class="dsp-btn" type="button" data-action="mock-highlight" title="Sends one baseline message plus one per enabled badge role and favorite username">Test highlights</button>
-            <button class="dsp-btn" type="button" data-action="clear">Clear</button>
-          </div>
-          <label class="dsp-row">
-            <span>Auto-spam mock messages</span>
-            <input type="checkbox" data-action="auto-mock" />
+          <label class="dsp-row" title="Adapts message rate and speed when chat gets busy">
+            <span>Adapt to busy chat</span>
+            <input type="checkbox" data-setting="dynamicMode" />
           </label>
         </section>
+
+        <details class="dsp-disclosure">
+          <summary>Favorite chatters</summary>
+          <div class="dsp-disclosure-body">
+            <p class="dsp-hint dsp-hint-leading">Choose the people and roles you want to prioritize when chat gets busy.</p>
+            <label class="dsp-field">
+              <span>Usernames</span>
+              <input type="text" data-setting="highlightUsers" placeholder="friend1, friend2" />
+            </label>
+            <div class="dsp-field-label">Badge roles</div>
+            <div class="dsp-preset-row" data-badge-chips></div>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Message content</summary>
+          <div class="dsp-disclosure-body">
+            <label class="dsp-field">
+              <span>Usernames</span>
+              <select data-action="username-display" data-control="username-display">
+                <option value="all">Show for everyone</option>
+                <option value="favorites">Show for favorite chatters</option>
+                <option value="hidden">Hide usernames</option>
+              </select>
+            </label>
+            <label class="dsp-row">
+              <span>Show badges</span>
+              <input type="checkbox" data-setting="showBadges" />
+            </label>
+            <label class="dsp-row" title="Include the replied-to user and a short quote">
+              <span>Show reply context</span>
+              <input type="checkbox" data-setting="showReplyContext" />
+            </label>
+            <label class="dsp-row">
+              <span>Pause on hover</span>
+              <input type="checkbox" data-setting="pauseOnHover" />
+            </label>
+            <label class="dsp-row" title="Freeze the overlay when a VOD is paused">
+              <span>Pause with VOD</span>
+              <input type="checkbox" data-setting="pauseOnVideoPause" />
+            </label>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Mentions</summary>
+          <div class="dsp-disclosure-body">
+            <label class="dsp-field">
+              <span>Highlight mentions of</span>
+              <input type="text" data-setting="highlightUsername" placeholder="Your Twitch username" />
+            </label>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Advanced</summary>
+          <div class="dsp-disclosure-body">
+            <div class="dsp-row dsp-row-vertical" data-motion-control="scroll">
+              <div class="dsp-row-label"><span>Travel time</span><em data-display="duration"></em></div>
+              <input type="range" data-setting="duration" min="3" max="30" step="1" />
+            </div>
+            <div class="dsp-row dsp-row-vertical" data-motion-control="stationary">
+              <div class="dsp-row-label"><span>On-screen time</span><em data-display="popFadeLifetime"></em></div>
+              <input type="range" data-setting="popFadeLifetime" min="1" max="15" step="0.5" />
+            </div>
+            <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Messages per second</span><em data-display="maxMessagesPerSecond"></em></div>
+              <input type="range" data-setting="maxMessagesPerSecond" min="1" max="20" step="1" />
+            </div>
+            <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Message length</span><em data-display="maxMessageLength"></em></div>
+              <input type="range" data-setting="maxMessageLength" min="20" max="500" step="10" />
+            </div>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Test &amp; diagnostics</summary>
+          <div class="dsp-disclosure-body">
+            <p class="dsp-diag-status" data-diag-status>No messages dropped recently.</p>
+            <ul class="dsp-diag-list" data-diag-list></ul>
+            <div class="dsp-preview-row">
+              <button class="dsp-btn" type="button" data-action="mock-one">Send mock</button>
+              <button class="dsp-btn" type="button" data-action="mock-burst">Burst ×10</button>
+              <button class="dsp-btn" type="button" data-action="mock-spam">Stress test</button>
+              <button class="dsp-btn" type="button" data-action="mock-highlight">Test favorites</button>
+              <button class="dsp-btn" type="button" data-action="clear">Clear</button>
+            </div>
+            <label class="dsp-row">
+              <span>Continuous mock messages</span>
+              <input type="checkbox" data-action="auto-mock" />
+            </label>
+          </div>
+        </details>
 
         <div class="dsp-footer">
           <button class="dsp-btn" type="button" data-action="reset">Reset to defaults</button>
@@ -228,13 +253,13 @@ class DanmakuSettingsPanel {
     this.panel.querySelector('.dsp-close').addEventListener('click', () => this.close());
 
     this.panel.querySelectorAll('[data-setting]').forEach((input) => {
-      const event = input.type === 'checkbox' ? 'change' : 'input';
+      const event = input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input';
       input.addEventListener(event, (e) => this.onInput(e));
     });
 
     this.panel.querySelectorAll('[data-action]').forEach((el) => {
       const action = el.getAttribute('data-action');
-      const event = el.tagName === 'INPUT' ? 'change' : 'click';
+      const event = el.tagName === 'INPUT' || el.tagName === 'SELECT' ? 'change' : 'click';
       el.addEventListener(event, (e) => this.onAction(action, e));
     });
 
@@ -263,7 +288,9 @@ class DanmakuSettingsPanel {
       }
       this.updateDisplay(key, value);
     });
-    this.updateAnimModeButtons();
+    this.updateUsernameDisplayControl();
+    this.updateAnimationControls();
+    this.updateRegionPresetButtons();
     this.updateBadgeChips();
   }
 
@@ -272,7 +299,9 @@ class DanmakuSettingsPanel {
     const selected = new Set(danmakuSettings.get('highlightBadges') || []);
     this.panel.querySelectorAll('[data-action="highlight-badge"]').forEach((btn) => {
       const role = btn.getAttribute('data-role');
-      btn.classList.toggle('dsp-btn-active', selected.has(role));
+      const active = selected.has(role);
+      btn.classList.toggle('dsp-btn-active', active);
+      btn.setAttribute('aria-pressed', String(active));
     });
   }
 
@@ -297,14 +326,39 @@ class DanmakuSettingsPanel {
     else display.textContent = value;
   }
 
-  updateAnimModeButtons() {
+  updateAnimationControls() {
     if (!this.panel) return;
     const mode = danmakuSettings.get('animationMode');
-    this.panel.querySelectorAll('[data-action="anim-mode"]').forEach((btn) => {
-      btn.classList.toggle('dsp-btn-active', btn.getAttribute('data-mode') === mode);
-    });
     const desc = this.panel.querySelector('[data-anim-desc]');
     if (desc) desc.textContent = ANIM_DESCRIPTIONS[mode] || '';
+    const stationary = (DANMAKU_CONSTANTS.STATIONARY_MODES || []).includes(mode);
+    this.panel.querySelectorAll('[data-motion-control="scroll"]').forEach((el) => {
+      el.hidden = stationary;
+    });
+    this.panel.querySelectorAll('[data-motion-control="stationary"]').forEach((el) => {
+      el.hidden = !stationary;
+    });
+  }
+
+  updateRegionPresetButtons() {
+    if (!this.panel) return;
+    const top = danmakuSettings.get('regionTop');
+    const height = danmakuSettings.get('regionHeight');
+    this.panel.querySelectorAll('[data-action="region-preset"]').forEach((btn) => {
+      const preset = DANMAKU_CONSTANTS.REGION_PRESETS[btn.getAttribute('data-preset')];
+      const active = !!preset && preset.regionTop === top && preset.regionHeight === height;
+      btn.classList.toggle('dsp-btn-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  updateUsernameDisplayControl() {
+    if (!this.panel) return;
+    const control = this.panel.querySelector('[data-control="username-display"]');
+    if (!control) return;
+    if (!danmakuSettings.get('showUsernames')) control.value = 'hidden';
+    else if (danmakuSettings.get('showUsernamesFavoritesOnly')) control.value = 'favorites';
+    else control.value = 'all';
   }
 
   onAction(action, e) {
@@ -335,6 +389,14 @@ class DanmakuSettingsPanel {
         this.autoMockOn = e.target.checked;
         this.callbacks.onAutoMock?.(this.autoMockOn);
         break;
+      case 'username-display': {
+        const value = e.target.value;
+        danmakuSettings.setMany({
+          showUsernames: value !== 'hidden',
+          showUsernamesFavoritesOnly: value === 'favorites',
+        });
+        break;
+      }
       case 'region-preset': {
         const preset = e.currentTarget.getAttribute('data-preset');
         const values = DANMAKU_CONSTANTS.REGION_PRESETS[preset];
@@ -342,11 +404,6 @@ class DanmakuSettingsPanel {
           danmakuSettings.set('regionTop', values.regionTop);
           danmakuSettings.set('regionHeight', values.regionHeight);
         }
-        break;
-      }
-      case 'anim-mode': {
-        const mode = e.currentTarget.getAttribute('data-mode');
-        if (mode) danmakuSettings.set('animationMode', mode);
         break;
       }
       case 'highlight-badge': {

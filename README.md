@@ -5,7 +5,7 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 ## Features
 
 - **Five animation modes**: Scroll, Reverse, Drift (slow vertical wobble), Pop & fade, Slide up
-- **Dynamic mode**: automatically increases message rate and scroll speed when chat activity spikes
+- **Dynamic mode**: ramps message throughput and animation speed during bursts or sustained fast chat, while buffering brief lane congestion
 - **Configurable region** with on-player drag handles — define exactly where chat appears; scales correctly across windowed, theater, and fullscreen
 - **In-region toolbar** (hover the chat area on the player) for quick rows / font-size adjustments and a settings shortcut
 - **@mention highlighting**: messages mentioning your username are visually distinguished
@@ -38,7 +38,8 @@ All changes apply live and auto-save.
 |---|---|
 | Enable overlay | Master on/off |
 | Fullscreen only | Hide overlay outside fullscreen |
-| Show usernames | Show "username:" prefix on each message |
+| Usernames | Show names for everyone, favorite chatters only, or nobody |
+| Favorite chatters | Prioritize listed usernames and selected badge roles when chat gets busy |
 | Show badges | Display subscriber, moderator, etc. badges |
 | Pause on hover | Freeze animations when hovering the chat region |
 | Dynamic mode | Auto-boost rate and speed when chat activity spikes |
