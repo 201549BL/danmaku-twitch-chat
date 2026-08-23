@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, height=800">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; background: #0e0e10; }
+    #root { position: relative; width: 1280px; height: 800px; overflow: hidden; font-family: Inter, Arial, sans-serif; }
+    .stage { position: absolute; inset: 0; background: radial-gradient(circle at 80% -10%, #30204d 0%, #14111c 42%, #0e0e10 76%); color: #fff; }
+    .header { position: absolute; left: 38px; right: 38px; top: 23px; height: 61px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand img { width: 46px; height: 46px; }
+    .brand-name { font-size: 23px; font-weight: 800; letter-spacing: -.025em; }
+    .phase { position: absolute; left: 310px; right: 0; top: 0; height: 60px; display: flex; align-items: center; justify-content: flex-start; padding: 0 18px; border: 2px solid rgba(145,71,255,.72); border-radius: 13px; background: rgba(20,16,30,.94); box-shadow: 0 10px 28px rgba(0,0,0,.28); color: #efeff1; opacity: 0; }
+    .phase::before { content: attr(data-beat); flex: none; width: 34px; height: 34px; margin-right: 14px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #9147ff; color: #fff; font-size: 12px; font-weight: 900; letter-spacing: .05em; line-height: 1; }
+    .phase-copy { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+    .phase-title { color: #efeff1; font-size: 27px; font-weight: 820; line-height: 1; letter-spacing: -.03em; white-space: nowrap; }
+    .phase-context { color: #c9c2d5; font-size: 14px; font-weight: 590; line-height: 1; letter-spacing: .01em; white-space: nowrap; }
+    .player { position: absolute; left: 38px; top: 97px; width: 1204px; height: 666px; overflow: hidden; border: 1px solid rgba(191,148,255,.42); border-radius: 17px; background: #101820; box-shadow: 0 30px 80px rgba(0,0,0,.42); }
+    .player-camera { position: absolute; inset: 0; overflow: hidden; transform-origin: 100% 0%; }
+    .stream-footage { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center center; }
+    .placeholder-visual { position: absolute; inset: -35px; overflow: hidden; background: linear-gradient(125deg, #082333 0%, #15314f 34%, #25205b 65%, #5e1b61 100%); }
+    .placeholder-grid { position: absolute; inset: 0; opacity: .32; background-image: linear-gradient(rgba(92,225,255,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(92,225,255,.13) 1px, transparent 1px); background-size: 78px 78px; transform: perspective(700px) rotateX(58deg) scale(1.5) translateY(160px); }
+    .placeholder-orb { position: absolute; width: 380px; height: 380px; right: 170px; top: 80px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d9faff 0%, #38bdf8 12%, #6d28d9 46%, rgba(76,29,149,.08) 70%); box-shadow: 0 0 85px rgba(92,225,255,.35); }
+    .placeholder-beam { position: absolute; left: 500px; top: -100px; width: 130px; height: 900px; background: linear-gradient(90deg, transparent, rgba(92,225,255,.3), rgba(191,148,255,.34), transparent); transform: rotate(24deg); filter: blur(8px); }
+    .placeholder-ridge { position: absolute; left: -100px; right: -100px; bottom: -145px; height: 380px; border-radius: 50% 50% 0 0; background: linear-gradient(155deg, #14182d, #101424 45%, #271440); border-top: 3px solid rgba(92,225,255,.38); transform: rotate(-4deg); }
+    .gameplay-layer { position:absolute; inset:35px; overflow:hidden; color:#dff9ff; font-family:Inter,Arial,sans-serif; opacity:.82; }
+    .game-hud { position:absolute; left:20px; right:20px; top:18px; z-index:4; display:flex; align-items:flex-start; justify-content:space-between; color:rgba(223,249,255,.78); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; text-shadow:0 1px 3px rgba(0,0,0,.8); }
+    .game-hud-block { display:flex; align-items:center; gap:9px; padding:7px 10px; border:1px solid rgba(92,225,255,.28); border-radius:5px; background:rgba(4,18,28,.48); box-shadow:inset 0 0 18px rgba(92,225,255,.05); }
+    .game-hud-dot { width:6px; height:6px; border-radius:50%; background:#5ce1ff; box-shadow:0 0 8px rgba(92,225,255,.9); }
+    .game-score { color:#bf94ff; font-size:15px; font-variant-numeric:tabular-nums; letter-spacing:.08em; }
+    .game-route { position:absolute; inset:0; width:100%; height:100%; opacity:.28; }
+    .game-route path { fill:none; stroke:#5ce1ff; stroke-width:2; stroke-dasharray:8 12; }
+    .game-route circle { fill:#bf94ff; opacity:.9; }
+    .game-target { position:absolute; width:76px; height:76px; border:1px solid rgba(191,148,255,.68); border-radius:50%; box-shadow:0 0 25px rgba(145,71,255,.18),inset 0 0 18px rgba(145,71,255,.12); }
+    .game-target::before,.game-target::after { content:''; position:absolute; left:50%; top:50%; background:rgba(223,249,255,.54); transform:translate(-50%,-50%); }
+    .game-target::before { width:98px; height:1px; }
+    .game-target::after { width:1px; height:98px; }
+    .game-target span { position:absolute; left:50%; top:50%; width:24px; height:24px; border:2px solid rgba(92,225,255,.72); border-radius:50%; transform:translate(-50%,-50%); }
+    .game-target-a { left:760px; top:170px; }
+    .game-target-b { left:930px; top:380px; transform:scale(.72); }
+    .game-ship { position:absolute; left:0; top:0; width:60px; height:42px; transform-origin:50% 50%; filter:drop-shadow(0 0 12px rgba(92,225,255,.58)); }
+    .game-ship-body { position:absolute; left:17px; top:7px; width:30px; height:28px; border:2px solid #dff9ff; background:linear-gradient(145deg,#5ce1ff,#6941c6 70%); clip-path:polygon(50% 0,100% 100%,50% 74%,0 100%); }
+    .game-ship-wing { position:absolute; top:19px; width:24px; height:7px; border-top:2px solid rgba(223,249,255,.8); background:linear-gradient(90deg,transparent,rgba(92,225,255,.42)); }
+    .game-ship-wing-l { left:0; transform:rotate(-12deg); }
+    .game-ship-wing-r { right:0; transform:rotate(12deg) scaleX(-1); }
+    .game-ship-core { position:absolute; left:27px; top:20px; width:8px; height:8px; border-radius:50%; background:#fff; box-shadow:0 0 11px #5ce1ff; }
+    .game-trail { position:absolute; left:-56px; top:26px; width:78px; height:3px; background:linear-gradient(90deg,transparent,rgba(92,225,255,.76)); filter:blur(.5px); }
+    .game-projectile { position:absolute; left:0; top:0; width:72px; height:3px; border-radius:3px; background:linear-gradient(90deg,transparent,#fff 76%,#5ce1ff); box-shadow:0 0 9px rgba(92,225,255,.9); opacity:0; transform-origin:100% 50%; }
+    .game-impact { position:absolute; left:0; top:0; width:54px; height:54px; margin:-27px 0 0 -27px; border:3px solid rgba(191,148,255,.9); border-radius:50%; opacity:0; box-shadow:0 0 24px rgba(191,148,255,.7); }
+    .game-status { position:absolute; left:22px; bottom:92px; z-index:4; padding:7px 10px; border-left:2px solid #5ce1ff; background:rgba(4,18,28,.42); color:rgba(223,249,255,.72); font-size:10px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+    .game-status strong { color:#fff; }
+    .video-vignette { position: absolute; inset: 0; background: radial-gradient(circle at 62% 45%, transparent 20%, rgba(3,4,8,.18) 62%, rgba(3,4,8,.58) 100%); }
+    .player-bottom { position: absolute; left: 0; right: 0; bottom: 0; height: 82px; background: linear-gradient(0deg, rgba(5,5,8,.94), rgba(5,5,8,0)); z-index: 20; }
+    .play { position: absolute; left: 23px; bottom: 19px; width: 0; height: 0; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 14px solid #efeff1; }
+    .live { position: absolute; left: 58px; bottom: 15px; height: 28px; padding: 0 9px; display: flex; align-items: center; border-radius: 5px; background: #e91916; font-size: 12px; font-weight: 850; }
+    .placeholder-label { position: absolute; right: 58px; bottom: 18px; color: rgba(239,239,241,.72); font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+    .danmaku-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+    .danmaku-message { position: absolute; left: 0; opacity: 0; transform-origin: 0% 50%; white-space: nowrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 31px; line-height: 1; font-weight: 600; color: #fff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 4px rgba(0,0,0,.8); }
+    .danmaku-username { font-weight: 700; }
+    .danmaku-text { font-weight: 500; }
+    .danmaku-badge { display: inline-flex; width: 1em; height: 1em; margin-right: 4px; align-items: center; justify-content: center; vertical-align: .08em; border-radius: 3px; background: #9147ff; color: #fff; font-size: .56em; font-weight: 900; text-shadow: none; }
+    .danmaku-emote { display: inline-flex; height: 1.35em; min-width: 1.35em; margin: 0 2px; align-items: center; justify-content: center; vertical-align: middle; border-radius: 7px; background: rgba(14,14,16,.78); font-size: .82em; text-shadow: none; }
+    img.danmaku-emote { display: inline-block; width: auto; height: 1.4em; min-width: 0; max-width: none; margin: 0 2px; border-radius: 0; background: transparent; vertical-align: middle; object-fit: contain; }
+    .danmaku-reply { margin-right: 4px; color: rgba(255,255,255,.65); font-weight: 500; }
+    .danmaku-reply-user { color: rgba(255,255,255,.85); }
+    .danmaku-reply-quote { color: rgba(255,255,255,.5); font-style: italic; }
+    .danmaku-message--favorite { z-index: 5; }
+    .danmaku-message--mention { color: #fff7c8; text-shadow: -1px -1px 0 #8a5a00, 1px -1px 0 #8a5a00, -1px 1px 0 #8a5a00, 1px 1px 0 #8a5a00, 0 0 8px rgba(255,215,0,.95), 0 0 16px rgba(255,215,0,.55); }
+    .danmaku-username-effect--duotoneFlow, .danmaku-username-effect--duotoneEmber, .danmaku-username-effect--duotoneGlitch { position: relative; display: inline-block; background-color: var(--danmaku-username-color,#fff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none; filter: url(#danmaku-text-border-filter); }
+    .danmaku-username-effect--duotoneFlow { background-image: linear-gradient(110deg,var(--danmaku-username-color,#fff) 0% 24%,var(--danmaku-secondary-color,#fff) 42%,color-mix(in srgb,var(--danmaku-secondary-color,#fff),white 76%) 50%,var(--danmaku-secondary-color,#fff) 58%,var(--danmaku-username-color,#fff) 76% 100%); background-size: 240% 100%; animation: danmaku-effect-duotone-flow calc(3.8s * var(--danmaku-effect-duration-scale,1)) ease-in-out 3; animation-delay: var(--danmaku-effect-delay,0s); animation-direction: var(--danmaku-gradient-direction,alternate); animation-fill-mode: both; }
+    .danmaku-username-effect--duotoneEmber { isolation: isolate; background-image: linear-gradient(var(--danmaku-username-color,#fff),var(--danmaku-username-color,#fff)); }
+    .effect-ember-layer { position: absolute; inset: 0; display: block; width: 100%; height: 100%; background-image: linear-gradient(var(--danmaku-secondary-color,#fff),var(--danmaku-secondary-color,#fff)),var(--danmaku-effect-texture,url('assets/ember.webp')); background-position: 0 0,0 0; background-repeat: repeat; background-size: 100% 100%,128px 128px; background-blend-mode: multiply; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; mix-blend-mode: screen; filter: brightness(1.35) contrast(1.4); pointer-events: none; animation: danmaku-effect-duotone-ember calc(7s * var(--danmaku-effect-duration-scale,1)) linear 2; animation-delay: var(--danmaku-effect-delay,0s); animation-direction: var(--danmaku-texture-direction,normal); animation-fill-mode: both; }
+    .danmaku-username-effect--duotoneGlitch { background-image: linear-gradient(var(--danmaku-username-color,#fff),var(--danmaku-username-color,#fff)); }
+    .effect-glitch-layer { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; opacity: 0; animation-duration: calc(2.7s * var(--danmaku-effect-duration-scale,1)); animation-delay: var(--danmaku-effect-delay,0s); animation-iteration-count: 4; animation-timing-function: steps(1,end); animation-fill-mode: both; }
+    .effect-glitch-layer--upper { color: var(--danmaku-secondary-color,#fff); -webkit-text-fill-color: var(--danmaku-secondary-color,#fff); clip-path: inset(8% 0 58% 0); animation-name: danmaku-effect-glitch-upper; }
+    .effect-glitch-layer--lower { color: color-mix(in srgb,var(--danmaku-secondary-color,#fff),white 68%); -webkit-text-fill-color: color-mix(in srgb,var(--danmaku-secondary-color,#fff),white 68%); clip-path: inset(58% 0 12% 0); animation-name: danmaku-effect-glitch-lower; }
+    .danmaku-username-effect--enhanced { filter: url(#danmaku-text-border-flat-filter); }
+    @keyframes danmaku-effect-duotone-flow { from { background-position:0% 50%; } to { background-position:100% 50%; } }
+    @keyframes danmaku-effect-duotone-ember { from { background-position:0 0,0 0; } to { background-position:0 0,0 -128px; } }
+    @keyframes danmaku-effect-glitch-upper { 0%,6%,10%,42%,46%,78%,82%,100% { opacity:0; transform:translateX(0); } 7% { opacity:.95; transform:translateX(3px); } 8% { opacity:.8; transform:translateX(-2px); } 43% { opacity:.9; transform:translateX(-3px); } 44% { opacity:.75; transform:translateX(2px); } 79% { opacity:.95; transform:translateX(2px); } 80% { opacity:.7; transform:translateX(-1px); } }
+    @keyframes danmaku-effect-glitch-lower { 0%,7%,11%,41%,45%,79%,83%,100% { opacity:0; transform:translateX(0); } 8% { opacity:.9; transform:translateX(-3px); } 9% { opacity:.7; transform:translateX(1px); } 42% { opacity:.85; transform:translateX(3px); } 43% { opacity:.7; transform:translateX(-2px); } 80% { opacity:.9; transform:translateX(-2px); } 81% { opacity:.65; transform:translateX(2px); } }
+    .danmaku-dynamic-tag { position: absolute; right: 12px; top: 9%; margin-top: 6px; padding: 4px 10px; background: linear-gradient(135deg, #ff4d4d 0%, #ff8a00 100%); color: #fff; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .08em; border-radius: 12px; box-shadow: 0 2px 12px rgba(255,100,0,.55); pointer-events: none; opacity: 0; z-index: 18; }
+    .danmaku-dynamic-tag::before { content: '⚡'; margin-right: 4px; }
+    .danmaku-region-editor { position: absolute; left: 0; right: 0; top: 9%; width: 100%; height: 48%; background: transparent; pointer-events: none; box-sizing: border-box; opacity: 0; z-index: 17; }
+    .danmaku-region-editor.dre-active { background: rgba(145,71,255,.1); }
+    .danmaku-region-editor::before, .danmaku-region-editor::after { content: ''; position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(145,71,255,0); pointer-events: none; }
+    .danmaku-region-editor::before { top: 0; } .danmaku-region-editor::after { bottom: 0; transform: translateY(2px); }
+    .danmaku-region-editor.dre-active::before, .danmaku-region-editor.dre-active::after { border-top-color: rgba(145,71,255,.85); }
+    .danmaku-region-editor .dre-handle { position: absolute; left: 0; right: 0; pointer-events: none; opacity: 0; }
+    .danmaku-region-editor.dre-active .dre-handle { pointer-events: auto; opacity: 1; }
+    .danmaku-region-editor .dre-handle-top { top: -7px; height: 14px; }
+    .danmaku-region-editor .dre-handle-bottom { bottom: -7px; height: 14px; }
+    .danmaku-region-editor .dre-handle-top::after, .danmaku-region-editor .dre-handle-bottom::after { content: ''; position: absolute; left: 50%; top: 50%; width: 44px; height: 4px; background: rgba(145,71,255,.95); border-radius: 2px; transform: translate(-50%,-50%); }
+    .danmaku-region-editor .dre-toolbar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; opacity: 0; pointer-events: none; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; cursor: move; user-select: none; }
+    .danmaku-region-editor.dre-active .dre-toolbar { opacity: 1; pointer-events: auto; }
+    .danmaku-region-editor .dre-quick { display: inline-flex; align-items: center; background: rgba(0,0,0,.78); border-radius: 16px; padding: 2px; height: 28px; color: #fff; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .danmaku-region-editor .dre-quick-btn { width: 24px; height: 24px; border: none; background: rgba(145,71,255,.92); color: #fff; font-size: 15px; line-height: 1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; padding: 0; }
+    .danmaku-region-editor .dre-quick-label { padding: 0 8px; min-width: 50px; text-align: center; white-space: nowrap; letter-spacing: .02em; }
+    .danmaku-region-editor .dre-quick-label em { font-style: normal; color: #c4a8ff; font-weight: 700; margin-left: 3px; }
+    .danmaku-region-editor .dre-settings-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(145,71,255,.95); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .danmaku-row-guides { position: absolute; inset: 0; pointer-events: none; z-index: 1050; opacity: 0; }
+    .danmaku-row-guide { position: absolute; left: 0; right: 0; width: 100%; height: 27.75px; transform-origin: 50% 0%; background: rgba(0,230,118,.14); border-top: 1px dashed rgba(0,230,118,.75); border-bottom: 1px dashed rgba(0,230,118,.75); }
+    .danmaku-row-guide-label { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); padding: 2px 7px; border-radius: 3px; background: rgba(0,230,118,.92); color: #0e0e10; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size: 11px; font-weight: 700; line-height: 1.2; text-shadow: none; letter-spacing: .02em; }
+    .guide-5 { opacity: 0; }
+    .danmaku-player-toggle { position: absolute; right: 20px; bottom: 13px; z-index: 22; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 5px; color: #efeff1; background: rgba(255,255,255,.12); font-size: 17px; font-weight: 850; }
+    .demo-cursor { position: absolute; left: 0; top: 0; width: 30px; height: 36px; opacity: 0; pointer-events: none; z-index: 40; filter: drop-shadow(0 2px 3px rgba(0,0,0,.75)); }
+    .demo-cursor svg { display: block; width: 30px; height: 36px; }
+    .cursor-click { position: absolute; left: -9px; top: -9px; width: 22px; height: 22px; border: 3px solid #d8b4fe; border-radius: 50%; opacity: 0; }
+    .settings-cursor { position: absolute; left: 0; top: 0; width: 30px; height: 36px; opacity: 0; pointer-events: none; z-index: 2147483647; filter: drop-shadow(0 2px 3px rgba(0,0,0,.75)); }
+    .settings-cursor svg { display: block; width: 30px; height: 36px; }
+    .settings-cursor .cursor-click { border-color: #d8b4fe; }
+    #danmaku-settings-panel { --dsp-bg:#18181b; --dsp-surface:#1f1f23; --dsp-border:#35353b; --dsp-border-subtle:#2a2a2e; --dsp-text:#efeff1; --dsp-muted:#adadb8; --dsp-accent:#a970ff; position:absolute; top:72px; right:72px; width:336px; max-height:656px; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--dsp-border); border-radius:8px; background:var(--dsp-bg); box-shadow:0 12px 32px rgba(0,0,0,.55); color:var(--dsp-text); font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; line-height:1.4; opacity:0; z-index:70; }
+    #danmaku-settings-panel .dsp-header { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:0 10px 0 16px; border-bottom:1px solid var(--dsp-border-subtle); cursor:move; user-select:none; }
+    #danmaku-settings-panel .dsp-title { font-size:14px; font-weight:650; }
+    #danmaku-settings-panel .dsp-close { display:grid; place-items:center; width:28px; height:28px; padding:0; border:0; border-radius:4px; background:transparent; color:var(--dsp-muted); font:inherit; font-size:20px; line-height:1; }
+    #danmaku-settings-panel .dsp-body { padding:4px 16px 14px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#53535f transparent; }
+    #danmaku-settings-panel .dsp-section { padding:14px 0; border-bottom:1px solid var(--dsp-border-subtle); }
+    #danmaku-settings-panel .dsp-section h3 { margin:0 0 8px; color:var(--dsp-muted); font-size:11px; font-weight:650; letter-spacing:.04em; text-transform:uppercase; }
+    #danmaku-settings-panel .dsp-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:28px; padding:3px 0; }
+    #danmaku-settings-panel .dsp-row-vertical { align-items:stretch; flex-direction:column; gap:5px; padding:5px 0; }
+    #danmaku-settings-panel .dsp-row-label { display:flex; align-items:center; justify-content:space-between; }
+    #danmaku-settings-panel .dsp-row-label em { color:#cfcfd4; font-size:12px; font-style:normal; font-variant-numeric:tabular-nums; }
+    #danmaku-settings-panel input[type='checkbox'] { width:16px; height:16px; flex:0 0 auto; margin:0; accent-color:var(--dsp-accent); }
+    #danmaku-settings-panel input[type='range'] { width:100%; margin:0; accent-color:var(--dsp-accent); }
+    #danmaku-settings-panel select { width:100%; min-height:32px; padding:6px 9px; border:1px solid var(--dsp-border); border-radius:4px; outline:none; background:#0e0e10; color:var(--dsp-text); font:inherit; font-size:12px; }
+    #danmaku-settings-panel .dsp-field { display:flex; flex-direction:column; gap:5px; margin:7px 0; }
+    #danmaku-settings-panel .dsp-segmented { display:grid; grid-template-columns:repeat(4,1fr); overflow:hidden; border:1px solid var(--dsp-border); border-radius:5px; }
+    #danmaku-settings-panel .dsp-btn { min-height:30px; padding:5px 9px; border:1px solid var(--dsp-border); border-radius:4px; background:var(--dsp-surface); color:var(--dsp-text); font:inherit; font-size:12px; font-weight:500; }
+    #danmaku-settings-panel .dsp-btn-sm { min-height:28px; padding:4px 7px; font-size:11px; }
+    #danmaku-settings-panel .dsp-segmented .dsp-btn { border:0; border-right:1px solid var(--dsp-border); border-radius:0; }
+    #danmaku-settings-panel .dsp-segmented .dsp-btn:last-child { border-right:0; }
+    #danmaku-settings-panel .dsp-btn-active { background:#3d2b58; color:#f3eaff; }
+    #danmaku-settings-panel .dsp-anim-desc { min-height:16px; margin:6px 0; color:var(--dsp-muted); font-size:11px; line-height:1.45; }
+    #danmaku-settings-panel .dsp-disclosure { margin:0 -8px; padding:0 8px; border:1px solid transparent; border-bottom-color:var(--dsp-border-subtle); border-radius:6px; }
+    #danmaku-settings-panel .dsp-disclosure[open] { margin-top:6px; margin-bottom:6px; padding:0 10px; border-color:var(--dsp-border); background:#202024; }
+    #danmaku-settings-panel .dsp-disclosure > summary { position:relative; min-height:24px; margin:0 -6px; padding:11px 38px 11px 8px; border-radius:5px; color:#d7d7dc; font-weight:550; list-style:none; }
+    #danmaku-settings-panel .dsp-disclosure > summary::-webkit-details-marker { display:none; }
+    #danmaku-settings-panel .dsp-disclosure > summary::after { content:'›'; position:absolute; display:flex; align-items:center; justify-content:center; top:7px; right:6px; width:26px; height:26px; border-radius:5px; background:#2d2d33; color:#d7d7dc; font-size:20px; line-height:1; transform:rotate(90deg); }
+    #danmaku-settings-panel .dsp-disclosure[open] > summary::after { background:#3a2b4f; transform:rotate(-90deg); }
+    #danmaku-settings-panel .dsp-disclosure-body { padding:4px 2px 12px; }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-zxdw" id="root" data-composition-id="store-demo" data-start="0" data-duration="36" data-width="1280" data-height="800">
+    <div data-hf-id="hf-cxw4" id="store-demo-stage" class="clip stage" data-start="0" data-duration="36" data-track-index="0">
+      <div data-hf-id="hf-4y7z" class="header" data-layout-allow-overlap="">
+        <div data-hf-id="hf-oojr" class="brand"><img data-hf-id="hf-old0" src="assets/icon-128.png" alt=""><div data-hf-id="hf-4xiw" class="brand-name">Danmaku for Twitch</div></div>
+        <div data-hf-id="hf-7kwu" class="phase phase-1" data-beat="01"><div data-hf-id="hf-phase-copy-1" class="phase-copy"><strong data-hf-id="hf-mfy7" class="phase-title">Chat on the video</strong><small data-hf-id="hf-phase-context-1" class="phase-context">Normal chat stays smooth and readable.</small></div></div>
+        <div data-hf-id="hf-wouz" class="phase phase-2" data-beat="02"><div data-hf-id="hf-phase-copy-2" class="phase-copy"><strong data-hf-id="hf-t363" class="phase-title">It adapts as chat gets busy</strong><small data-hf-id="hf-phase-context-2" class="phase-context">Speed rises with the size of the spike.</small></div></div>
+        <div data-hf-id="hf-8p7z" class="phase phase-3" data-beat="03"><div data-hf-id="hf-phase-copy-3" class="phase-copy"><strong data-hf-id="hf-p1ig" class="phase-title">Bigger spike. Faster flow.</strong></div></div>
+        <div data-hf-id="hf-o3y3" class="phase phase-4" data-beat="04"><div data-hf-id="hf-phase-copy-4" class="phase-copy"><strong data-hf-id="hf-mfk7" class="phase-title">Favorite viewers stand out</strong><small data-hf-id="hf-phase-context-4" class="phase-context">Flow, Ember, and Glitch effects.</small></div></div>
+        <div data-hf-id="hf-v9fh" class="phase phase-5" data-beat="05"><div data-hf-id="hf-phase-copy-5" class="phase-copy"><strong data-hf-id="hf-zm60" class="phase-title">Place it exactly where you want</strong><small data-hf-id="hf-phase-context-5" class="phase-context">Change rows, text size, position, and height.</small></div></div>
+        <div data-hf-id="hf-phase-6" class="phase phase-6" data-beat="06"><div data-hf-id="hf-phase-copy-6" class="phase-copy"><strong data-hf-id="hf-phase-title-6" class="phase-title">Tune every detail</strong><small data-hf-id="hf-phase-context-6" class="phase-context">Settings update the overlay immediately.</small></div></div>
+      </div>
+      <div data-hf-id="hf-ahjb" class="player">
+        <div data-hf-id="hf-camera" class="player-camera" data-layout-allow-overflow="">
+        <video data-hf-id="hf-stream-footage" id="stream-footage" class="clip stream-footage" src=".media/video/video_001.mp4" data-start="0" data-duration="36" data-track-index="0" muted playsinline></video>
+        <div data-hf-id="hf-she0" class="video-vignette"></div>
+        <div data-hf-id="hf-44jo" class="danmaku-overlay" data-layout-allow-overlap="" data-layout-allow-occlusion="">
+          <div data-hf-id="hf-jsuh" class="danmaku-dynamic-tag">×1.4</div>
+          <div data-hf-id="hf-w5xn" data-layout-allow-overflow="" class="danmaku-message m1" style="top:55px"><span data-hf-id="hf-qf5p" class="danmaku-badge">M</span><span data-hf-id="hf-87zf" class="danmaku-username" style="color:#5ce1ff">PixelPanda: </span><span data-hf-id="hf-pyke" class="danmaku-text">that play was insane</span> <span data-hf-id="hf-hur6" class="danmaku-emote">⚡</span></div>
+          <div data-hf-id="hf-160y" data-layout-allow-overflow="" class="danmaku-message m2" style="top:118px"><span data-hf-id="hf-lpd2" class="danmaku-username" style="color:#ff69b4">Kappa_Lover42: </span><span data-hf-id="hf-bjch" class="danmaku-text">POGGERS</span> <span data-hf-id="hf-zuc5" class="danmaku-emote">P</span></div>
+          <div data-hf-id="hf-sp15" data-layout-allow-overflow="" class="danmaku-message m3" style="top:181px"><span data-hf-id="hf-ofmk" class="danmaku-badge">V</span><span data-hf-id="hf-lt8g" class="danmaku-username" style="color:#adff2f">Subwooferr: </span><span data-hf-id="hf-7zi5" class="danmaku-text">GG WP</span></div>
+          <div data-hf-id="hf-e9to" data-layout-allow-overflow="" class="danmaku-message b1" style="top:42px"><span data-hf-id="hf-57ae" class="danmaku-username" style="color:#ff6347">EmoteSpammer: </span><span data-hf-id="hf-e08s" class="danmaku-text">KEKW KEKW</span> <span data-hf-id="hf-yft0" class="danmaku-emote">😂</span></div>
+          <div data-hf-id="hf-nrfa" data-layout-allow-overflow="" class="danmaku-message b2" style="top:102px"><span data-hf-id="hf-pmjn" class="danmaku-badge">S</span><span data-hf-id="hf-cmek" class="danmaku-username" style="color:#da70d6">GachiGuy: </span><span data-hf-id="hf-leg6" class="danmaku-text">no way that happened</span></div>
+          <div data-hf-id="hf-mxm5" data-layout-allow-overflow="" class="danmaku-message b3" style="top:162px"><span data-hf-id="hf-uar1" class="danmaku-username" style="color:#00ced1">NinetyNineCent: </span><span data-hf-id="hf-1gij" class="danmaku-text">EZ Clap</span> <span data-hf-id="hf-0pyr" class="danmaku-emote">👏</span></div>
+          <div data-hf-id="hf-1hgl" data-layout-allow-overflow="" class="danmaku-message b4" style="top:222px"><span data-hf-id="hf-s6z0" class="danmaku-username" style="color:#ffd700">ChannelPointer: </span><span data-hf-id="hf-9y8k" class="danmaku-text">chat is so fast right now</span></div>
+          <div data-hf-id="hf-e6wq" data-layout-allow-overflow="" class="danmaku-message b5" style="top:282px"><span data-hf-id="hf-30b5" class="danmaku-badge">M</span><span data-hf-id="hf-9xb1" class="danmaku-username" style="color:#1e90ff">NoobMaster69: </span><span data-hf-id="hf-4f4p" class="danmaku-text">monkaS that was close</span></div>
+          <div data-hf-id="hf-b6" data-layout-allow-overflow="" class="danmaku-message b6" style="top:342px"><span data-hf-id="hf-b6u" class="danmaku-username" style="color:#ff69b4">PogChamp99: </span><span data-hf-id="hf-b6t" class="danmaku-text">PEPEGA</span> <img data-hf-id="hf-b6e" id="spike-pepega-5" class="clip danmaku-emote" data-start="7.4" data-duration="2.85" src=".media/images/image_001.png" alt="Pepega"></div>
+          <div data-hf-id="hf-b7" data-layout-allow-overflow="" class="danmaku-message b7" style="top:402px"><span data-hf-id="hf-b7b" class="danmaku-badge">S</span><span data-hf-id="hf-b7u" class="danmaku-username" style="color:#7fffd4">LurkerXD: </span><span data-hf-id="hf-b7t" class="danmaku-text">streamer is cracked</span> <span data-hf-id="hf-b7e" class="danmaku-emote">🔥</span></div>
+          <div data-hf-id="hf-b8" data-layout-allow-overflow="" class="danmaku-message b8" style="top:72px"><span data-hf-id="hf-b8u" class="danmaku-username" style="color:#ffd700">ChannelPointer: </span><span data-hf-id="hf-b8t" class="danmaku-text">PogU PogU PogU</span> <span data-hf-id="hf-b8e" class="danmaku-emote">😮</span></div>
+          <div data-hf-id="hf-b9" data-layout-allow-overflow="" class="danmaku-message b9" style="top:192px"><span data-hf-id="hf-b9b" class="danmaku-badge">V</span><span data-hf-id="hf-b9u" class="danmaku-username" style="color:#adff2f">Subwooferr: </span><span data-hf-id="hf-b9t" class="danmaku-text">LETS GOOO</span> <span data-hf-id="hf-b9e" class="danmaku-emote">P</span></div>
+          <div data-hf-id="hf-b10" data-layout-allow-overflow="" class="danmaku-message b10" style="top:312px"><span data-hf-id="hf-b10u" class="danmaku-username" style="color:#5ce1ff">NinetyNineCent: </span><span data-hf-id="hf-b10t" class="danmaku-text">what a play</span> <span data-hf-id="hf-b10e" class="danmaku-emote">😲</span></div>
+          <div data-hf-id="hf-b11" data-layout-allow-overflow="" class="danmaku-message b11" style="top:28px"><span data-hf-id="hf-b11u" class="danmaku-username" style="color:#7fffd4">PepeEnjoyer: </span><span data-hf-id="hf-b11t" class="danmaku-text">PEPEGA</span> <img data-hf-id="hf-b11e" id="spike-pepega-1" class="clip danmaku-emote" data-start="6.3" data-duration="3.2" src=".media/images/image_001.png" alt="Pepega"></div>
+          <div data-hf-id="hf-b12" data-layout-allow-overflow="" class="danmaku-message b12" style="top:88px"><span data-hf-id="hf-b12u" class="danmaku-username" style="color:#ffd166">FrogInChat: </span><span data-hf-id="hf-b12t" class="danmaku-text">PEPEGA</span> <img data-hf-id="hf-b12e" id="spike-pepega-2" class="clip danmaku-emote" data-start="6.65" data-duration="3" src=".media/images/image_001.png" alt="Pepega"></div>
+          <div data-hf-id="hf-b13" data-layout-allow-overflow="" class="danmaku-message b13" style="top:208px"><span data-hf-id="hf-b13u" class="danmaku-username" style="color:#da70d6">ChatFrog: </span><span data-hf-id="hf-b13t" class="danmaku-text">PEPEGA</span> <img data-hf-id="hf-b13e" id="spike-pepega-3" class="clip danmaku-emote" data-start="7" data-duration="2.8" src=".media/images/image_001.png" alt="Pepega"></div>
+          <div data-hf-id="hf-b14" data-layout-allow-overflow="" class="danmaku-message b14" style="top:268px"><span data-hf-id="hf-b14u" class="danmaku-username" style="color:#5ce1ff">PepePolice: </span><span data-hf-id="hf-b14t" class="danmaku-text">PEPEGA</span> <img data-hf-id="hf-b14e" id="spike-pepega-4" class="clip danmaku-emote" data-start="7.35" data-duration="2.6" src=".media/images/image_001.png" alt="Pepega"></div>
+          <div data-hf-id="hf-5224" data-layout-allow-overflow="" class="danmaku-message danmaku-message--favorite f1" style="top:78px"><span data-hf-id="hf-4avo" class="danmaku-badge">V</span><span data-hf-id="hf-tumv" id="effect-flow" class="clip danmaku-username danmaku-username-effect--duotoneFlow danmaku-username-effect--enhanced" data-start="10.9" data-duration="6.25" data-danmaku-username-effect="duotoneFlow" data-danmaku-username-palette="analogous" data-danmaku-username-text="FavoriteViewer: " style="--danmaku-username-color:#ff69b4;--danmaku-secondary-color:hsl(5 82% 70%);--danmaku-effect-duration-scale:.92;--danmaku-effect-delay:-2.958s;--danmaku-gradient-direction:alternate-reverse;--danmaku-texture-direction:reverse">FavoriteViewer: </span><span data-hf-id="hf-hiqg" class="danmaku-text">you called it!</span> <span data-hf-id="hf-lldy" class="danmaku-emote">★</span></div>
+          <div data-hf-id="hf-z42w" data-layout-allow-overflow="" class="danmaku-message danmaku-message--favorite danmaku-message--mention f2" style="top:158px"><span data-hf-id="hf-4io2" id="effect-ember" class="danmaku-username danmaku-username-effect--duotoneEmber danmaku-username-effect--enhanced" data-danmaku-username-effect="duotoneEmber" data-danmaku-username-palette="analogous" data-danmaku-username-text="ModSignal: " style="--danmaku-username-color:#ffd166;--danmaku-secondary-color:hsl(77 82% 70%);--danmaku-effect-texture:url('assets/ember.webp');--danmaku-effect-duration-scale:.88;--danmaku-effect-delay:-.455s;--danmaku-gradient-direction:alternate-reverse;--danmaku-texture-direction:reverse">ModSignal: <span data-hf-id="hf-ember-layer" id="effect-ember-layer" class="clip effect-ember-layer" data-start="11.7" data-duration="5.45" aria-hidden="true">ModSignal: </span></span><span data-hf-id="hf-kuek" class="danmaku-text">@you POG!</span></div>
+          <div data-hf-id="hf-glitch-message" data-layout-allow-overflow="" class="danmaku-message danmaku-message--favorite f3" style="top:238px"><span data-hf-id="hf-glitch-badge" class="danmaku-badge">S</span><span data-hf-id="hf-glitch-username" id="effect-glitch" class="danmaku-username danmaku-username-effect--duotoneGlitch danmaku-username-effect--enhanced" data-danmaku-username-effect="duotoneGlitch" data-danmaku-username-palette="analogous" data-danmaku-username-text="GlitchCaster: " style="--danmaku-username-color:#5ce1ff;--danmaku-secondary-color:hsl(226 82% 70%);--danmaku-effect-duration-scale:1;--danmaku-effect-delay:-4.609s;--danmaku-gradient-direction:alternate;--danmaku-texture-direction:normal">GlitchCaster: <span data-hf-id="hf-glitch-upper" id="effect-glitch-upper" class="clip effect-glitch-layer effect-glitch-layer--upper" data-start="12.4" data-duration="4.75" aria-hidden="true">GlitchCaster: </span><span data-hf-id="hf-glitch-lower" id="effect-glitch-lower" class="clip effect-glitch-layer effect-glitch-layer--lower" data-start="12.4" data-duration="4.75" aria-hidden="true">GlitchCaster: </span></span><span data-hf-id="hf-glitch-text" class="danmaku-text">POG moment!</span></div>
+          <div data-hf-id="hf-zqr8" data-layout-allow-overflow="" class="danmaku-message p1" style="top:105px"><span data-hf-id="hf-th3d" class="danmaku-username" style="color:#7fffd4">LurkerXD: </span><span data-hf-id="hf-9797" class="danmaku-text">move the overlay up here</span></div>
+          <div data-hf-id="hf-wg9f" data-layout-allow-overflow="" class="danmaku-message r1" style="top:70px"><span data-hf-id="hf-nbir" class="danmaku-reply"><span data-hf-id="hf-qc8e" class="danmaku-reply-user">↳ @PixelPanda</span><span data-hf-id="hf-4r4d" class="danmaku-reply-quote"> “that play was…”</span> </span><span data-hf-id="hf-uasq" class="danmaku-username" style="color:#ff69b4">Kappa_Lover42: </span><span data-hf-id="hf-c2ca" class="danmaku-text">I saw it!</span></div>
+          <div data-hf-id="hf-r4zc" data-layout-allow-overflow="" class="danmaku-message r2" style="top:148px"><span data-hf-id="hf-4788" class="danmaku-badge">M</span><span data-hf-id="hf-xtaq" class="danmaku-username" style="color:#5ce1ff">StreamSniper: </span><span data-hf-id="hf-uegq" class="danmaku-text">badges, replies and emotes</span> <span data-hf-id="hf-ubl1" class="danmaku-emote">GG</span></div>
+          <div data-hf-id="hf-9iga" data-layout-allow-overflow="" class="danmaku-message r3" style="top:226px"><span data-hf-id="hf-pzy0" class="danmaku-username" style="color:#adff2f">Subwooferr: </span><span data-hf-id="hf-h8fo" class="danmaku-text">all on the video</span></div>
+          <div data-hf-id="hf-settings-sample" data-layout-allow-overflow="" class="danmaku-message settings-sample" style="top:84px"><span data-hf-id="hf-settings-sample-user" class="danmaku-username" style="color:#5ce1ff">PixelPanda: </span><span data-hf-id="hf-settings-sample-text" class="danmaku-text">make it yours</span></div>
+          <div data-hf-id="hf-guides" class="danmaku-row-guides"><div data-hf-id="hf-guide-1" class="danmaku-row-guide guide-1" style="top:59.94px"><span data-hf-id="hf-guide-label-1" class="danmaku-row-guide-label">Row 1</span></div><div data-hf-id="hf-guide-2" class="danmaku-row-guide guide-2" style="top:157.25px"><span data-hf-id="hf-guide-label-2" class="danmaku-row-guide-label">Row 2</span></div><div data-hf-id="hf-guide-3" class="danmaku-row-guide guide-3" style="top:254.56px"><span data-hf-id="hf-guide-label-3" class="danmaku-row-guide-label">Row 3</span></div><div data-hf-id="hf-guide-4" class="danmaku-row-guide guide-4" style="top:351.87px"><span data-hf-id="hf-guide-label-4" class="danmaku-row-guide-label">Row 4</span></div><div data-hf-id="hf-guide-5" class="danmaku-row-guide guide-5" style="top:351.87px"><span data-hf-id="hf-guide-label-5" class="danmaku-row-guide-label">Row 5</span></div></div>
+          <div data-hf-id="hf-reas" data-layout-allow-overlap="" data-layout-allow-occlusion="" class="danmaku-region-editor dre-active"><div data-hf-id="hf-dfsa" class="dre-handle dre-handle-top"></div><div data-hf-id="hf-mt6g" class="dre-handle dre-handle-bottom"></div><div data-hf-id="hf-3xkx" class="dre-toolbar"><div data-hf-id="hf-hikl" class="dre-quick"><button data-hf-id="hf-787f" class="dre-quick-btn" type="button">−</button><span data-hf-id="hf-j0uc" class="dre-quick-label">Rows <em data-hf-id="hf-lal5" class="rows-value">4</em></span><button data-hf-id="hf-bi0g" class="dre-quick-btn rows-plus" type="button">+</button></div><div data-hf-id="hf-df2x" class="dre-quick"><button data-hf-id="hf-yegb" class="dre-quick-btn" type="button">−</button><span data-hf-id="hf-qovk" class="dre-quick-label">Size <em data-hf-id="hf-d7b0" class="size-value">30px</em></span><button data-hf-id="hf-0iiw" class="dre-quick-btn size-plus" type="button">+</button></div><button data-hf-id="hf-1dft" class="dre-settings-btn" type="button">⚙</button></div></div>
+          <svg data-hf-id="hf-effect-filters" class="danmaku-effect-filter-defs" aria-hidden="true" width="0" height="0"><filter data-hf-id="hf-mgv7" id="danmaku-text-border-filter" x="-30%" y="-35%" width="160%" height="180%" color-interpolation-filters="sRGB"><femorphology data-hf-id="hf-brgs" in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor" /><fecomponenttransfer data-hf-id="hf-92ht" in="expandedColor" result="border"><fefuncr data-hf-id="hf-sdjz" type="linear" slope="0.24" /><fefuncg data-hf-id="hf-jskg" type="linear" slope="0.24" /><fefuncb data-hf-id="hf-a3rj" type="linear" slope="0.24" /><fefunca data-hf-id="hf-5bqd" type="identity" /></fecomponenttransfer><feoffset data-hf-id="hf-jn0p" in="expandedColor" dy="1.6" result="depthShape" /><fecomponenttransfer data-hf-id="hf-9hs2" in="depthShape" result="depth"><fefuncr data-hf-id="hf-3ts1" type="linear" slope="0.08" /><fefuncg data-hf-id="hf-k6ii" type="linear" slope="0.08" /><fefuncb data-hf-id="hf-yt2p" type="linear" slope="0.08" /><fefunca data-hf-id="hf-vazz" type="linear" slope="0.98" /></fecomponenttransfer><femerge data-hf-id="hf-zn2o"><femergenode data-hf-id="hf-3qpu" in="depth" /><femergenode data-hf-id="hf-0igh" in="border" /><femergenode data-hf-id="hf-cmaw" in="SourceGraphic" /></femerge></filter><filter data-hf-id="hf-x3fe" id="danmaku-text-border-flat-filter" x="-30%" y="-35%" width="160%" height="170%" color-interpolation-filters="sRGB"><femorphology data-hf-id="hf-1iw4" in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor" /><fecomponenttransfer data-hf-id="hf-3gfp" in="expandedColor" result="border"><fefuncr data-hf-id="hf-vnz3" type="linear" slope="0.24" /><fefuncg data-hf-id="hf-5efs" type="linear" slope="0.24" /><fefuncb data-hf-id="hf-ijsf" type="linear" slope="0.24" /><fefunca data-hf-id="hf-xla1" type="identity" /></fecomponenttransfer><femerge data-hf-id="hf-4ors"><femergenode data-hf-id="hf-zvj9" in="border" /><femergenode data-hf-id="hf-cnhc" in="SourceGraphic" /></femerge></filter></svg>
+        </div>
+        </div>
+        <div data-hf-id="hf-demo-cursor" data-layout-allow-overflow="" data-layout-allow-overlap="" class="demo-cursor"><div data-hf-id="hf-cursor-click" class="cursor-click"></div><svg data-hf-id="hf-cursor-svg" viewBox="0 0 30 36" aria-hidden="true"><path data-hf-id="hf-cursor-path" d="M2 2 L2 29 L9.5 22 L15 34 L20 31.5 L14.5 20 L26 20 Z" fill="#ffffff" stroke="#111111" stroke-width="2.2" stroke-linejoin="round" /></svg></div>
+        <div data-hf-id="hf-ctu1" class="player-bottom"><div data-hf-id="hf-24ou" class="play"></div><div data-hf-id="hf-j8vw" class="live">LIVE</div><div data-hf-id="hf-n2ol" class="placeholder-label">Live stream</div></div>
+        <div data-hf-id="hf-wv7z" data-layout-allow-occlusion="" class="danmaku-player-toggle">M</div>
+      </div>
+      <div data-hf-id="hf-settings-panel" id="danmaku-settings-panel" data-layout-allow-overlap="" data-layout-allow-occlusion="">
+        <div data-hf-id="hf-dsp-header" class="dsp-header"><span data-hf-id="hf-dsp-title" class="dsp-title">Danmaku</span><button data-hf-id="hf-dsp-close" class="dsp-close" type="button" aria-label="Close settings">×</button></div>
+        <div data-hf-id="hf-dsp-body" data-layout-allow-overflow="" class="dsp-body">
+          <section data-hf-id="hf-dsp-overlay" class="dsp-section"><h3 data-hf-id="hf-dsp-overlay-title">Overlay</h3><label data-hf-id="hf-dsp-enabled-row" class="dsp-row"><span data-hf-id="hf-dsp-enabled-label">Enabled</span><input data-hf-id="hf-dsp-enabled" type="checkbox" checked></label><label data-hf-id="hf-dsp-fullscreen-row" class="dsp-row"><span data-hf-id="hf-dsp-fullscreen-label">Fullscreen only</span><input data-hf-id="hf-dsp-fullscreen" type="checkbox"></label></section>
+          <details data-hf-id="hf-dsp-appearance" id="settings-appearance" class="dsp-disclosure" open><summary data-hf-id="hf-dsp-appearance-summary">Appearance</summary><div data-hf-id="hf-dsp-appearance-body" class="dsp-disclosure-body"><div data-hf-id="hf-dsp-font-row" class="dsp-row dsp-row-vertical"><div data-hf-id="hf-dsp-font-label" class="dsp-row-label"><span data-hf-id="hf-dsp-font-text">Text size</span><em data-hf-id="hf-dsp-font-value">36px</em></div><input data-hf-id="hf-dsp-font-input" type="range" min="12" max="48" step="1" value="36"></div><div data-hf-id="hf-dsp-rows-row" class="dsp-row dsp-row-vertical"><div data-hf-id="hf-dsp-rows-label" class="dsp-row-label"><span data-hf-id="hf-dsp-rows-text">Message rows</span><em data-hf-id="hf-dsp-rows-value">5</em></div><input data-hf-id="hf-dsp-rows-input" type="range" min="1" max="10" step="1" value="5"></div><div data-hf-id="hf-dsp-opacity-row" class="dsp-row dsp-row-vertical"><div data-hf-id="hf-dsp-opacity-label" class="dsp-row-label"><span data-hf-id="hf-dsp-opacity-text">Opacity</span><em data-hf-id="hf-dsp-opacity-value" class="settings-opacity-value">90%</em></div><input data-hf-id="hf-dsp-opacity-input" class="settings-opacity" type="range" min="0.1" max="1" step="0.05" value="0.9"></div></div></details>
+          <details data-hf-id="hf-dsp-placement" id="settings-placement" class="dsp-disclosure"><summary data-hf-id="hf-dsp-placement-summary">Placement</summary><div data-hf-id="hf-dsp-placement-body" class="dsp-disclosure-body"><div data-hf-id="hf-dsp-placement-options" class="dsp-segmented"><button data-hf-id="hf-dsp-top" class="dsp-btn dsp-btn-sm" type="button">Top</button><button data-hf-id="hf-dsp-middle" class="dsp-btn dsp-btn-sm" type="button">Middle</button><button data-hf-id="hf-dsp-bottom" class="dsp-btn dsp-btn-sm settings-bottom" type="button">Bottom</button><button data-hf-id="hf-dsp-full" class="dsp-btn dsp-btn-sm" type="button">Full</button></div></div></details>
+          <details data-hf-id="hf-dsp-motion" class="dsp-disclosure"><summary data-hf-id="hf-dsp-motion-summary">Motion</summary><div data-hf-id="hf-dsp-motion-body" class="dsp-disclosure-body"><label data-hf-id="hf-dsp-motion-field" class="dsp-field"><span data-hf-id="hf-dsp-style-label">Style</span><select data-hf-id="hf-dsp-style-select"><option data-hf-id="hf-25xh">Scroll</option><option data-hf-id="hf-7cyy">Reverse</option><option data-hf-id="hf-0h6v">Drift</option><option data-hf-id="hf-gleh">Pop &amp; fade</option><option data-hf-id="hf-s71i">Slide up</option></select></label><p data-hf-id="hf-dsp-motion-desc" class="dsp-anim-desc">Classic right-to-left scroll across the player.</p><label data-hf-id="hf-dsp-adapt-row" class="dsp-row"><span data-hf-id="hf-dsp-adapt-label">Adapt to busy chat</span><input data-hf-id="hf-dsp-adapt" type="checkbox" checked></label></div></details>
+          <details data-hf-id="hf-dsp-favorites" class="dsp-disclosure"><summary data-hf-id="hf-dsp-favorites-summary">Favorite chatters</summary></details><details data-hf-id="hf-dsp-message" class="dsp-disclosure"><summary data-hf-id="hf-dsp-message-summary">Message content</summary></details><details data-hf-id="hf-dsp-mentions" class="dsp-disclosure"><summary data-hf-id="hf-dsp-mentions-summary">Mentions</summary></details><details data-hf-id="hf-dsp-advanced" class="dsp-disclosure"><summary data-hf-id="hf-dsp-advanced-summary">Advanced</summary></details>
+        </div>
+      </div>
+      <div data-hf-id="hf-settings-cursor" class="settings-cursor"><div data-hf-id="hf-settings-cursor-click" class="cursor-click"></div><svg data-hf-id="hf-settings-cursor-svg" viewBox="0 0 30 36" aria-hidden="true"><path data-hf-id="hf-settings-cursor-path" d="M2 2 L2 29 L9.5 22 L15 34 L20 31.5 L14.5 20 L26 20 Z" fill="#ffffff" stroke="#111111" stroke-width="2.2" stroke-linejoin="round" /></svg></div>
+    </div>
+  </div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    const showPhase = (selector, start, hold = 2.65) => {
+      tl.fromTo(selector, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .42, ease: 'power3.out', immediateRender: false }, start);
+      tl.to(selector, { opacity: 0, y: -8, duration: .28, ease: 'power2.in' }, start + hold);
+      tl.set(selector, { opacity: 0 }, start + hold + .29);
+    };
+    const scrollMessage = (selector, start, duration, fromX = 1500, toX = -900) => {
+      tl.set(selector, { x: fromX, opacity: 1 }, Math.max(0, start - .04));
+      tl.fromTo(selector, { x: fromX }, { x: toX, duration, ease: 'none', immediateRender: false }, start);
+      tl.set(selector, { opacity: 0 }, start + duration + .01);
+    };
+    const clickCursor = (start, target) => {
+      tl.fromTo('.cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, start);
+      tl.to('.demo-cursor', { scale: .84, duration: .08, ease: 'power2.in' }, start);
+      tl.fromTo('.demo-cursor', { scale: .84 }, { scale: 1, duration: .12, ease: 'back.out(2)', immediateRender: false }, start + .09);
+      if (target) {
+        tl.to(target, { scale: .92, duration: .08, ease: 'power2.in' }, start);
+        tl.to(target, { scale: 1, duration: .12, ease: 'back.out(1.7)' }, start + .09);
+      }
+    };
+    tl.set('.danmaku-message', { x: 1500, opacity: 0 }, 0);
+    showPhase('.phase-1', 0, 3.45);
+    showPhase('.phase-2', 3.7, 2.35);
+    showPhase('.phase-3', 6.15, 4.25);
+    showPhase('.phase-4', 10.75, 6.4);
+    showPhase('.phase-5', 17.65, 10.7);
+    showPhase('.phase-6', 28.45, 7.15);
+
+    scrollMessage('.m1', .15, 7); scrollMessage('.m2', 1, 7); scrollMessage('.m3', 1.85, 7);
+
+    tl.set('.danmaku-dynamic-tag', { textContent: '×1.4' }, 3.84);
+    tl.fromTo('.danmaku-dynamic-tag', { opacity: 0, scale: .85 }, { opacity: 1, scale: 1, duration: .3, ease: 'back.out(1.8)', immediateRender: false }, 3.85);
+    tl.to('.player-camera', { scale: 1.65, x: 0, y: 0, duration: 1.05, ease: 'power3.inOut' }, 4);
+    tl.set('.danmaku-dynamic-tag', { textContent: '×2.4' }, 4.72);
+    tl.to('.danmaku-dynamic-tag', { scale: 1.16, duration: .18, ease: 'power2.out' }, 4.72);
+    tl.to('.danmaku-dynamic-tag', { scale: 1, duration: .2, ease: 'power2.in' }, 4.9);
+    tl.fromTo('.player-camera', { scale: 1.65, x: 0, y: 0 }, { scale: 1, x: 0, y: 0, duration: .85, ease: 'power3.inOut', immediateRender: false }, 5.3);
+    tl.set('.danmaku-dynamic-tag', { textContent: '×3.7' }, 6.15);
+    tl.to('.danmaku-dynamic-tag', { scale: 1.12, duration: .15, ease: 'power2.out' }, 6.15);
+    tl.to('.danmaku-dynamic-tag', { scale: 1, duration: .18, ease: 'power2.in' }, 6.31);
+
+    scrollMessage('.b1', 6.15, 3.35); scrollMessage('.b2', 6.4, 3.25);
+    scrollMessage('.b3', 6.65, 3.15); scrollMessage('.b4', 6.9, 3.05);
+    scrollMessage('.b5', 7.15, 2.95); scrollMessage('.b6', 7.4, 2.85);
+    scrollMessage('.b7', 7.65, 2.75); scrollMessage('.b8', 7.9, 2.65);
+    scrollMessage('.b9', 8.15, 2.5); scrollMessage('.b10', 8.4, 2.35);
+    scrollMessage('.b11', 6.3, 3.2); scrollMessage('.b12', 6.65, 3);
+    scrollMessage('.b13', 7, 2.8); scrollMessage('.b14', 7.35, 2.6);
+    tl.set('.danmaku-dynamic-tag', { textContent: '×1.4' }, 10.72);
+    tl.to('.danmaku-dynamic-tag', { scale: 1.18, duration: .18, ease: 'power2.out' }, 10.72);
+    tl.to('.danmaku-dynamic-tag', { scale: 1, duration: .2, ease: 'power2.in' }, 10.9);
+    tl.to('.danmaku-dynamic-tag', { opacity: 0, scale: .9, duration: .28, ease: 'power2.in' }, 11.6);
+
+    scrollMessage('.f1', 10.9, 6.25, 1500, -100); scrollMessage('.f2', 11.7, 5.45, 1500, -100); scrollMessage('.f3', 12.4, 4.75, 1500, -100);
+    tl.set('.player-camera', { transformOrigin: '42% 24%' }, 14.15);
+    tl.to('.player-camera', { scale: 1.55, x: 0, y: 0, duration: .68, ease: 'power3.inOut' }, 14.25);
+    tl.to('.player-camera', { scale: 1, x: 0, y: 0, duration: .78, ease: 'power3.inOut' }, 15.85);
+
+    tl.fromTo('.danmaku-region-editor', { opacity: 0 }, { opacity: 1, duration: .38, ease: 'power2.out', immediateRender: false }, 17.7);
+    tl.fromTo('.danmaku-row-guides', { opacity: 0 }, { opacity: 1, duration: .38, ease: 'power2.out', immediateRender: false }, 17.7);
+    tl.to('.danmaku-region-editor, .danmaku-row-guides', { opacity: 0, duration: .28, ease: 'power2.in' }, 28.6);
+    scrollMessage('.p1', 17.75, 10.8);
+    scrollMessage('.r1', 18.1, 10.45); scrollMessage('.r2', 18.5, 10.05); scrollMessage('.r3', 18.9, 9.65);
+
+    tl.set('.demo-cursor', { x: 1100, y: 565, opacity: 0 }, 17.95);
+    tl.fromTo('.demo-cursor', { opacity: 0 }, { opacity: 1, duration: .22, ease: 'power2.out', immediateRender: false }, 18);
+    tl.fromTo('.demo-cursor', { x: 1100, y: 565 }, { x: 554, y: 83, duration: .95, ease: 'power3.inOut', immediateRender: false }, 18.2);
+    clickCursor(19.2, '.rows-plus');
+    tl.set('.rows-value', { textContent: '5' }, 19.22);
+    tl.to('.guide-2', { y: -24.79, duration: .52, ease: 'power3.inOut' }, 19.22);
+    tl.to('.guide-3', { y: -49.58, duration: .52, ease: 'power3.inOut' }, 19.22);
+    tl.to('.guide-4', { y: -74.37, duration: .52, ease: 'power3.inOut' }, 19.22);
+    tl.fromTo('.guide-5', { opacity: 0, scaleX: .86 }, { opacity: 1, scaleX: 1, duration: .4, ease: 'power2.out', immediateRender: false }, 19.42);
+
+    tl.fromTo('.demo-cursor', { x: 554, y: 83 }, { x: 694, y: 83, duration: .72, ease: 'power3.inOut', immediateRender: false }, 20.35);
+    clickCursor(21.12, '.size-plus');
+    tl.set('.size-value', { textContent: '32px' }, 21.14);
+    tl.to('.danmaku-message', { scale: 1.067, duration: .32, ease: 'power2.out' }, 21.14);
+    tl.to('.danmaku-row-guide', { scaleY: 1.067, duration: .32, ease: 'power2.out' }, 21.14);
+    tl.to('.guide-5', { y: -1.85, duration: .32, ease: 'power2.out' }, 21.14);
+
+    clickCursor(21.66, '.size-plus');
+    tl.set('.size-value', { textContent: '34px' }, 21.68);
+    tl.to('.danmaku-message', { scale: 1.133, duration: .32, ease: 'power2.out' }, 21.68);
+    tl.to('.danmaku-row-guide', { scaleY: 1.133, duration: .32, ease: 'power2.out' }, 21.68);
+    tl.to('.guide-2', { y: -25.25, duration: .32, ease: 'power2.out' }, 21.68);
+    tl.to('.guide-3', { y: -50.51, duration: .32, ease: 'power2.out' }, 21.68);
+    tl.to('.guide-4', { y: -75.76, duration: .32, ease: 'power2.out' }, 21.68);
+    tl.to('.guide-5', { y: -3.7, duration: .32, ease: 'power2.out' }, 21.68);
+
+    clickCursor(22.2, '.size-plus');
+    tl.set('.size-value', { textContent: '36px' }, 22.22);
+    tl.to('.danmaku-message', { scale: 1.2, duration: .32, ease: 'power2.out' }, 22.22);
+    tl.to('.danmaku-row-guide', { scaleY: 1.2, duration: .32, ease: 'power2.out' }, 22.22);
+    tl.to('.guide-2', { y: -25.72, duration: .32, ease: 'power2.out' }, 22.22);
+    tl.to('.guide-3', { y: -51.43, duration: .32, ease: 'power2.out' }, 22.22);
+    tl.to('.guide-4', { y: -77.15, duration: .32, ease: 'power2.out' }, 22.22);
+    tl.to('.guide-5', { y: -5.55, duration: .32, ease: 'power2.out' }, 22.22);
+
+    tl.fromTo('.demo-cursor', { x: 694, y: 83 }, { x: 600, y: 82, duration: .72, ease: 'power3.inOut', immediateRender: false }, 22.76);
+    tl.fromTo('.cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, 23.53);
+    tl.to('.demo-cursor', { scale: .84, duration: .08, ease: 'power2.in' }, 23.53);
+    tl.fromTo('.demo-cursor', { x: 600, y: 82 }, { x: 600, y: 137, duration: 1.08, ease: 'power2.inOut', immediateRender: false }, 23.63);
+    tl.to('.danmaku-region-editor', { y: 55, duration: 1.08, ease: 'power2.inOut' }, 23.63);
+    tl.to('.danmaku-row-guides', { y: 55, duration: 1.08, ease: 'power2.inOut' }, 23.63);
+    tl.to('.danmaku-message', { y: 55, duration: 1.08, ease: 'power2.inOut' }, 23.63);
+    tl.fromTo('.demo-cursor', { scale: .84 }, { scale: 1, duration: .14, ease: 'back.out(2)', immediateRender: false }, 24.72);
+
+    tl.fromTo('.demo-cursor', { x: 600, y: 137 }, { x: 600, y: 433, duration: .9, ease: 'power3.inOut', immediateRender: false }, 25.02);
+    tl.fromTo('.cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, 25.97);
+    tl.to('.demo-cursor', { scale: .84, duration: .08, ease: 'power2.in' }, 25.97);
+    tl.fromTo('.demo-cursor', { x: 600, y: 433 }, { x: 600, y: 518, duration: 1.15, ease: 'power2.inOut', immediateRender: false }, 26.07);
+    tl.to('.danmaku-region-editor', { scaleY: 1.266, transformOrigin: '50% 0%', duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.to('.danmaku-region-editor .dre-quick, .danmaku-region-editor .dre-settings-btn, .danmaku-region-editor .dre-handle', { scaleY: .79, transformOrigin: '50% 50%', duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.to('.guide-2', { y: -4.47, duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.to('.guide-3', { y: -8.93, duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.to('.guide-4', { y: -13.4, duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.to('.guide-5', { y: 79.45, duration: 1.15, ease: 'power2.inOut' }, 26.07);
+    tl.fromTo('.demo-cursor', { scale: .84 }, { scale: 1, duration: .14, ease: 'back.out(2)', immediateRender: false }, 27.23);
+    tl.fromTo('.demo-cursor', { x: 600, y: 518 }, { x: 708, y: 137, duration: .82, ease: 'power3.inOut', immediateRender: false }, 27.45);
+    clickCursor(28.3, '.dre-settings-btn');
+    tl.to('.demo-cursor', { opacity: 0, duration: .2, ease: 'power2.in' }, 28.48);
+
+    tl.fromTo('#danmaku-settings-panel', { opacity: 0, x: 22, scale: .97 }, { opacity: 1, x: 0, scale: 1, duration: .42, ease: 'power3.out', immediateRender: false }, 28.38);
+    tl.set('.settings-cursor', { x: 746, y: 234, opacity: 0 }, 28.38);
+    tl.fromTo('.settings-cursor', { opacity: 0 }, { opacity: 1, duration: .2, ease: 'power2.out', immediateRender: false }, 28.56);
+    scrollMessage('.settings-sample', 28.75, 6.6);
+
+    tl.fromTo('.settings-cursor', { x: 746, y: 234 }, { x: 1145, y: 412, duration: .82, ease: 'power3.inOut', immediateRender: false }, 28.85);
+    tl.fromTo('.settings-cursor .cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, 29.72);
+    tl.to('.settings-cursor', { scale: .84, duration: .08, ease: 'power2.in' }, 29.72);
+    tl.fromTo('.settings-cursor', { x: 1145, y: 412 }, { x: 1068, y: 412, duration: .78, ease: 'power2.inOut', immediateRender: false }, 29.82);
+    tl.to('.settings-opacity', { value: .65, duration: .78, ease: 'power2.inOut' }, 29.82);
+    tl.to('.settings-sample', { opacity: .65, duration: .78, ease: 'power2.inOut' }, 29.82);
+    tl.set('.settings-opacity-value', { textContent: '65%' }, 30.6);
+    tl.fromTo('.settings-cursor', { scale: .84 }, { scale: 1, duration: .14, ease: 'back.out(2)', immediateRender: false }, 30.61);
+
+    tl.fromTo('.settings-cursor', { x: 1068, y: 412 }, { x: 1173, y: 466, duration: .62, ease: 'power3.inOut', immediateRender: false }, 30.9);
+    tl.fromTo('.settings-cursor .cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, 31.57);
+    tl.set('#settings-placement', { attr: { open: '' } }, 31.6);
+
+    tl.fromTo('.settings-cursor', { x: 1173, y: 466 }, { x: 1073, y: 505, duration: .68, ease: 'power3.inOut', immediateRender: false }, 31.82);
+    tl.fromTo('.settings-cursor .cursor-click', { opacity: .9, scale: .35 }, { opacity: 0, scale: 1.65, duration: .36, ease: 'power2.out', immediateRender: false }, 32.55);
+    tl.to('.settings-bottom', { backgroundColor: '#3d2b58', color: '#f3eaff', duration: .22, ease: 'power2.out' }, 32.55);
+    tl.to('.danmaku-region-editor', { y: 373, scaleY: .729, duration: .82, ease: 'power3.inOut' }, 32.59);
+    tl.to('.danmaku-row-guides', { y: 373, duration: .82, ease: 'power3.inOut' }, 32.59);
+    tl.to('.settings-sample', { y: 373, duration: .82, ease: 'power3.inOut' }, 32.59);
+    tl.to('.settings-cursor', { opacity: 0, duration: .28, ease: 'power2.in' }, 35.25);
+    tl.to('#danmaku-settings-panel', { opacity: 0, x: 18, duration: .35, ease: 'power2.in' }, 35.42);
+    window.__timelines['store-demo'] = tl;
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Danmaku Twitch Chat** does not collect, store, or transmit any personal data.
+**Danmaku for Twitch — Chat Overlay** does not collect, store, or transmit any personal data.
 
 ## What the extension does
 
