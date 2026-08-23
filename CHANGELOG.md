@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-08-23
+
 ### Added
 - Added three distinct color-adaptive username effects—Flow, Ember, and Glitch—with selectable same-hue, nearby-hue, and opposite-hue pairings.
 - Added Personalized mode, which deterministically assigns each username a consistent weighted effect and color pairing.
