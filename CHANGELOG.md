@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Player toggle now reattaches when Twitch replaces its controls after an ad or delayed player initialization.
+
 ## [1.5.0] - 2026-08-23
 
 ### Added
