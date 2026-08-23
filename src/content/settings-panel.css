@@ -124,7 +124,9 @@
   cursor: pointer;
 }
 
-#danmaku-settings-panel input:disabled {
+#danmaku-settings-panel input:disabled,
+#danmaku-settings-panel select:disabled,
+#danmaku-settings-panel button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -165,6 +167,15 @@
 
 #danmaku-settings-panel .dsp-field-label { margin: 9px 0 5px; }
 
+#danmaku-settings-panel .dsp-subheading {
+  margin: 14px 0 3px;
+  color: var(--dsp-muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 #danmaku-settings-panel .dsp-segmented {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -180,6 +191,120 @@
 }
 
 #danmaku-settings-panel .dsp-segmented .dsp-btn:last-child { border-right: 0; }
+#danmaku-settings-panel .dsp-segmented-three { grid-template-columns: repeat(3, 1fr); }
+
+#danmaku-settings-panel .dsp-choice-list {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 10px;
+}
+
+#danmaku-settings-panel .dsp-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  cursor: pointer;
+  margin: 0 -5px;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+#danmaku-settings-panel .dsp-choice:hover,
+#danmaku-settings-panel .dsp-choice:focus-within { background: rgba(169, 112, 255, 0.1); }
+
+#danmaku-settings-panel .dsp-new-badge {
+  margin-left: 2px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #3d2b58;
+  color: #e7d6ff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+#danmaku-settings-panel .dsp-username-preview {
+  margin: 8px 0 10px;
+  padding: 9px 10px 10px;
+  overflow: hidden;
+  border: 1px solid var(--dsp-border-subtle);
+  border-radius: 5px;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(169, 112, 255, 0.12), transparent 42%),
+    #0e0e10;
+}
+
+#danmaku-settings-panel .dsp-username-preview-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #85858f;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#danmaku-settings-panel .dsp-username-preview-names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 24px;
+}
+
+#danmaku-settings-panel .dsp-username-preview-name {
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+#danmaku-username-preview-popover {
+  --dsp-border-subtle: #2a2a2e;
+  position: fixed;
+  width: 250px;
+  max-width: calc(100vw - 20px);
+  box-sizing: border-box;
+  padding: 11px 12px 12px;
+  border: 1px solid #46464d;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(169, 112, 255, 0.16), transparent 44%),
+    #0e0e10;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  color: #efeff1;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+
+#danmaku-username-preview-popover[hidden] { display: none; }
+
+#danmaku-username-preview-popover .dsp-username-preview-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #adadb8;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#danmaku-username-preview-popover .dsp-username-preview-names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 24px;
+}
+
+#danmaku-username-preview-popover .dsp-username-preview-name {
+  font-size: 20px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
 
 #danmaku-settings-panel .dsp-preset-row,
 #danmaku-settings-panel .dsp-preview-row {
@@ -220,15 +345,39 @@
 
 #danmaku-settings-panel .dsp-anim-desc { min-height: 16px; }
 #danmaku-settings-panel .dsp-hint-leading { margin-top: 0; }
-#danmaku-settings-panel .dsp-disclosure { border-bottom: 1px solid var(--dsp-border-subtle); }
+#danmaku-settings-panel .dsp-disclosure {
+  margin: 0 -8px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-bottom-color: var(--dsp-border-subtle);
+  border-radius: 6px;
+}
+
+#danmaku-settings-panel .dsp-disclosure[open] {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding: 0 10px;
+  border-color: var(--dsp-border);
+  background: #202024;
+}
 
 #danmaku-settings-panel .dsp-disclosure > summary {
   position: relative;
-  padding: 11px 20px 11px 0;
+  min-height: 24px;
+  margin: 0 -6px;
+  padding: 11px 38px 11px 8px;
+  border-radius: 5px;
   color: #d7d7dc;
   font-weight: 550;
   list-style: none;
   cursor: pointer;
+}
+
+#danmaku-settings-panel .dsp-disclosure > summary:hover,
+#danmaku-settings-panel .dsp-disclosure > summary:focus-visible {
+  outline: none;
+  background: #29292e;
+  color: var(--dsp-text);
 }
 
 #danmaku-settings-panel .dsp-disclosure > summary::-webkit-details-marker { display: none; }
@@ -236,28 +385,64 @@
 #danmaku-settings-panel .dsp-disclosure > summary::after {
   content: '›';
   position: absolute;
-  top: 9px;
-  right: 3px;
-  color: var(--dsp-muted);
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 7px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: #2d2d33;
+  color: #d7d7dc;
+  font-size: 20px;
+  line-height: 1;
   transform: rotate(90deg);
-  transition: transform 120ms ease;
+  transition: background 120ms ease, transform 120ms ease;
 }
 
-#danmaku-settings-panel .dsp-disclosure[open] > summary::after { transform: rotate(-90deg); }
-#danmaku-settings-panel .dsp-disclosure-body { padding: 0 0 12px; }
+#danmaku-settings-panel .dsp-disclosure[open] > summary::after {
+  background: #3a2b4f;
+  transform: rotate(-90deg);
+}
+#danmaku-settings-panel .dsp-disclosure-body { padding: 4px 2px 12px; }
 
-#danmaku-settings-panel .dsp-inline-disclosure { margin-top: 7px; border-bottom: 0; }
+#danmaku-settings-panel .dsp-inline-disclosure {
+  margin: 9px 0 2px;
+  padding: 0;
+  border: 1px solid var(--dsp-border);
+  background: #19191d;
+}
+
+#danmaku-settings-panel .dsp-inline-disclosure[open] {
+  margin: 9px 0 4px;
+  padding: 0;
+  border-color: #484850;
+  background: #29292f;
+}
 
 #danmaku-settings-panel .dsp-inline-disclosure > summary {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  color: var(--dsp-muted);
+  min-height: 26px;
+  margin: 0;
+  padding: 9px 40px 9px 10px;
+  color: #d7d7dc;
   font-size: 12px;
+  font-weight: 600;
 }
 
-#danmaku-settings-panel .dsp-inline-disclosure > summary::after { top: 3px; }
-#danmaku-settings-panel .dsp-inline-disclosure .dsp-disclosure-body { padding-top: 5px; padding-bottom: 0; }
+#danmaku-settings-panel .dsp-inline-disclosure > summary small {
+  display: block;
+  margin-top: 1px;
+  color: #85858f;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+#danmaku-settings-panel .dsp-inline-disclosure > summary::after { top: 5px; right: 6px; }
+#danmaku-settings-panel .dsp-inline-disclosure .dsp-disclosure-body {
+  padding: 7px 10px 10px;
+  border-top: 1px solid #3a3a40;
+}
 
 #danmaku-settings-panel .dsp-diag-list {
   display: flex;

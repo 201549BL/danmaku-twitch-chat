@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added three distinct color-adaptive username effects—Flow, Ember, and Glitch—with selectable same-hue, nearby-hue, and opposite-hue pairings.
+- Added Personalized mode, which deterministically assigns each username a consistent weighted effect and color pairing.
+- Personalized mode can be narrowed to preferred effects and color pairings while retaining the simple all-options default.
+- Added unseen-option tracking so future catalog additions can display a New badge without confusing deliberately excluded options with new ones.
+- Added favorite-only and everyone scopes for username effects, with favorite-only as the default.
+
+### Changed
+- Everyone-scope username effects now fall back to favorites when dynamic chat pressure is high, reducing rendering load during busy chat.
+- Simplified username-effect settings into Off, Personalized, and Fixed choices, with clearer checkbox-based personalization options and fixed controls shown only when relevant.
+- Added a live multi-username preview to the effect settings and placed Personalized as the rightmost mode in the progression.
+- Effect and color options now open a viewport-clamped floating preview on hover or keyboard focus, keeping comparisons visible while browsing larger catalogs.
+- Settings disclosures now use full-width headers with prominent chevron controls and distinct surfaced backgrounds for open groups and nested options.
+- Appearance, Placement, and Motion settings are now collapsed groups, reducing the panel's initial length while keeping Overlay controls immediately available.
+- Personalized choices are now snapshotted per installation, so newly shipped effects remain opt-in for existing users.
+- Personalized assignment now uses weighted rendezvous selection, minimizing chatter appearance changes when users add or remove an option.
+- Removed the username entrance shimmer and enhanced-favorite glow for a calmer, more consistent treatment.
+- Increased username-effect highlight contrast and movement speed so favorite treatments remain clearly visible without glow.
+- Consolidated overlapping username effects into Off, Flow, Ember, and Glitch, with nearby hues as the default color pairing.
+
+### Fixed
+- Packaged username textures now resolve through the extension runtime URL instead of disappearing after content-script injection on Twitch.
+- Palette derivation now handles Twitch's CSS `rgb()` and `rgba()` username colors instead of giving live chatters the same fallback accent.
+- Busy-chat fallback now stops effects on already-visible ordinary usernames immediately while leaving favorite effects active.
+- Username effects now keep the original chatter color as their minimum brightness and use a softer shadow, preventing dark textures and heavy outlines from reducing readability.
+- Username effects now use a very dark, subtly color-adaptive SVG morphology border and an even darker lower edge, separating the bright animated fill from video backgrounds.
+- Enhanced favorite and role username effects use a flat outline without a hard lower shadow.
+
 ## [1.4.2] - 2026-08-21
 
 ### Changed

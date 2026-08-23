@@ -15,6 +15,11 @@ function loadRenderer(overrides = {}) {
     new URL('../src/content/renderer.js', `file://${__filename}`),
     'utf8'
   );
+  const usernameEffects = fs.readFileSync(
+    new URL('../src/content/username-effects.js', `file://${__filename}`),
+    'utf8'
+  );
+  const classes = new Set();
   const context = {
     console,
     setInterval,
@@ -22,8 +27,20 @@ function loadRenderer(overrides = {}) {
     DANMAKU_CONSTANTS: { REFERENCE_PLAYER_HEIGHT: 720, STATIONARY_MODES: [] },
     danmakuSettings: { get: (key) => values[key] },
   };
-  vm.runInNewContext(`${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;`, context);
-  return new context.DanmakuRenderer({ container: {} });
+  vm.runInNewContext(
+    `${usernameEffects}\n${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;`,
+    context
+  );
+  const renderer = new context.DanmakuRenderer({
+    container: {
+      classList: {
+        toggle: (name, enabled) => enabled ? classes.add(name) : classes.delete(name),
+        contains: (name) => classes.has(name),
+      },
+    },
+  });
+  renderer._testClasses = classes;
+  return renderer;
 }
 
 test('sustained high chat keeps dynamic pressure active', () => {
@@ -56,4 +73,19 @@ test('a temporarily full lane leaves the message queued', () => {
 
   assert.equal(renderer.messageQueue.length, 1);
   assert.equal(renderer.messageQueue[0].id, 'queued');
+});
+
+test('crossing the busy threshold suppresses effects on already-visible ordinary messages', () => {
+  const renderer = loadRenderer({
+    usernameEffectScope: 'everyone',
+    dynamicMode: true,
+  });
+
+  renderer._smoothedPressure = 0.8;
+  renderer._syncUsernameEffectPressureMode();
+  assert.equal(renderer._testClasses.has('danmaku-effects-favorites-only'), true);
+
+  renderer._smoothedPressure = 0;
+  renderer._syncUsernameEffectPressureMode();
+  assert.equal(renderer._testClasses.has('danmaku-effects-favorites-only'), false);
 });

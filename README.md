@@ -9,6 +9,7 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 - **Configurable region** with on-player drag handles — define exactly where chat appears; scales correctly across windowed, theater, and fullscreen
 - **In-region toolbar** (hover the chat area on the player) for quick rows / font-size adjustments and a settings shortcut
 - **@mention highlighting**: messages mentioning your username are visually distinguished
+- **Color-adaptive username effects**: Flow, Ember, and Glitch preserve Twitch colors while offering same-hue, nearby-hue, and opposite-hue pairings; Personalized mode gives every chatter a consistent treatment across viewing sessions
 - **Pause on hover**: animations freeze when you mouse over the chat region
 - **Live preview** with mock chat messages and a diagnostics panel showing drop statistics
 - **Emote and badge support**: Twitch native, BetterTTV, FrankerFaceZ, and 7TV emotes rendered inline; optional subscriber/moderator badges
@@ -39,6 +40,9 @@ All changes apply live and auto-save.
 | Enable overlay | Master on/off |
 | Fullscreen only | Hide overlay outside fullscreen |
 | Usernames | Show names for everyone, favorite chatters only, or nobody |
+| Animated usernames | Turn effects off, give each chatter a consistent Personalized look, or use one Fixed treatment. Personalization options can be narrowed to preferred effects and color pairings. |
+| Fixed effect and color pairing | Choose Flow, Ember, or Glitch with same-hue, nearby-hue, or opposite-hue colors |
+| Show effects for | Apply effects to favorites or all chatters; all chatters falls back to favorites in busy chat |
 | Favorite chatters | Prioritize listed usernames and selected badge roles when chat gets busy |
 | Show badges | Display subscriber, moderator, etc. badges |
 | Pause on hover | Freeze animations when hovering the chat region |

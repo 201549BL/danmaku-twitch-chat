@@ -1,0 +1,684 @@
+<!doctype html>
+<!-- PROTOTYPE: effects via ?variant= and three palette relationships via ?palette=. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Danmaku username effect preview</title>
+    <link rel="stylesheet" href="../../src/content/overlay.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 40px 40px 176px;
+        background: #0e0e10;
+        color: #efeff1;
+        font-family: Inter, system-ui, sans-serif;
+      }
+
+      h1 {
+        margin: 0 0 7px;
+        font-size: 24px;
+      }
+
+      .intro {
+        margin: 0 0 28px;
+        color: #adadb8;
+        font-size: 13px;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+        gap: 18px;
+      }
+
+      section {
+        padding: 20px;
+        border: 1px solid #2f2f35;
+        border-radius: 12px;
+        background: #18181b;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        color: #adadb8;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .sample {
+        display: block;
+        margin: 9px 0;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+
+      main.prototype-focus {
+        grid-template-columns: minmax(280px, 760px);
+      }
+
+      .prototype-note {
+        max-width: 620px;
+        margin: -4px 0 18px;
+        color: #adadb8;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .prototype-effect {
+        position: relative;
+        display: block;
+        background-color: var(--danmaku-username-color, #ffffff);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: none;
+        filter: url(#danmaku-text-border-flat-filter);
+        animation-delay: var(--danmaku-effect-delay, 0s);
+        animation-direction: var(--danmaku-texture-direction, normal);
+      }
+
+      .prototype-effect--strata {
+        background-image: repeating-linear-gradient(
+          0deg,
+          var(--danmaku-username-color) 0 18%,
+          color-mix(in srgb, var(--danmaku-username-color), white 78%) 18% 36%,
+          var(--danmaku-username-color) 36% 62%,
+          color-mix(in srgb, var(--danmaku-username-color), white 38%) 62% 74%,
+          var(--danmaku-username-color) 74% 100%
+        );
+        background-size: 100% 22px;
+        animation: prototype-strata 1.6s linear infinite;
+      }
+
+      .prototype-effect--signal {
+        background-image: repeating-linear-gradient(
+          90deg,
+          var(--danmaku-username-color) 0 10px,
+          color-mix(in srgb, var(--danmaku-username-color), white 82%) 10px 15px,
+          var(--danmaku-username-color) 15px 28px,
+          white 28px 31px,
+          var(--danmaku-username-color) 31px 44px
+        );
+        background-size: 176px 100%;
+        animation: prototype-signal 1.8s steps(8, end) infinite;
+      }
+
+      .prototype-effect--stardust {
+        background-image:
+          radial-gradient(circle, white 0 1.2px, transparent 1.8px),
+          radial-gradient(
+            circle,
+            color-mix(in srgb, var(--danmaku-username-color), white 70%) 0 1.4px,
+            transparent 2px
+          ),
+          linear-gradient(var(--danmaku-username-color), var(--danmaku-username-color));
+        background-position: 0 0, 7px 11px, 0 0;
+        background-size: 18px 18px, 29px 29px, auto;
+        background-blend-mode: screen, screen, normal;
+        animation: prototype-stardust 3.8s linear infinite;
+      }
+
+      .prototype-effect--glitch {
+        background-image: linear-gradient(
+          var(--danmaku-username-color),
+          var(--danmaku-username-color)
+        );
+      }
+
+      .prototype-effect--glitch::before,
+      .prototype-effect--glitch::after {
+        content: attr(data-prototype-text);
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        animation-duration: 2.7s;
+        animation-delay: var(--danmaku-effect-delay, 0s);
+        animation-iteration-count: infinite;
+        animation-timing-function: steps(1, end);
+      }
+
+      .prototype-effect--glitch::before {
+        color: color-mix(in srgb, var(--danmaku-username-color), white 74%);
+        -webkit-text-fill-color: color-mix(in srgb, var(--danmaku-username-color), white 74%);
+        clip-path: inset(8% 0 58% 0);
+        animation-name: prototype-glitch-upper;
+      }
+
+      .prototype-effect--glitch::after {
+        color: var(--danmaku-username-color);
+        -webkit-text-fill-color: var(--danmaku-username-color);
+        clip-path: inset(58% 0 12% 0);
+        animation-name: prototype-glitch-lower;
+      }
+
+      .prototype-effect--duotone-flow {
+        background-image: linear-gradient(
+          110deg,
+          var(--danmaku-username-color) 0% 24%,
+          var(--danmaku-secondary-color) 42%,
+          color-mix(in srgb, var(--danmaku-secondary-color), white 76%) 50%,
+          var(--danmaku-secondary-color) 58%,
+          var(--danmaku-username-color) 76% 100%
+        );
+        background-size: 240% 100%;
+        animation: prototype-duotone-flow 3.8s ease-in-out infinite alternate;
+      }
+
+      .prototype-effect--bttv-inspired {
+        background-image:
+          url('../../assets/text-effects/cosmic-drift.webp'),
+          linear-gradient(
+            115deg,
+            color-mix(in srgb, var(--danmaku-username-color), white 18%) 0%,
+            var(--danmaku-username-color) 26%,
+            var(--danmaku-secondary-color) 48%,
+            color-mix(in srgb, var(--danmaku-secondary-color), white 66%) 55%,
+            var(--danmaku-secondary-color) 62%,
+            var(--danmaku-username-color) 82% 100%
+          );
+        background-position: 0 0, 0% 50%;
+        background-repeat: repeat;
+        background-size: 128px 128px, 230% 100%;
+        background-blend-mode: screen, normal;
+        filter: url(#prototype-bttv-border-filter);
+        animation: prototype-bttv-intergalactic 10s linear infinite;
+      }
+
+      .prototype-effect--duotone-split {
+        background-image: repeating-linear-gradient(
+          90deg,
+          var(--danmaku-username-color) 0 18px,
+          var(--danmaku-secondary-color) 18px 34px,
+          color-mix(in srgb, var(--danmaku-secondary-color), white 68%) 34px 38px,
+          var(--danmaku-username-color) 38px 56px
+        );
+        background-size: 224px 100%;
+        animation: prototype-duotone-split 2.4s linear infinite;
+      }
+
+      .prototype-effect--duotone-glitch {
+        background-image: linear-gradient(
+          var(--danmaku-username-color),
+          var(--danmaku-username-color)
+        );
+      }
+
+      .prototype-effect--duotone-glitch::before,
+      .prototype-effect--duotone-glitch::after {
+        content: attr(data-prototype-text);
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        animation-duration: 2.7s;
+        animation-delay: var(--danmaku-effect-delay, 0s);
+        animation-iteration-count: infinite;
+        animation-timing-function: steps(1, end);
+      }
+
+      .prototype-effect--duotone-glitch::before {
+        color: var(--danmaku-secondary-color);
+        -webkit-text-fill-color: var(--danmaku-secondary-color);
+        clip-path: inset(8% 0 58% 0);
+        animation-name: prototype-glitch-upper;
+      }
+
+      .prototype-effect--duotone-glitch::after {
+        color: color-mix(in srgb, var(--danmaku-secondary-color), white 68%);
+        -webkit-text-fill-color: color-mix(in srgb, var(--danmaku-secondary-color), white 68%);
+        clip-path: inset(58% 0 12% 0);
+        animation-name: prototype-glitch-lower;
+      }
+
+      .prototype-effect--duotone-texture {
+        isolation: isolate;
+        background-image: linear-gradient(
+          var(--danmaku-username-color),
+          var(--danmaku-username-color)
+        );
+      }
+
+      .prototype-effect--duotone-texture::before {
+        content: attr(data-prototype-text);
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--danmaku-secondary-color), var(--danmaku-secondary-color)),
+          var(--prototype-texture);
+        background-position: 0 0, 0 0;
+        background-repeat: repeat;
+        background-size:
+          100% 100%,
+          var(--prototype-texture-size) var(--prototype-texture-size);
+        background-blend-mode: multiply;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        mix-blend-mode: screen;
+        filter: brightness(1.35) contrast(1.4);
+        pointer-events: none;
+        animation: prototype-duotone-texture var(--prototype-texture-duration) linear infinite;
+        animation-delay: var(--danmaku-effect-delay, 0s);
+        animation-direction: var(--danmaku-texture-direction, normal);
+      }
+
+      .prototype-texture--cosmic {
+        --prototype-texture: url('../../assets/text-effects/cosmic-drift.webp');
+        --prototype-texture-size: 128px;
+        --prototype-texture-x: -128px;
+        --prototype-texture-y: -128px;
+        --prototype-texture-duration: 10s;
+      }
+
+      .prototype-texture--ember {
+        --prototype-texture: url('../../assets/text-effects/ember.webp');
+        --prototype-texture-size: 128px;
+        --prototype-texture-x: 0;
+        --prototype-texture-y: -128px;
+        --prototype-texture-duration: 7s;
+      }
+
+      .prototype-texture--pixel-rain {
+        --prototype-texture: url('../../assets/text-effects/pixel-rain.webp');
+        --prototype-texture-size: 192px;
+        --prototype-texture-x: 0;
+        --prototype-texture-y: 192px;
+        --prototype-texture-duration: 4.5s;
+      }
+
+      .color-pair {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: -4px 0 10px;
+        color: #777781;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .color-pair i {
+        width: 9px;
+        height: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.38);
+        border-radius: 50%;
+      }
+
+      @keyframes prototype-strata {
+        to { background-position: 0 -22px; }
+      }
+
+      @keyframes prototype-signal {
+        to { background-position: -88px 0; }
+      }
+
+      @keyframes prototype-stardust {
+        to { background-position: 54px -54px, -58px 58px, 0 0; }
+      }
+
+      @keyframes prototype-duotone-flow {
+        from { background-position: 0% 50%; }
+        to { background-position: 100% 50%; }
+      }
+
+      @keyframes prototype-bttv-intergalactic {
+        from { background-position: 0 0, 0% 50%; }
+        to { background-position: -128px -128px, 100% 50%; }
+      }
+
+      @keyframes prototype-duotone-split {
+        to { background-position: -112px 0; }
+      }
+
+      @keyframes prototype-duotone-texture {
+        from { background-position: 0 0, 0 0; }
+        to { background-position: 0 0, var(--prototype-texture-x) var(--prototype-texture-y); }
+      }
+
+      @keyframes prototype-glitch-upper {
+        0%, 6%, 10%, 42%, 46%, 78%, 82%, 100% { opacity: 0; transform: translateX(0); }
+        7% { opacity: 0.95; transform: translateX(3px); }
+        8% { opacity: 0.8; transform: translateX(-2px); }
+        43% { opacity: 0.9; transform: translateX(-3px); }
+        44% { opacity: 0.75; transform: translateX(2px); }
+        79% { opacity: 0.95; transform: translateX(2px); }
+        80% { opacity: 0.7; transform: translateX(-1px); }
+      }
+
+      @keyframes prototype-glitch-lower {
+        0%, 7%, 11%, 41%, 45%, 79%, 83%, 100% { opacity: 0; transform: translateX(0); }
+        8% { opacity: 0.9; transform: translateX(-3px); }
+        9% { opacity: 0.7; transform: translateX(1px); }
+        42% { opacity: 0.85; transform: translateX(3px); }
+        43% { opacity: 0.7; transform: translateX(-2px); }
+        80% { opacity: 0.9; transform: translateX(-2px); }
+        81% { opacity: 0.65; transform: translateX(2px); }
+      }
+
+      .prototype-switcher {
+        position: fixed;
+        z-index: 100;
+        left: 50%;
+        bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        padding: 8px;
+        border: 1px solid #4a4a52;
+        border-radius: 999px;
+        background: rgba(24, 24, 27, 0.96);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+        transform: translateX(-50%);
+        backdrop-filter: blur(12px);
+      }
+
+      .prototype-switcher button {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 50%;
+        background: #2f2f35;
+        color: #fff;
+        cursor: pointer;
+        font-size: 20px;
+      }
+
+      .prototype-switcher-output {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .prototype-palette-switcher {
+        position: fixed;
+        z-index: 100;
+        left: 50%;
+        bottom: 84px;
+        display: flex;
+        gap: 4px;
+        padding: 5px;
+        border: 1px solid #4a4a52;
+        border-radius: 999px;
+        background: rgba(24, 24, 27, 0.96);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+        transform: translateX(-50%);
+        backdrop-filter: blur(12px);
+      }
+
+      .prototype-palette-switcher button {
+        padding: 8px 13px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #adadb8;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .prototype-palette-switcher button[aria-pressed='true'] {
+        background: #9147ff;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="danmaku-effect-filter-defs" aria-hidden="true" width="0" height="0">
+      <filter id="danmaku-text-border-filter" x="-30%" y="-35%" width="160%" height="180%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor"></feMorphology>
+        <feComponentTransfer in="expandedColor" result="border">
+          <feFuncR type="linear" slope="0.24"></feFuncR>
+          <feFuncG type="linear" slope="0.24"></feFuncG>
+          <feFuncB type="linear" slope="0.24"></feFuncB>
+          <feFuncA type="identity"></feFuncA>
+        </feComponentTransfer>
+        <feOffset in="expandedColor" dy="1.6" result="depthShape"></feOffset>
+        <feComponentTransfer in="depthShape" result="depth">
+          <feFuncR type="linear" slope="0.08"></feFuncR>
+          <feFuncG type="linear" slope="0.08"></feFuncG>
+          <feFuncB type="linear" slope="0.08"></feFuncB>
+          <feFuncA type="linear" slope="0.98"></feFuncA>
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode in="depth"></feMergeNode>
+          <feMergeNode in="border"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+      <filter id="danmaku-text-border-flat-filter" x="-30%" y="-35%" width="160%" height="170%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor"></feMorphology>
+        <feComponentTransfer in="expandedColor" result="border">
+          <feFuncR type="linear" slope="0.24"></feFuncR>
+          <feFuncG type="linear" slope="0.24"></feFuncG>
+          <feFuncB type="linear" slope="0.24"></feFuncB>
+          <feFuncA type="identity"></feFuncA>
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode in="border"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+      <filter id="prototype-bttv-border-filter" x="-30%" y="-35%" width="160%" height="180%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="1.25" result="outlineShape"></feMorphology>
+        <feOffset in="outlineShape" dy="2" result="depthShape"></feOffset>
+        <feFlood flood-color="#24152f" result="depthColor"></feFlood>
+        <feComposite in="depthColor" in2="depthShape" operator="in" result="depth"></feComposite>
+        <feFlood flood-color="#4e316c" result="outlineColor"></feFlood>
+        <feComposite in="outlineColor" in2="outlineShape" operator="in" result="outline"></feComposite>
+        <feMerge>
+          <feMergeNode in="depth"></feMergeNode>
+          <feMergeNode in="outline"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+    </svg>
+    <h1 data-title>Color-adaptive username effects</h1>
+    <p class="intro" data-intro>Stable timing per chatter · GoldenVIP demonstrates the flat favorite outline</p>
+    <main id="preview"></main>
+    <nav class="prototype-palette-switcher" aria-label="Prototype color palette">
+      <button type="button" data-palette="auto">Auto per chatter</button>
+      <button type="button" data-palette="monochrome">Monochrome</button>
+      <button type="button" data-palette="analogous">Analogous</button>
+      <button type="button" data-palette="complementary">Complementary</button>
+    </nav>
+    <nav class="prototype-switcher" aria-label="Effect prototype variants">
+      <button type="button" data-previous aria-label="Previous variant">←</button>
+      <div class="prototype-switcher-output" data-variant-label></div>
+      <button type="button" data-next aria-label="Next variant">→</button>
+    </nav>
+    <script src="../../src/content/username-effects.js"></script>
+    <script>
+      const searchParams = new URLSearchParams(location.search);
+      const paletteModes = {
+        auto: { label: 'Auto per chatter', swatchLabel: 'name-derived' },
+        monochrome: { label: 'Monochrome', swatchLabel: 'same hue' },
+        analogous: { label: 'Analogous', swatchLabel: 'nearby hue +35°' },
+        complementary: { label: 'Complementary', swatchLabel: 'soft opposite +165°' },
+      };
+      const paletteKey = paletteModes[searchParams.get('palette')]
+        ? searchParams.get('palette')
+        : 'complementary';
+      const selectedEffect = searchParams.get('effect');
+      const effectLabels = {
+        signature: 'Signature mix',
+        duotoneFlow: 'Flow',
+        duotoneEmber: 'Ember',
+        duotoneGlitch: 'Glitch',
+      };
+      const effects = selectedEffect
+        ? [selectedEffect]
+        : Object.keys(effectLabels);
+      const users = [
+        ['OceanCaster', '#1e90ff'],
+        ['RoseQuartz', '#ff69b4'],
+        ['EmeraldMod', '#00fa9a'],
+        ['GoldenVIP', '#ffd700'],
+      ];
+      const variants = [
+        { key: 'production', name: 'Current four' },
+        { key: 'duotone-flow', name: 'Duotone Flow' },
+        { key: 'bttv-inspired', name: 'BTTV-inspired' },
+        { key: 'duotone-glitch', name: 'Duotone Glitch' },
+        { key: 'duotone-texture', name: 'Duotone Textures' },
+      ];
+      const candidateDescriptions = {
+        'duotone-flow': 'A smooth sweep travels from the Twitch color into a softened split-complementary hue and back again.',
+        'bttv-inspired': 'The BTTV intergalactic layering recipe rebuilt with our own Cosmic tile: strong moving texture, fixed purple outline, and a lowered dark-purple edge.',
+        'duotone-glitch': 'The base name keeps its Twitch color while displaced glitch slices use the split-complementary hue.',
+        'duotone-texture': 'The Twitch color remains the base while each grayscale light-map pattern is tinted with its compatible opposite.',
+      };
+      const requestedVariant = searchParams.get('variant') || 'production';
+      const normalizedVariant = requestedVariant === 'glitch' ? 'duotone-glitch' : requestedVariant;
+      const variantIndex = Math.max(0, variants.findIndex(({ key }) => key === normalizedVariant));
+      const variant = variants[variantIndex];
+      const preview = document.querySelector('#preview');
+      const shiftedColor = (hex, palette) => {
+        const value = hex.replace('#', '');
+        const r = parseInt(value.slice(0, 2), 16) / 255;
+        const g = parseInt(value.slice(2, 4), 16) / 255;
+        const b = parseInt(value.slice(4, 6), 16) / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const delta = max - min;
+        let hue = 0;
+        if (delta) {
+          if (max === r) hue = 60 * (((g - b) / delta) % 6);
+          else if (max === g) hue = 60 * ((b - r) / delta + 2);
+          else hue = 60 * ((r - g) / delta + 4);
+        }
+        if (hue < 0) hue += 360;
+        const lightness = (max + min) / 2;
+        const saturation = delta ? delta / (1 - Math.abs(2 * lightness - 1)) : 0;
+        const hueShift = palette === 'monochrome' ? 0 : palette === 'analogous' ? 35 : 165;
+        const accentHue = Math.round((hue + hueShift) % 360);
+        const accentSaturation = palette === 'monochrome'
+          ? Math.round(Math.max(48, Math.min(76, saturation * 70)))
+          : Math.round(Math.max(62, Math.min(82, saturation * 82)));
+        const accentLightness = palette === 'monochrome'
+          ? Math.round(lightness > 0.64 ? 56 : Math.max(64, Math.min(72, lightness * 100 + 12)))
+          : Math.round(Math.max(60, Math.min(70, lightness * 100 + 7)));
+        return `hsl(${accentHue} ${accentSaturation}% ${accentLightness}%)`;
+      };
+      const effectProfile = (username) => {
+        let hash = 2166136261;
+        for (const char of username.toLowerCase()) {
+          hash ^= char.codePointAt(0);
+          hash = Math.imul(hash, 16777619);
+        }
+        hash >>>= 0;
+        const reverse = Boolean(hash & 1);
+        return {
+          durationScale: (0.88 + (hash % 25) / 100).toFixed(2),
+          delay: `${(-((hash >>> 8) % 7000) / 1000).toFixed(3)}s`,
+          gradientDirection: reverse ? 'alternate-reverse' : 'alternate',
+          textureDirection: reverse ? 'reverse' : 'normal',
+        };
+      };
+      const appendSamples = (section, className) => {
+        for (const [name, color] of users) {
+          const sample = document.createElement('span');
+          const resolvedEffect = className.includes('danmaku-username-effect--signature')
+            ? DANMAKU_USERNAME_EFFECTS.resolveEffect('signature', name)
+            : null;
+          const renderedClassName = resolvedEffect
+            ? className.replace('danmaku-username-effect--signature', `danmaku-username-effect--${resolvedEffect}`)
+            : className;
+          const resolvedPalette = DANMAKU_USERNAME_EFFECTS.resolvePalette(paletteKey, name);
+          sample.className = `sample danmaku-username ${renderedClassName}`;
+          sample.style.color = color;
+          sample.style.setProperty('--danmaku-username-color', color);
+          const secondaryColor = shiftedColor(color, resolvedPalette);
+          sample.style.setProperty('--danmaku-secondary-color', secondaryColor);
+          const profile = effectProfile(name);
+          sample.style.setProperty('--danmaku-effect-duration-scale', profile.durationScale);
+          sample.style.setProperty('--danmaku-effect-delay', profile.delay);
+          sample.style.setProperty('--danmaku-gradient-direction', profile.gradientDirection);
+          sample.style.setProperty('--danmaku-texture-direction', profile.textureDirection);
+          sample.dataset.prototypeText = `${name}:`;
+          sample.dataset.danmakuUsernameText = `${name}:`;
+          if (resolvedEffect) sample.dataset.danmakuUsernameEffect = resolvedEffect;
+          sample.dataset.danmakuUsernamePalette = resolvedPalette;
+          if (name === 'GoldenVIP' && renderedClassName.includes('danmaku-username-effect')) {
+            sample.classList.add('danmaku-username-effect--enhanced');
+          }
+          sample.textContent = `${name}:`;
+          section.appendChild(sample);
+          if (renderedClassName.includes('prototype-effect') || renderedClassName.includes('danmaku-username-effect')) {
+            const pair = document.createElement('small');
+            pair.className = 'color-pair';
+            const effectLabel = resolvedEffect
+              ? `${effectLabels[resolvedEffect]} · `
+              : '';
+            pair.innerHTML = `<i style="background:${color}"></i> original <span>→</span><i style="background:${secondaryColor}"></i> ${effectLabel}${paletteModes[resolvedPalette].swatchLabel}`;
+            section.appendChild(pair);
+          }
+        }
+      };
+
+      if (variant.key === 'production') for (const effect of effects) {
+        document.querySelector('[data-intro]').textContent = `PROTOTYPE PALETTE — ${paletteModes[paletteKey].label} · same production effects and chatter colors`;
+        const section = document.createElement('section');
+        section.innerHTML = `<h2>${effectLabels[effect] || effect}</h2>`;
+        appendSamples(section, `danmaku-username-effect--${effect}`);
+        preview.appendChild(section);
+      } else {
+        document.querySelector('[data-title]').textContent = `${variant.name} effect prototype`;
+        document.querySelector('[data-intro]').textContent = variant.key === 'bttv-inspired'
+          ? 'PROTOTYPE — BTTV-style layering rebuilt with our texture and no external dependency'
+          : 'PROTOTYPE — softened opposite-side colors matched for brightness';
+        preview.classList.add('prototype-focus');
+        if (variant.key === 'duotone-texture') {
+          for (const texture of [
+            ['cosmic', 'Cosmic pattern'],
+            ['ember', 'Ember pattern'],
+            ['pixel-rain', 'Pixel Rain pattern'],
+          ]) {
+            const section = document.createElement('section');
+            section.innerHTML = `<h2>${texture[1]}</h2><p class="prototype-note">${candidateDescriptions[variant.key]}</p>`;
+            appendSamples(
+              section,
+              `prototype-effect prototype-effect--duotone-texture prototype-texture--${texture[0]}`
+            );
+            preview.appendChild(section);
+          }
+        } else {
+          const section = document.createElement('section');
+          section.innerHTML = `<h2>${variant.name}</h2><p class="prototype-note">${candidateDescriptions[variant.key]}</p>`;
+          appendSamples(section, `prototype-effect prototype-effect--${variant.key}`);
+          preview.appendChild(section);
+        }
+      }
+
+      const showVariant = (index) => {
+        const next = variants[(index + variants.length) % variants.length];
+        const nextParams = new URLSearchParams(location.search);
+        nextParams.set('variant', next.key);
+        location.search = nextParams.toString();
+      };
+      document.querySelector('[data-variant-label]').textContent = `${variantIndex + 1}/${variants.length} — ${variant.name}`;
+      document.querySelector('[data-previous]').addEventListener('click', () => showVariant(variantIndex - 1));
+      document.querySelector('[data-next]').addEventListener('click', () => showVariant(variantIndex + 1));
+      for (const button of document.querySelectorAll('[data-palette]')) {
+        const selected = button.dataset.palette === paletteKey;
+        button.setAttribute('aria-pressed', String(selected));
+        button.addEventListener('click', () => {
+          const nextParams = new URLSearchParams(location.search);
+          nextParams.set('palette', button.dataset.palette);
+          location.search = nextParams.toString();
+        });
+      }
+      document.addEventListener('keydown', (event) => {
+        const tag = event.target?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable) return;
+        if (event.key === 'ArrowLeft') showVariant(variantIndex - 1);
+        if (event.key === 'ArrowRight') showVariant(variantIndex + 1);
+      });
+    </script>
+  </body>
+</html>

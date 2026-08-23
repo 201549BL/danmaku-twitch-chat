@@ -11,6 +11,7 @@ class DanmakuSettingsPanel {
     this.callbacks = callbacks;
     this.getStats = callbacks.getStats || (() => null);
     this.panel = null;
+    this.optionPreview = null;
     this.opened = false;
     this.autoMockOn = false;
     this.dragState = null;
@@ -39,6 +40,10 @@ class DanmakuSettingsPanel {
     this.build();
     this.attach();
     this.buildBadgeChips();
+    this.buildTextEffectStyleOptions();
+    this.buildTextEffectOptions();
+    this.buildTextEffectPaletteOptions();
+    this.buildSignatureMixOptions();
     this.bindEvents();
     this.loadValues();
   }
@@ -57,6 +62,96 @@ class DanmakuSettingsPanel {
       btn.textContent = role.label;
       container.appendChild(btn);
     }
+  }
+
+  buildTextEffectOptions() {
+    const select = this.panel.querySelector('[data-setting="usernameEffect"]');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const effect of DANMAKU_CONSTANTS.TEXT_EFFECTS || []) {
+      const option = document.createElement('option');
+      option.value = effect.key;
+      option.textContent = effect.label;
+      select.appendChild(option);
+    }
+  }
+
+  buildTextEffectStyleOptions() {
+    const container = this.panel.querySelector('[data-username-effect-styles]');
+    if (!container) return;
+    container.innerHTML = '';
+    for (const style of DANMAKU_CONSTANTS.TEXT_EFFECT_STYLES || []) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'dsp-btn dsp-btn-sm';
+      button.setAttribute('data-action', 'username-effect-style');
+      button.setAttribute('data-value', style.key);
+      button.textContent = style.label;
+      container.appendChild(button);
+    }
+  }
+
+  buildTextEffectPaletteOptions() {
+    const select = this.panel.querySelector('[data-setting="usernameEffectPalette"]');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const palette of DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES || []) {
+      const option = document.createElement('option');
+      option.value = palette.key;
+      option.textContent = palette.label;
+      select.appendChild(option);
+    }
+  }
+
+  buildSignatureMixOptions() {
+    const buildPool = (selector, entries, action, previewKey) => {
+      const container = this.panel.querySelector(selector);
+      if (!container) return;
+      container.innerHTML = '';
+      for (const entry of entries || []) {
+        const label = document.createElement('label');
+        label.className = 'dsp-choice';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-action', action);
+        checkbox.setAttribute('data-value', entry.key);
+        const text = document.createElement('span');
+        text.textContent = entry.label;
+        const badge = document.createElement('small');
+        badge.className = 'dsp-new-badge';
+        badge.textContent = 'New';
+        badge.hidden = true;
+        label.appendChild(checkbox);
+        label.appendChild(text);
+        label.appendChild(badge);
+        const showPreview = () => this.showOptionPreview(
+          {
+            [previewKey]: entry.key,
+            label: entry.label,
+          },
+          label
+        );
+        label.addEventListener('mouseenter', showPreview);
+        label.addEventListener('mouseleave', () => this.hideOptionPreview());
+        label.addEventListener('focusin', showPreview);
+        label.addEventListener('focusout', (event) => {
+          if (!label.contains(event.relatedTarget)) this.hideOptionPreview();
+        });
+        container.appendChild(label);
+      }
+    };
+    buildPool(
+      '[data-signature-effect-pool]',
+      DANMAKU_CONSTANTS.TEXT_EFFECTS,
+      'signature-effect-toggle',
+      'effect'
+    );
+    buildPool(
+      '[data-signature-palette-pool]',
+      DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES,
+      'signature-palette-toggle',
+      'palette'
+    );
   }
 
   build() {
@@ -85,63 +180,69 @@ class DanmakuSettingsPanel {
           </label>
         </section>
 
-        <section class="dsp-section">
-          <h3>Appearance</h3>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Text size</span><em data-display="fontSize"></em></div>
-            <input type="range" data-setting="fontSize" min="12" max="48" step="1" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Message rows</span><em data-display="rows"></em></div>
-            <input type="range" data-setting="rows" min="1" max="10" step="1" />
-          </div>
-          <div class="dsp-row dsp-row-vertical">
-            <div class="dsp-row-label"><span>Opacity</span><em data-display="opacity"></em></div>
-            <input type="range" data-setting="opacity" min="0.1" max="1" step="0.05" />
-          </div>
-        </section>
-
-        <section class="dsp-section">
-          <h3>Placement</h3>
-          <div class="dsp-segmented" aria-label="Overlay placement presets">
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="top">Top</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="middle">Middle</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="bottom">Bottom</button>
-            <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="full">Full</button>
-          </div>
-          <details class="dsp-disclosure dsp-inline-disclosure">
-            <summary>Fine-tune placement</summary>
-            <div class="dsp-disclosure-body">
-              <div class="dsp-row dsp-row-vertical">
-                <div class="dsp-row-label"><span>Top edge</span><em data-display="regionTop"></em></div>
-                <input type="range" data-setting="regionTop" min="0" max="100" step="1" />
-              </div>
-              <div class="dsp-row dsp-row-vertical">
-                <div class="dsp-row-label"><span>Height</span><em data-display="regionHeight"></em></div>
-                <input type="range" data-setting="regionHeight" min="5" max="100" step="1" />
-              </div>
+        <details class="dsp-disclosure">
+          <summary>Appearance</summary>
+          <div class="dsp-disclosure-body">
+            <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Text size</span><em data-display="fontSize"></em></div>
+              <input type="range" data-setting="fontSize" min="12" max="48" step="1" />
             </div>
-          </details>
-        </section>
+            <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Message rows</span><em data-display="rows"></em></div>
+              <input type="range" data-setting="rows" min="1" max="10" step="1" />
+            </div>
+            <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Opacity</span><em data-display="opacity"></em></div>
+              <input type="range" data-setting="opacity" min="0.1" max="1" step="0.05" />
+            </div>
+          </div>
+        </details>
 
-        <section class="dsp-section">
-          <h3>Motion</h3>
-          <label class="dsp-field">
-            <span>Style</span>
-            <select data-setting="animationMode">
-              <option value="scroll">Scroll</option>
-              <option value="reverse">Reverse</option>
-              <option value="drift">Drift</option>
-              <option value="popFade">Pop &amp; fade</option>
-              <option value="slideUp">Slide up</option>
-            </select>
-          </label>
-          <p class="dsp-anim-desc" data-anim-desc></p>
-          <label class="dsp-row" title="Adapts message rate and speed when chat gets busy">
-            <span>Adapt to busy chat</span>
-            <input type="checkbox" data-setting="dynamicMode" />
-          </label>
-        </section>
+        <details class="dsp-disclosure">
+          <summary>Placement</summary>
+          <div class="dsp-disclosure-body">
+            <div class="dsp-segmented" aria-label="Overlay placement presets">
+              <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="top">Top</button>
+              <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="middle">Middle</button>
+              <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="bottom">Bottom</button>
+              <button class="dsp-btn dsp-btn-sm" type="button" data-action="region-preset" data-preset="full">Full</button>
+            </div>
+            <details class="dsp-disclosure dsp-inline-disclosure">
+              <summary>Fine-tune placement</summary>
+              <div class="dsp-disclosure-body">
+                <div class="dsp-row dsp-row-vertical">
+                  <div class="dsp-row-label"><span>Top edge</span><em data-display="regionTop"></em></div>
+                  <input type="range" data-setting="regionTop" min="0" max="100" step="1" />
+                </div>
+                <div class="dsp-row dsp-row-vertical">
+                  <div class="dsp-row-label"><span>Height</span><em data-display="regionHeight"></em></div>
+                  <input type="range" data-setting="regionHeight" min="5" max="100" step="1" />
+                </div>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Motion</summary>
+          <div class="dsp-disclosure-body">
+            <label class="dsp-field">
+              <span>Style</span>
+              <select data-setting="animationMode">
+                <option value="scroll">Scroll</option>
+                <option value="reverse">Reverse</option>
+                <option value="drift">Drift</option>
+                <option value="popFade">Pop &amp; fade</option>
+                <option value="slideUp">Slide up</option>
+              </select>
+            </label>
+            <p class="dsp-anim-desc" data-anim-desc></p>
+            <label class="dsp-row" title="Adapts message rate and speed when chat gets busy">
+              <span>Adapt to busy chat</span>
+              <input type="checkbox" data-setting="dynamicMode" />
+            </label>
+          </div>
+        </details>
 
         <details class="dsp-disclosure">
           <summary>Favorite chatters</summary>
@@ -167,6 +268,49 @@ class DanmakuSettingsPanel {
                 <option value="hidden">Hide usernames</option>
               </select>
             </label>
+            <div class="dsp-subheading">Username appearance</div>
+            <div class="dsp-field">
+              <span>Animated usernames</span>
+              <div class="dsp-segmented dsp-segmented-three" data-username-effect-styles aria-label="Animated usernames"></div>
+              <small class="dsp-hint" data-effect-style-desc></small>
+            </div>
+            <div class="dsp-username-preview" aria-label="Username effect preview">
+              <span class="dsp-username-preview-label" data-username-preview-label>Preview</span>
+              <div class="dsp-username-preview-names" data-username-effect-preview></div>
+            </div>
+            <div data-custom-effect-settings hidden>
+              <label class="dsp-field">
+                <span>Effect</span>
+                <select data-setting="usernameEffect" data-control="username-effect"></select>
+                <small class="dsp-hint" data-effect-desc></small>
+              </label>
+              <label class="dsp-field">
+                <span>Color pairing</span>
+                <select data-setting="usernameEffectPalette" data-control="username-effect-palette"></select>
+                <small class="dsp-hint" data-effect-palette-desc></small>
+              </label>
+            </div>
+            <label class="dsp-field" data-effect-scope-settings>
+              <span>Show effects for</span>
+              <select data-setting="usernameEffectScope" data-control="username-effect-scope">
+                <option value="favorites">Favorites only</option>
+                <option value="everyone">All chatters</option>
+              </select>
+              <small class="dsp-hint">All chatters automatically switches to favorites when chat gets busy.</small>
+            </label>
+            <details class="dsp-inline-disclosure" data-signature-mix-settings hidden>
+              <summary>
+                <span>Personalization options</span>
+                <small data-signature-mix-summary></small>
+              </summary>
+              <div class="dsp-disclosure-body">
+                <div class="dsp-field-label">Effects</div>
+                <div class="dsp-choice-list" data-signature-effect-pool></div>
+                <div class="dsp-field-label">Color pairing</div>
+                <div class="dsp-choice-list" data-signature-palette-pool></div>
+                <button class="dsp-btn dsp-btn-sm" type="button" data-action="reset-signature-mix">Restore defaults</button>
+              </div>
+            </details>
             <label class="dsp-row">
               <span>Show badges</span>
               <input type="checkbox" data-setting="showBadges" />
@@ -247,10 +391,24 @@ class DanmakuSettingsPanel {
 
   attach() {
     document.body.appendChild(this.panel);
+    this.optionPreview = document.createElement('div');
+    this.optionPreview.id = 'danmaku-username-preview-popover';
+    this.optionPreview.hidden = true;
+    this.optionPreview.setAttribute('aria-hidden', 'true');
+    this.optionPreview.innerHTML = `
+      <span class="dsp-username-preview-label" data-username-preview-label>Preview</span>
+      <div class="dsp-username-preview-names" data-username-effect-preview></div>
+    `;
+    document.body.appendChild(this.optionPreview);
   }
 
   bindEvents() {
     this.panel.querySelector('.dsp-close').addEventListener('click', () => this.close());
+    this.panel.querySelector('.dsp-body').addEventListener(
+      'scroll',
+      () => this.hideOptionPreview(),
+      { passive: true }
+    );
 
     this.panel.querySelectorAll('[data-setting]').forEach((input) => {
       const event = input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input';
@@ -289,6 +447,7 @@ class DanmakuSettingsPanel {
       this.updateDisplay(key, value);
     });
     this.updateUsernameDisplayControl();
+    this.updateTextEffectControl();
     this.updateAnimationControls();
     this.updateRegionPresetButtons();
     this.updateBadgeChips();
@@ -361,6 +520,176 @@ class DanmakuSettingsPanel {
     else control.value = 'all';
   }
 
+  updateTextEffectControl() {
+    if (!this.panel) return;
+    const styleDescription = this.panel.querySelector('[data-effect-style-desc]');
+    const control = this.panel.querySelector('[data-control="username-effect"]');
+    const description = this.panel.querySelector('[data-effect-desc]');
+    const paletteControl = this.panel.querySelector('[data-control="username-effect-palette"]');
+    const paletteDescription = this.panel.querySelector('[data-effect-palette-desc]');
+    if (!control) return;
+    const usernamesHidden = !danmakuSettings.get('showUsernames');
+    const style = danmakuSettings.get('usernameEffectStyle');
+    const custom = style === 'custom';
+    this.panel.querySelectorAll('[data-action="username-effect-style"]').forEach((button) => {
+      const active = button.getAttribute('data-value') === style;
+      button.disabled = usernamesHidden;
+      button.classList.toggle('dsp-btn-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    control.disabled = usernamesHidden || !custom;
+    if (paletteControl) paletteControl.disabled = usernamesHidden || !custom;
+    const customSettings = this.panel.querySelector('[data-custom-effect-settings]');
+    if (customSettings) customSettings.hidden = usernamesHidden || !custom;
+    const signatureSettings = this.panel.querySelector('[data-signature-mix-settings]');
+    if (signatureSettings) signatureSettings.hidden = usernamesHidden || style !== 'signature';
+    if (usernamesHidden || style !== 'signature') this.hideOptionPreview();
+    const scopeControl = this.panel.querySelector('[data-control="username-effect-scope"]');
+    if (scopeControl) scopeControl.disabled = usernamesHidden || style === 'original';
+    const scopeSettings = this.panel.querySelector('[data-effect-scope-settings]');
+    if (scopeSettings) scopeSettings.hidden = usernamesHidden || style === 'original';
+    const selectedStyle = (DANMAKU_CONSTANTS.TEXT_EFFECT_STYLES || []).find(
+      (effectStyle) => effectStyle.key === style
+    );
+    if (styleDescription) styleDescription.textContent = selectedStyle?.description || '';
+    const selected = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).find(
+      (effect) => effect.key === danmakuSettings.get('usernameEffect')
+    );
+    if (description) description.textContent = selected?.description || '';
+    const selectedPalette = (DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES || []).find(
+      (palette) => palette.key === danmakuSettings.get('usernameEffectPalette')
+    );
+    if (paletteDescription) paletteDescription.textContent = selectedPalette?.description || '';
+    this.updateSignatureMixControls();
+    this.renderUsernameEffectPreview();
+  }
+
+  renderUsernameEffectPreview(override = {}, root = this.panel) {
+    const container = root?.querySelector('[data-username-effect-preview]');
+    if (!container) return;
+    container.innerHTML = '';
+    const label = root.querySelector('[data-username-preview-label]');
+    if (label) {
+      label.textContent = override.effect
+        ? `${override.label || 'Effect'} effect`
+        : override.palette
+          ? `${override.label || 'Color'} pairing`
+          : 'Preview';
+    }
+    const style = danmakuSettings.get('usernameEffectStyle');
+    const examples = [
+      { username: 'EmberFox', color: '#ff9f43' },
+      { username: 'RoseQuartz', color: '#ff7ad9' },
+      { username: 'Moonbeam', color: '#4ca6ff' },
+    ];
+
+    for (const example of examples) {
+      const username = document.createElement('span');
+      username.className = 'danmaku-username dsp-username-preview-name';
+      username.textContent = example.username;
+      username.style.color = example.color;
+      username.style.setProperty('--danmaku-username-color', example.color);
+
+      if (style !== 'original') {
+        const effect = override.effect || (style === 'signature'
+          ? DANMAKU_USERNAME_EFFECTS.resolveEffect(
+              'signature',
+              example.username,
+              danmakuSettings.get('signatureEffectPool')
+            )
+          : danmakuSettings.get('usernameEffect'));
+        const palette = override.palette || (style === 'signature'
+          ? DANMAKU_USERNAME_EFFECTS.resolvePalette(
+              'auto',
+              example.username,
+              danmakuSettings.get('signaturePalettePool')
+            )
+          : danmakuSettings.get('usernameEffectPalette'));
+        DANMAKU_USERNAME_EFFECTS.decorateElement(username, {
+          username: example.username,
+          color: example.color,
+          effect,
+          palette,
+        });
+      }
+      container.appendChild(username);
+    }
+  }
+
+  showOptionPreview(override, anchor) {
+    if (!this.optionPreview || !anchor) return;
+    this.renderUsernameEffectPreview(override, this.optionPreview);
+    this.optionPreview.hidden = false;
+    const panelRect = this.panel.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
+    const previewRect = this.optionPreview.getBoundingClientRect();
+    const margin = 10;
+    let left = panelRect.left - previewRect.width - 12;
+    if (left < margin) left = panelRect.right + 12;
+    left = Math.max(margin, Math.min(left, window.innerWidth - previewRect.width - margin));
+    const centeredTop = anchorRect.top + anchorRect.height / 2 - previewRect.height / 2;
+    const top = Math.max(
+      margin,
+      Math.min(centeredTop, window.innerHeight - previewRect.height - margin)
+    );
+    this.optionPreview.style.left = `${Math.round(left)}px`;
+    this.optionPreview.style.top = `${Math.round(top)}px`;
+  }
+
+  hideOptionPreview() {
+    if (this.optionPreview) this.optionPreview.hidden = true;
+  }
+
+  updateSignatureMixControls() {
+    if (!this.panel) return;
+    const updatePool = (selector, setting, knownSetting) => {
+      const selected = new Set(danmakuSettings.get(setting) || []);
+      const known = new Set(danmakuSettings.get(knownSetting) || []);
+      this.panel.querySelectorAll(selector).forEach((checkbox) => {
+        const value = checkbox.getAttribute('data-value');
+        checkbox.checked = selected.has(value);
+        const badge = checkbox.parentElement?.querySelector('.dsp-new-badge');
+        if (badge) badge.hidden = known.has(value);
+      });
+      return selected.size;
+    };
+    const effectCount = updatePool(
+      '[data-action="signature-effect-toggle"]',
+      'signatureEffectPool',
+      'signatureKnownEffects'
+    );
+    const paletteCount = updatePool(
+      '[data-action="signature-palette-toggle"]',
+      'signaturePalettePool',
+      'signatureKnownPalettes'
+    );
+    const summary = this.panel.querySelector('[data-signature-mix-summary]');
+    if (summary) {
+      summary.textContent = `${effectCount} effect${effectCount === 1 ? '' : 's'} · ${paletteCount} color pairing${paletteCount === 1 ? '' : 's'}`;
+    }
+  }
+
+  toggleSignaturePool(setting, knownSetting, value) {
+    if (!value) return;
+    const current = new Set(danmakuSettings.get(setting) || []);
+    if (current.has(value)) {
+      if (current.size === 1) {
+        this.flashStatus('Keep at least one option');
+        return false;
+      }
+      current.delete(value);
+    } else {
+      current.add(value);
+    }
+    const known = new Set(danmakuSettings.get(knownSetting) || []);
+    known.add(value);
+    danmakuSettings.setMany({
+      [setting]: Array.from(current),
+      [knownSetting]: Array.from(known),
+    });
+    return true;
+  }
+
   onAction(action, e) {
     switch (action) {
       case 'mock-one':
@@ -397,6 +726,12 @@ class DanmakuSettingsPanel {
         });
         break;
       }
+      case 'username-effect-style':
+        danmakuSettings.set(
+          'usernameEffectStyle',
+          e.currentTarget.getAttribute('data-value')
+        );
+        break;
       case 'region-preset': {
         const preset = e.currentTarget.getAttribute('data-preset');
         const values = DANMAKU_CONSTANTS.REGION_PRESETS[preset];
@@ -416,6 +751,33 @@ class DanmakuSettingsPanel {
         this.updateBadgeChips();
         break;
       }
+      case 'signature-effect-toggle': {
+        const changed = this.toggleSignaturePool(
+          'signatureEffectPool',
+          'signatureKnownEffects',
+          e.currentTarget.getAttribute('data-value')
+        );
+        if (!changed) e.currentTarget.checked = true;
+        break;
+      }
+      case 'signature-palette-toggle': {
+        const changed = this.toggleSignaturePool(
+          'signaturePalettePool',
+          'signatureKnownPalettes',
+          e.currentTarget.getAttribute('data-value')
+        );
+        if (!changed) e.currentTarget.checked = true;
+        break;
+      }
+      case 'reset-signature-mix':
+        danmakuSettings.setMany({
+          signatureEffectPool: DANMAKU_CONSTANTS.DEFAULTS.signatureEffectPool,
+          signaturePalettePool: DANMAKU_CONSTANTS.DEFAULTS.signaturePalettePool,
+          signatureKnownEffects: DANMAKU_CONSTANTS.DEFAULTS.signatureKnownEffects,
+          signatureKnownPalettes: DANMAKU_CONSTANTS.DEFAULTS.signatureKnownPalettes,
+        });
+        this.flashStatus('Personalization restored');
+        break;
       case 'reset':
         this.reset();
         break;
@@ -455,6 +817,7 @@ class DanmakuSettingsPanel {
   }
 
   close() {
+    this.hideOptionPreview();
     this.panel.style.display = 'none';
     this.opened = false;
     if (this._statsPollId !== null) {

@@ -46,8 +46,53 @@ class DanmakuOverlay {
     this.container.id = 'danmaku-overlay';
     this.container.className = 'danmaku-overlay';
     player.appendChild(this.container);
+    this.appendTextEffectFilter();
 
     this.updateVisibility();
+  }
+
+  appendTextEffectFilter() {
+    if (!this.container) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('danmaku-effect-filter-defs');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('width', '0');
+    svg.setAttribute('height', '0');
+    svg.innerHTML = [
+      this.textEffectFilterMarkup('danmaku-text-border-filter', true),
+      this.textEffectFilterMarkup('danmaku-text-border-flat-filter', false),
+    ].join('');
+    this.container.appendChild(svg);
+  }
+
+  textEffectFilterMarkup(id, includeDepth) {
+    const depth = includeDepth
+      ? `
+        <feOffset in="expandedColor" dy="1.6" result="depthShape"></feOffset>
+        <feComponentTransfer in="depthShape" result="depth">
+          <feFuncR type="linear" slope="0.08"></feFuncR>
+          <feFuncG type="linear" slope="0.08"></feFuncG>
+          <feFuncB type="linear" slope="0.08"></feFuncB>
+          <feFuncA type="linear" slope="0.98"></feFuncA>
+        </feComponentTransfer>`
+      : '';
+    const depthMergeNode = includeDepth ? '<feMergeNode in="depth"></feMergeNode>' : '';
+    const height = includeDepth ? '180%' : '170%';
+    return `
+      <filter id="${id}" x="-30%" y="-35%" width="160%" height="${height}" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor"></feMorphology>
+        <feComponentTransfer in="expandedColor" result="border">
+          <feFuncR type="linear" slope="0.24"></feFuncR>
+          <feFuncG type="linear" slope="0.24"></feFuncG>
+          <feFuncB type="linear" slope="0.24"></feFuncB>
+          <feFuncA type="identity"></feFuncA>
+        </feComponentTransfer>${depth}
+        <feMerge>
+          ${depthMergeNode}
+          <feMergeNode in="border"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>`;
   }
 
   ensurePositionedAncestor(player) {

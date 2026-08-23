@@ -1,4 +1,9 @@
 const DANMAKU_CONSTANTS = {
+  PERSONALIZATION_BASELINE: {
+    effects: ['duotoneFlow', 'duotoneEmber', 'duotoneGlitch'],
+    palettes: ['monochrome', 'analogous', 'complementary'],
+  },
+
   SELECTORS: {
     PLAYER: '[data-a-target="video-player"]',
     PLAYER_CONTAINER: '.video-player__container',
@@ -26,6 +31,14 @@ const DANMAKU_CONSTANTS = {
     maxMessageLength: 160,
     showUsernames: true,
     showUsernamesFavoritesOnly: false,
+    usernameEffectStyle: 'signature',
+    usernameEffect: 'duotoneFlow',
+    usernameEffectPalette: 'analogous',
+    usernameEffectScope: 'favorites',
+    signatureEffectPool: ['duotoneFlow', 'duotoneEmber', 'duotoneGlitch'],
+    signaturePalettePool: ['monochrome', 'analogous', 'complementary'],
+    signatureKnownEffects: ['duotoneFlow', 'duotoneEmber', 'duotoneGlitch'],
+    signatureKnownPalettes: ['monochrome', 'analogous', 'complementary'],
     showReplyContext: true,
     regionTop: 0,
     regionHeight: 13,
@@ -45,6 +58,63 @@ const DANMAKU_CONSTANTS = {
   ANIMATION_MODES: ['scroll', 'reverse', 'drift', 'popFade', 'slideUp'],
 
   STATIONARY_MODES: ['popFade', 'slideUp'],
+
+  TEXT_EFFECT_STYLES: [
+    {
+      key: 'original',
+      label: 'Off',
+      description: 'Use the chatter\'s original Twitch color without animation.',
+    },
+    {
+      key: 'custom',
+      label: 'Fixed',
+      description: 'Use the same effect and color pairing for every selected chatter.',
+    },
+    {
+      key: 'signature',
+      label: 'Personalized',
+      description: 'Give each chatter a consistent look based on their username.',
+    },
+  ],
+
+  TEXT_EFFECTS: [
+    {
+      key: 'duotoneFlow',
+      label: 'Flow',
+      description: 'A smooth color sweep across the username.',
+    },
+    {
+      key: 'duotoneEmber',
+      label: 'Ember',
+      description: 'Rising sparks and organic texture inside the username.',
+      texture: 'assets/text-effects/ember.webp',
+    },
+    {
+      key: 'duotoneGlitch',
+      label: 'Glitch',
+      description: 'Brief displaced color slices over the original username.',
+    },
+  ],
+
+  TEXT_EFFECT_PALETTES: [
+    {
+      key: 'monochrome',
+      label: 'Same hue',
+      description: 'Two lightness levels of the chatter\'s original hue.',
+    },
+    {
+      key: 'analogous',
+      label: 'Nearby hues',
+      description: 'The original color plus a nearby hue for gentle contrast.',
+    },
+    {
+      key: 'complementary',
+      label: 'Opposite hues',
+      description: 'The original color plus a softened opposite hue for bold contrast.',
+    },
+  ],
+
+  TEXT_EFFECT_SCOPES: ['favorites', 'everyone'],
 
   HIGHLIGHT_BADGE_ROLES: [
     { key: 'broadcaster', label: 'Broadcaster', match: 'broadcaster' },

@@ -241,11 +241,25 @@ class DanmakuRenderer {
     }
   }
 
+  _syncUsernameEffectPressureMode() {
+    if (!this.overlay?.container) return;
+    const limitToFavorites = DANMAKU_USERNAME_EFFECTS.shouldLimitToFavorites(
+      danmakuSettings.get('usernameEffectScope'),
+      danmakuSettings.get('dynamicMode'),
+      this._smoothedPressure
+    );
+    this.overlay.container.classList.toggle(
+      'danmaku-effects-favorites-only',
+      limitToFavorites
+    );
+  }
+
   _tickDynamic() {
     if (!danmakuSettings.get('dynamicMode')) {
       if (this._smoothedPressure > 0) {
         this._smoothedPressure = 0;
         this._updateDynamicTag();
+        this._syncUsernameEffectPressureMode();
       }
       return;
     }
@@ -292,6 +306,7 @@ class DanmakuRenderer {
     if (this._smoothedPressure < 0.01) this._smoothedPressure = 0;
 
     this._updateDynamicTag();
+    this._syncUsernameEffectPressureMode();
   }
 
   renderMessage(message) {
@@ -340,8 +355,8 @@ class DanmakuRenderer {
       startTime: Date.now(),
     });
 
-    element.addEventListener('animationend', () => {
-      this.removeMessage(element);
+    element.addEventListener('animationend', (event) => {
+      this._handleMessageAnimationEnd(element, event);
     });
     return true;
   }
@@ -471,6 +486,49 @@ class DanmakuRenderer {
       const usernameSpan = document.createElement('span');
       usernameSpan.className = 'danmaku-username';
       usernameSpan.style.color = message.color;
+      usernameSpan.style.setProperty('--danmaku-username-color', message.color || '#ffffff');
+      const usernameEffectStyle = danmakuSettings.get('usernameEffectStyle');
+      let configuredEffect = 'none';
+      let configuredPalette = danmakuSettings.get('usernameEffectPalette');
+      if (usernameEffectStyle === 'signature') {
+        configuredEffect = 'signature';
+        configuredPalette = 'auto';
+      } else if (usernameEffectStyle === 'custom') {
+        configuredEffect = danmakuSettings.get('usernameEffect');
+      }
+      const usernameEffect = DANMAKU_USERNAME_EFFECTS.resolveEffect(
+        configuredEffect,
+        message.username,
+        danmakuSettings.get('signatureEffectPool')
+      );
+      const usernamePalette = DANMAKU_USERNAME_EFFECTS.resolvePalette(
+        configuredPalette,
+        message.username,
+        danmakuSettings.get('signaturePalettePool')
+      );
+      const effectDefinition = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).find(
+        (effect) => effect.key === usernameEffect
+      );
+      if (
+        effectDefinition &&
+        usernameEffect !== 'none' &&
+        DANMAKU_USERNAME_EFFECTS.shouldApply(
+          danmakuSettings.get('usernameEffectScope'),
+          danmakuSettings.get('dynamicMode'),
+          this._smoothedPressure,
+          favorite
+        )
+      ) {
+        DANMAKU_USERNAME_EFFECTS.decorateElement(usernameSpan, {
+          username: message.username,
+          text: message.username + ': ',
+          color: message.color,
+          effect: usernameEffect,
+          palette: usernamePalette,
+          mode,
+          enhanced: favorite,
+        });
+      }
       usernameSpan.textContent = message.username + ': ';
       contentParent.appendChild(usernameSpan);
     }
@@ -553,6 +611,11 @@ class DanmakuRenderer {
     element.remove();
   }
 
+  _handleMessageAnimationEnd(element, event) {
+    if (event.target !== element) return;
+    this.removeMessage(element);
+  }
+
   clear() {
     this.activeMessages.forEach((m) => m.element.remove());
     this.activeMessages = [];
@@ -585,5 +648,6 @@ class DanmakuRenderer {
   onSettingsChange() {
     this.updateLanes();
     this._updateDynamicTag();
+    this._syncUsernameEffectPressureMode();
   }
 }

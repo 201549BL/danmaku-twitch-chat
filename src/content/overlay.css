@@ -108,6 +108,176 @@
   font-weight: 700;
 }
 
+.danmaku-username-effect--duotoneFlow,
+.danmaku-username-effect--duotoneEmber,
+.danmaku-username-effect--duotoneGlitch {
+  position: relative;
+  display: inline-block;
+  background-color: var(--danmaku-username-color, #ffffff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Transparent glyph fill exposes inherited text shadows inside the letters. */
+  text-shadow: none;
+  filter: url(#danmaku-text-border-filter);
+}
+
+.danmaku-username-effect--duotoneFlow {
+  background-image: linear-gradient(
+    110deg,
+    var(--danmaku-username-color, #ffffff) 0% 24%,
+    var(--danmaku-secondary-color, #ffffff) 42%,
+    color-mix(in srgb, var(--danmaku-secondary-color, #ffffff), white 76%) 50%,
+    var(--danmaku-secondary-color, #ffffff) 58%,
+    var(--danmaku-username-color, #ffffff) 76% 100%
+  );
+  background-size: 240% 100%;
+  animation: danmaku-effect-duotone-flow calc(3.8s * var(--danmaku-effect-duration-scale, 1))
+    ease-in-out infinite;
+  animation-delay: var(--danmaku-effect-delay, 0s);
+  animation-direction: var(--danmaku-gradient-direction, alternate);
+}
+
+.danmaku-username-effect--duotoneEmber {
+  isolation: isolate;
+  background-image: linear-gradient(
+    var(--danmaku-username-color, #ffffff),
+    var(--danmaku-username-color, #ffffff)
+  );
+}
+
+.danmaku-username-effect--duotoneEmber::before {
+  content: attr(data-danmaku-username-text);
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      var(--danmaku-secondary-color, #ffffff),
+      var(--danmaku-secondary-color, #ffffff)
+    ),
+    var(--danmaku-effect-texture, url('../../assets/text-effects/ember.webp'));
+  background-position: 0 0, 0 0;
+  background-repeat: repeat;
+  background-size: 100% 100%, 128px 128px;
+  background-blend-mode: multiply;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  mix-blend-mode: screen;
+  filter: brightness(1.35) contrast(1.4);
+  pointer-events: none;
+  animation: danmaku-effect-duotone-ember calc(7s * var(--danmaku-effect-duration-scale, 1))
+    linear infinite;
+  animation-delay: var(--danmaku-effect-delay, 0s);
+  animation-direction: var(--danmaku-texture-direction, normal);
+}
+
+.danmaku-username-effect--duotoneGlitch {
+  background-image: linear-gradient(
+    var(--danmaku-username-color, #ffffff),
+    var(--danmaku-username-color, #ffffff)
+  );
+}
+
+.danmaku-username-effect--duotoneGlitch::before,
+.danmaku-username-effect--duotoneGlitch::after {
+  content: attr(data-danmaku-username-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation-duration: calc(2.7s * var(--danmaku-effect-duration-scale, 1));
+  animation-delay: var(--danmaku-effect-delay, 0s);
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(1, end);
+}
+
+.danmaku-username-effect--duotoneGlitch::before {
+  color: var(--danmaku-secondary-color, #ffffff);
+  -webkit-text-fill-color: var(--danmaku-secondary-color, #ffffff);
+  clip-path: inset(8% 0 58% 0);
+  animation-name: danmaku-effect-glitch-upper;
+}
+
+.danmaku-username-effect--duotoneGlitch::after {
+  color: color-mix(in srgb, var(--danmaku-secondary-color, #ffffff), white 68%);
+  -webkit-text-fill-color: color-mix(
+    in srgb,
+    var(--danmaku-secondary-color, #ffffff),
+    white 68%
+  );
+  clip-path: inset(58% 0 12% 0);
+  animation-name: danmaku-effect-glitch-lower;
+}
+
+.danmaku-username-effect--enhanced {
+  filter: url(#danmaku-text-border-flat-filter);
+}
+
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneFlow,
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneEmber,
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneGlitch {
+  background-image: none;
+  filter: none;
+  animation: none;
+}
+
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneEmber::before,
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneGlitch::before,
+.danmaku-overlay.danmaku-effects-favorites-only
+  .danmaku-message:not(.danmaku-message--favorite)
+  .danmaku-username-effect--duotoneGlitch::after {
+  display: none;
+}
+
+@keyframes danmaku-effect-duotone-flow {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes danmaku-effect-duotone-ember {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 0 0, 0 -128px;
+  }
+}
+
+@keyframes danmaku-effect-glitch-upper {
+  0%, 6%, 10%, 42%, 46%, 78%, 82%, 100% { opacity: 0; transform: translateX(0); }
+  7% { opacity: 0.95; transform: translateX(3px); }
+  8% { opacity: 0.8; transform: translateX(-2px); }
+  43% { opacity: 0.9; transform: translateX(-3px); }
+  44% { opacity: 0.75; transform: translateX(2px); }
+  79% { opacity: 0.95; transform: translateX(2px); }
+  80% { opacity: 0.7; transform: translateX(-1px); }
+}
+
+@keyframes danmaku-effect-glitch-lower {
+  0%, 7%, 11%, 41%, 45%, 79%, 83%, 100% { opacity: 0; transform: translateX(0); }
+  8% { opacity: 0.9; transform: translateX(-3px); }
+  9% { opacity: 0.7; transform: translateX(1px); }
+  42% { opacity: 0.85; transform: translateX(3px); }
+  43% { opacity: 0.7; transform: translateX(-2px); }
+  80% { opacity: 0.9; transform: translateX(-2px); }
+  81% { opacity: 0.65; transform: translateX(2px); }
+}
+
 .danmaku-reply {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.65);
@@ -153,9 +323,25 @@
 
 .danmaku-overlay.danmaku-paused .danmaku-message,
 .danmaku-overlay.danmaku-paused .danmaku-drift-inner,
+.danmaku-overlay.danmaku-paused .danmaku-username,
+.danmaku-overlay.danmaku-paused .danmaku-username::before,
+.danmaku-overlay.danmaku-paused .danmaku-username::after,
 .danmaku-overlay.danmaku-paused-video .danmaku-message,
-.danmaku-overlay.danmaku-paused-video .danmaku-drift-inner {
+.danmaku-overlay.danmaku-paused-video .danmaku-drift-inner,
+.danmaku-overlay.danmaku-paused-video .danmaku-username,
+.danmaku-overlay.danmaku-paused-video .danmaku-username::before,
+.danmaku-overlay.danmaku-paused-video .danmaku-username::after {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .danmaku-username-effect--duotoneFlow,
+  .danmaku-username-effect--duotoneEmber::before,
+  .danmaku-username-effect--duotoneGlitch::before,
+  .danmaku-username-effect--duotoneGlitch::after {
+    animation: none;
+    background-position: 50% 50%;
+  }
 }
 
 .danmaku-message--favorite {
