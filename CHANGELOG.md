@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-08-26
+
 ### Fixed
 - Player toggle now follows Twitch's visible controls ribbon when hidden or replaced player controls remain in the page after ads, navigation, or delayed initialization.
 

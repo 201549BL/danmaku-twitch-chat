@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Danmaku for Twitch — Chat Overlay",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "See Twitch chat on the video with smooth danmaku, modern emotes, smart busy-chat control, and private local settings.",
   "permissions": [
     "storage"
