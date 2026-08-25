@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Danmaku Twitch Chat",
-  "version": "1.5.0",
-  "description": "Display Twitch chat as scrolling overlays on the video player. Configurable region, animations, and emote support (BTTV/FFZ/7TV).",
+  "name": "Danmaku for Twitch — Chat Overlay",
+  "version": "1.5.1",
+  "description": "See Twitch chat on the video with smooth danmaku, modern emotes, smart busy-chat control, and private local settings.",
   "permissions": [
     "storage"
   ],
@@ -59,6 +59,6 @@
       "48": "assets/icon-48.png",
       "128": "assets/icon-128.png"
     },
-    "default_title": "Danmaku Twitch Chat"
+    "default_title": "Danmaku for Twitch"
   }
 }

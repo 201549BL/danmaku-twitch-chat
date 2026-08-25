@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Player toggle now follows Twitch's visible controls ribbon when hidden or replaced player controls remain in the page after ads, navigation, or delayed initialization.
 
+## [1.5.1] - 2026-08-23
+
+### Changed
+- Renamed the extension to Danmaku for Twitch — Chat Overlay and sharpened its store summary around modern emotes, busy-chat readability, and local-only settings.
+
 ## [1.5.0] - 2026-08-23
 
 ### Added

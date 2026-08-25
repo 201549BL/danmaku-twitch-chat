@@ -5,3 +5,10 @@ dist/
 .vscode/
 .idea/
 .claude/
+
+# HyperFrames working output and superseded promo draft
+videos/**/.thumbnails/
+videos/**/snapshots/
+videos/**/renders/
+videos/danmaku-for-twitch-promo/
+store-listing/screenshots/previous-generated/

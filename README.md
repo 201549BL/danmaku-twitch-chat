@@ -1,4 +1,4 @@
-# Danmaku Twitch Chat
+# Danmaku for Twitch — Chat Overlay
 
 A Chrome extension that displays Twitch chat as scrolling overlays on the video player — danmaku-style.
 
@@ -21,7 +21,7 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 
 ### Chrome Web Store
 
-[Danmaku Twitch Chat](https://chromewebstore.google.com/detail/bapmefpfibkpmbcokkbmgjcjphdnkhch?utm_source=item-share-cb)
+[Danmaku for Twitch](https://chromewebstore.google.com/detail/bapmefpfibkpmbcokkbmgjcjphdnkhch?utm_source=item-share-cb)
 
 ## Usage
 

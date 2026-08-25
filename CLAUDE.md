@@ -1,4 +1,4 @@
-# Danmaku Twitch Chat — agent context
+# Danmaku for Twitch — Chat Overlay — agent context
 
 A Chrome MV3 extension that renders Twitch chat as scrolling overlays on the video player. No build step — files in `src/` are loaded directly via the `content_scripts` array in `manifest.json`.
 

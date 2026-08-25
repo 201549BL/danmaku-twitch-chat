@@ -1,0 +1,2 @@
+{"id":"image_001","type":"image","path":".media/images/image_001.png","source":"ingested","description":"3x.png","provenance":{"provider":"local","from":"https://cdn.betterttv.net/emote/5aca62163e290877a25481ad/3x.png"}}
+{"id":"video_001","type":"video","path":".media/video/video_001.mp4","source":"ingested","description":"danmaku-stream-clip.mp4","provenance":{"provider":"local","from":"/tmp/danmaku-stream-clip.mp4"}}
