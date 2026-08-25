@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Player toggle now reattaches when Twitch replaces its controls after an ad or delayed player initialization.
+- Player toggle now follows Twitch's visible controls ribbon when hidden or replaced player controls remain in the page after ads, navigation, or delayed initialization.
 
 ## [1.5.0] - 2026-08-23
 

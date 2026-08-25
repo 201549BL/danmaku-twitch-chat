@@ -16,12 +16,31 @@ class DanmakuPlayerToggle {
   }
 
   findAndAttach() {
-    const controls = document.querySelector('[data-a-target="player-controls"]');
-    const rightControls = controls?.querySelector('.player-controls__right-control-group');
+    const candidates = Array.from(
+      document.querySelectorAll('[data-a-target="player-controls"]')
+    ).map((controls) => ({
+      controls,
+      rightControls: controls.querySelector('.player-controls__right-control-group'),
+    })).filter(({ rightControls }) => rightControls);
 
-    if (rightControls) {
-      this.attach(rightControls);
+    const visibleCandidates = candidates.filter(({ controls }) => this.isVisible(controls));
+    const currentVisible = visibleCandidates.find(
+      ({ rightControls }) => rightControls === this.controlsContainer
+    );
+    const target =
+      currentVisible ||
+      visibleCandidates[visibleCandidates.length - 1] ||
+      candidates[0];
+
+    if (target) {
+      this.attach(target.rightControls);
     }
+  }
+
+  isVisible(element) {
+    if (element.isConnected === false) return false;
+    if (typeof element.getClientRects !== 'function') return true;
+    return element.getClientRects().length > 0;
   }
 
   attach(container) {

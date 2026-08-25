@@ -13,6 +13,7 @@ class FakeElement {
     this.children = [];
     this.parentNode = null;
     this.classList = new FakeClassList();
+    this.visible = true;
   }
 
   setAttribute() {}
@@ -34,6 +35,10 @@ class FakeElement {
     return this.children[0] || null;
   }
 
+  getClientRects() {
+    return this.visible ? [{}] : [];
+  }
+
   querySelector(selector) {
     if (selector === '.player-controls__right-control-group') return this.rightControls || null;
     if (selector === '[data-tooltip-title]') return null;
@@ -42,14 +47,18 @@ class FakeElement {
 }
 
 function createHarness() {
-  let playerControls = null;
+  let playerControls = [];
   const intervals = new Map();
   const timeouts = new Map();
   let nextIntervalId = 1;
   const document = {
     querySelector(selector) {
-      if (selector === '[data-a-target="player-controls"]') return playerControls;
+      if (selector === '[data-a-target="player-controls"]') return playerControls[0] || null;
       return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === '[data-a-target="player-controls"]') return playerControls;
+      return [];
     },
     createElement() {
       return new FakeElement('danmaku-toggle');
@@ -89,7 +98,10 @@ function createHarness() {
   return {
     DanmakuPlayerToggle: context.DanmakuPlayerToggle,
     setPlayerControls(value) {
-      playerControls = value;
+      playerControls = value ? [value] : [];
+    },
+    setPlayerControlCandidates(values) {
+      playerControls = values;
     },
     tick() {
       for (const callback of [...intervals.values()]) callback();
@@ -120,6 +132,23 @@ test('reattaches the toggle when Twitch replaces player controls after an ad', (
 
   assert.equal(afterAd.rightControls.children.length, 1);
   assert.equal(toggle.button.parentNode, afterAd.rightControls);
+});
+
+test('moves the toggle to the visible ribbon when Twitch retains hidden player controls', () => {
+  const harness = createHarness();
+  const staleControls = makePlayerControls('stale');
+  harness.setPlayerControls(staleControls);
+  const toggle = new harness.DanmakuPlayerToggle();
+  toggle.init();
+
+  staleControls.visible = false;
+  const visibleControls = makePlayerControls('visible');
+  harness.setPlayerControlCandidates([staleControls, visibleControls]);
+  harness.tick();
+
+  assert.equal(staleControls.rightControls.children.length, 0);
+  assert.equal(visibleControls.rightControls.children.length, 1);
+  assert.equal(toggle.button.parentNode, visibleControls.rightControls);
 });
 
 test('keeps looking for controls until they appear', () => {
