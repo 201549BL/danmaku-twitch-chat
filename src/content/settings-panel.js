@@ -6,12 +6,20 @@ const ANIM_DESCRIPTIONS = {
   slideUp: 'Messages slide in from below, hold, then drift up and fade.',
 };
 
+const settingsText = (source) =>
+  typeof DANMAKU_I18N === 'undefined' ? source : DANMAKU_I18N.text(source);
+const settingsMessage = (key, fallback, substitutions) =>
+  typeof DANMAKU_I18N === 'undefined'
+    ? fallback
+    : DANMAKU_I18N.t(key, fallback, substitutions);
+
 class DanmakuSettingsPanel {
   constructor(callbacks = {}) {
     this.callbacks = callbacks;
     this.getStats = callbacks.getStats || (() => null);
     this.panel = null;
     this.optionPreview = null;
+    this.translationFeedbackLocale = null;
     this.opened = false;
     this.autoMockOn = false;
     this.dragState = null;
@@ -39,6 +47,8 @@ class DanmakuSettingsPanel {
   init() {
     this.build();
     this.attach();
+    this.buildReleaseNotes();
+    this.configureTranslationFeedback();
     this.buildBadgeChips();
     this.buildTextEffectStyleOptions();
     this.buildTextEffectOptions();
@@ -58,9 +68,9 @@ class DanmakuSettingsPanel {
     select.innerHTML = '';
     const loading = document.createElement('option');
     loading.value = 'system';
-    loading.textContent = 'Loading installed fonts…';
+    loading.textContent = settingsText('Loading installed fonts…');
     select.appendChild(loading);
-    if (status) status.textContent = 'Reading fonts installed on this device…';
+    if (status) status.textContent = settingsText('Reading fonts installed on this device…');
 
     try {
       const response = await chrome.runtime.sendMessage({ action: 'get-font-list' });
@@ -69,7 +79,7 @@ class DanmakuSettingsPanel {
 
       const defaultOption = document.createElement('option');
       defaultOption.value = 'system';
-      defaultOption.textContent = 'Default';
+      defaultOption.textContent = settingsText('Default');
       select.appendChild(defaultOption);
 
       for (const font of fonts) {
@@ -86,19 +96,19 @@ class DanmakuSettingsPanel {
       select.disabled = false;
       if (status) {
         status.textContent = response?.error
-          ? 'Installed fonts are unavailable; using Default.'
-          : 'Fonts are read from this device and never uploaded.';
+          ? settingsText('Installed fonts are unavailable; using Default.')
+          : settingsText('Fonts are read from this device and never uploaded.');
       }
     } catch (error) {
       select.innerHTML = '';
       const defaultOption = document.createElement('option');
       defaultOption.value = 'system';
-      defaultOption.textContent = 'Default';
+      defaultOption.textContent = settingsText('Default');
       select.appendChild(defaultOption);
       select.value = 'system';
       select.disabled = false;
       danmakuSettings.set('fontFamily', 'system');
-      if (status) status.textContent = 'Installed fonts are unavailable; using Default.';
+      if (status) status.textContent = settingsText('Installed fonts are unavailable; using Default.');
     }
   }
 
@@ -113,7 +123,7 @@ class DanmakuSettingsPanel {
       btn.className = 'dsp-btn dsp-btn-sm';
       btn.setAttribute('data-action', 'highlight-badge');
       btn.setAttribute('data-role', role.key);
-      btn.textContent = role.label;
+      btn.textContent = settingsText(role.label);
       container.appendChild(btn);
     }
   }
@@ -125,7 +135,7 @@ class DanmakuSettingsPanel {
     for (const effect of DANMAKU_CONSTANTS.TEXT_EFFECTS || []) {
       const option = document.createElement('option');
       option.value = effect.key;
-      option.textContent = effect.label;
+      option.textContent = settingsText(effect.label);
       select.appendChild(option);
     }
   }
@@ -140,7 +150,7 @@ class DanmakuSettingsPanel {
       button.className = 'dsp-btn dsp-btn-sm';
       button.setAttribute('data-action', 'username-effect-style');
       button.setAttribute('data-value', style.key);
-      button.textContent = style.label;
+      button.textContent = settingsText(style.label);
       container.appendChild(button);
     }
   }
@@ -152,7 +162,7 @@ class DanmakuSettingsPanel {
     for (const palette of DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES || []) {
       const option = document.createElement('option');
       option.value = palette.key;
-      option.textContent = palette.label;
+      option.textContent = settingsText(palette.label);
       select.appendChild(option);
     }
   }
@@ -170,10 +180,10 @@ class DanmakuSettingsPanel {
         checkbox.setAttribute('data-action', action);
         checkbox.setAttribute('data-value', entry.key);
         const text = document.createElement('span');
-        text.textContent = entry.label;
+        text.textContent = settingsText(entry.label);
         const badge = document.createElement('small');
         badge.className = 'dsp-new-badge';
-        badge.textContent = 'New';
+        badge.textContent = settingsText('New');
         badge.hidden = true;
         label.appendChild(checkbox);
         label.appendChild(text);
@@ -181,7 +191,7 @@ class DanmakuSettingsPanel {
         const showPreview = () => this.showOptionPreview(
           {
             [previewKey]: entry.key,
-            label: entry.label,
+            label: settingsText(entry.label),
           },
           label
         );
@@ -212,6 +222,7 @@ class DanmakuSettingsPanel {
     this.panel = document.createElement('div');
     this.panel.id = 'danmaku-settings-panel';
     this.panel.innerHTML = this.template();
+    if (typeof DANMAKU_I18N !== 'undefined') DANMAKU_I18N.localizeTree(this.panel);
     this.panel.style.display = 'none';
   }
 
@@ -233,6 +244,30 @@ class DanmakuSettingsPanel {
             <input type="checkbox" data-setting="fullscreenOnly" />
           </label>
         </section>
+
+        <aside class="dsp-translation-prompt" data-translation-prompt hidden>
+          <button class="dsp-translation-dismiss" type="button" data-action="dismiss-translation-feedback" aria-label="Dismiss translation request">×</button>
+          <strong>Help improve this translation</strong>
+          <span>This translation is new. If anything sounds incorrect or unnatural, please tell us.</span>
+          <button class="dsp-btn" type="button" data-action="open-translation-feedback">Suggest a correction</button>
+        </aside>
+
+        <aside class="dsp-release-prompt" data-release-prompt hidden>
+          <button class="dsp-release-dismiss" type="button" data-action="dismiss-whats-new" aria-label="Dismiss release notes">×</button>
+          <strong data-release-prompt-title></strong>
+          <span>See the latest improvements.</span>
+          <button class="dsp-btn" type="button" data-action="show-whats-new">See what's new</button>
+        </aside>
+
+        <aside class="dsp-feedback-prompt" data-feedback-prompt hidden>
+          <button class="dsp-feedback-dismiss" type="button" data-action="dismiss-feedback" aria-label="Dismiss feedback request">×</button>
+          <strong>How is Danmaku working for you?</strong>
+          <span>Rate the extension or send feedback.</span>
+          <div class="dsp-feedback-actions">
+            <button class="dsp-btn" type="button" data-action="open-review">Rate extension</button>
+            <button class="dsp-btn" type="button" data-action="open-feedback">Send feedback</button>
+          </div>
+        </aside>
 
         <details class="dsp-disclosure">
           <summary>Appearance</summary>
@@ -423,6 +458,36 @@ class DanmakuSettingsPanel {
           </div>
         </details>
 
+        <details class="dsp-disclosure" data-release-notes>
+          <summary>
+            <span>What's new</span>
+            <small class="dsp-summary-badge" data-release-badge hidden>New</small>
+          </summary>
+          <div class="dsp-disclosure-body">
+            <strong class="dsp-release-heading" data-release-heading></strong>
+            <ul class="dsp-release-list" data-release-list></ul>
+            <button class="dsp-btn dsp-release-link" type="button" data-action="open-changelog">View full changelog</button>
+          </div>
+        </details>
+
+        <details class="dsp-disclosure">
+          <summary>Help &amp; feedback</summary>
+          <div class="dsp-disclosure-body">
+            <aside class="dsp-translation-callout" data-translation-callout hidden>
+              <strong>Help improve this translation</strong>
+              <p>This translation is new. If anything sounds incorrect or unnatural, please tell us.</p>
+              <button class="dsp-btn" type="button" data-action="open-translation-feedback">Suggest a correction</button>
+            </aside>
+            <p class="dsp-hint dsp-hint-leading">Get help, report a problem, or share an honest rating.</p>
+            <div class="dsp-help-actions">
+              <button class="dsp-btn" type="button" data-action="open-review">Rate extension</button>
+              <button class="dsp-btn" type="button" data-action="open-feedback">Report a problem</button>
+              <button class="dsp-btn" type="button" data-action="open-guide">Usage guide</button>
+              <button class="dsp-btn" type="button" data-action="open-privacy">Privacy policy</button>
+            </div>
+          </div>
+        </details>
+
         <details class="dsp-disclosure">
           <summary>Test &amp; diagnostics</summary>
           <div class="dsp-disclosure-body">
@@ -460,7 +525,44 @@ class DanmakuSettingsPanel {
       <span class="dsp-username-preview-label" data-username-preview-label>Preview</span>
       <div class="dsp-username-preview-names" data-username-effect-preview></div>
     `;
+    if (typeof DANMAKU_I18N !== 'undefined') DANMAKU_I18N.localizeTree(this.optionPreview);
     document.body.appendChild(this.optionPreview);
+  }
+
+  buildReleaseNotes() {
+    if (!this.panel || typeof DANMAKU_RELEASE_NOTES === 'undefined') return;
+    const version = DANMAKU_RELEASE_NOTES.currentVersion();
+    const title = settingsMessage('newInVersion', `New in ${version}`, [version]);
+    const promptTitle = this.panel.querySelector('[data-release-prompt-title]');
+    const heading = this.panel.querySelector('[data-release-heading]');
+    if (promptTitle) promptTitle.textContent = title;
+    if (heading) heading.textContent = title;
+
+    const list = this.panel.querySelector('[data-release-list]');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const item of DANMAKU_RELEASE_NOTES.ITEMS) {
+      const li = document.createElement('li');
+      li.textContent = settingsMessage(item.key, item.fallback);
+      list.appendChild(li);
+    }
+  }
+
+  configureTranslationFeedback() {
+    const callout = this.panel?.querySelector('[data-translation-callout]');
+    const prompt = this.panel?.querySelector('[data-translation-prompt]');
+    if (!callout || !prompt || typeof DANMAKU_I18N === 'undefined') return;
+    const locale = DANMAKU_I18N.getLocale().replaceAll('_', '-').toLowerCase();
+    const supportedLocale = locale === 'ja' || locale.startsWith('ja-')
+      ? 'ja'
+      : locale === 'zh-cn' || locale === 'zh-hans'
+        ? 'zh_CN'
+        : locale === 'zh-tw' || locale === 'zh-hant'
+          ? 'zh_TW'
+          : null;
+    this.translationFeedbackLocale = supportedLocale;
+    callout.hidden = !supportedLocale;
+    prompt.hidden = true;
   }
 
   bindEvents() {
@@ -480,6 +582,11 @@ class DanmakuSettingsPanel {
       const action = el.getAttribute('data-action');
       const event = el.tagName === 'INPUT' || el.tagName === 'SELECT' ? 'change' : 'click';
       el.addEventListener(event, (e) => this.onAction(action, e));
+    });
+
+    const releaseNotes = this.panel.querySelector('[data-release-notes]');
+    releaseNotes?.addEventListener('toggle', () => {
+      if (releaseNotes.open) this.dismissReleaseNotesPrompt();
     });
 
     const handle = this.panel.querySelector('[data-drag-handle]');
@@ -550,7 +657,7 @@ class DanmakuSettingsPanel {
     if (!this.panel) return;
     const mode = danmakuSettings.get('animationMode');
     const desc = this.panel.querySelector('[data-anim-desc]');
-    if (desc) desc.textContent = ANIM_DESCRIPTIONS[mode] || '';
+    if (desc) desc.textContent = settingsText(ANIM_DESCRIPTIONS[mode] || '');
     const stationary = (DANMAKU_CONSTANTS.STATIONARY_MODES || []).includes(mode);
     this.panel.querySelectorAll('[data-motion-control="scroll"]').forEach((el) => {
       el.hidden = stationary;
@@ -612,15 +719,15 @@ class DanmakuSettingsPanel {
     const selectedStyle = (DANMAKU_CONSTANTS.TEXT_EFFECT_STYLES || []).find(
       (effectStyle) => effectStyle.key === style
     );
-    if (styleDescription) styleDescription.textContent = selectedStyle?.description || '';
+    if (styleDescription) styleDescription.textContent = settingsText(selectedStyle?.description || '');
     const selected = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).find(
       (effect) => effect.key === danmakuSettings.get('usernameEffect')
     );
-    if (description) description.textContent = selected?.description || '';
+    if (description) description.textContent = settingsText(selected?.description || '');
     const selectedPalette = (DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES || []).find(
       (palette) => palette.key === danmakuSettings.get('usernameEffectPalette')
     );
-    if (paletteDescription) paletteDescription.textContent = selectedPalette?.description || '';
+    if (paletteDescription) paletteDescription.textContent = settingsText(selectedPalette?.description || '');
     this.updateSignatureMixControls();
     this.renderUsernameEffectPreview();
   }
@@ -632,10 +739,18 @@ class DanmakuSettingsPanel {
     const label = root.querySelector('[data-username-preview-label]');
     if (label) {
       label.textContent = override.effect
-        ? `${override.label || 'Effect'} effect`
+        ? settingsMessage(
+            'effectPreview',
+            `${override.label || 'Effect'} effect`,
+            [override.label || settingsText('Effect')]
+          )
         : override.palette
-          ? `${override.label || 'Color'} pairing`
-          : 'Preview';
+          ? settingsMessage(
+              'palettePreview',
+              `${override.label || 'Color'} pairing`,
+              [override.label || settingsText('Color pairing')]
+            )
+          : settingsText('Preview');
     }
     const style = danmakuSettings.get('usernameEffectStyle');
     const examples = [
@@ -726,7 +841,11 @@ class DanmakuSettingsPanel {
     );
     const summary = this.panel.querySelector('[data-signature-mix-summary]');
     if (summary) {
-      summary.textContent = `${effectCount} effect${effectCount === 1 ? '' : 's'} · ${paletteCount} color pairing${paletteCount === 1 ? '' : 's'}`;
+      summary.textContent = settingsMessage(
+        'signatureSummary',
+        `${effectCount} effect${effectCount === 1 ? '' : 's'} · ${paletteCount} color pairing${paletteCount === 1 ? '' : 's'}`,
+        [String(effectCount), String(paletteCount)]
+      );
     }
   }
 
@@ -842,7 +961,116 @@ class DanmakuSettingsPanel {
       case 'reset':
         this.reset();
         break;
+      case 'open-review':
+        this.dismissFeedbackPrompt();
+        this.callbacks.onOpenReview?.();
+        break;
+      case 'open-feedback':
+        this.dismissFeedbackPrompt();
+        this.callbacks.onOpenFeedback?.();
+        break;
+      case 'open-guide':
+        this.callbacks.onOpenGuide?.();
+        break;
+      case 'open-privacy':
+        this.callbacks.onOpenPrivacy?.();
+        break;
+      case 'open-changelog':
+        this.callbacks.onOpenChangelog?.();
+        break;
+      case 'open-translation-feedback':
+        if (this.translationFeedbackLocale) {
+          this.dismissTranslationFeedbackPrompt();
+          this.callbacks.onOpenTranslationFeedback?.(this.translationFeedbackLocale);
+        }
+        break;
+      case 'dismiss-translation-feedback':
+        this.dismissTranslationFeedbackPrompt();
+        break;
+      case 'dismiss-feedback':
+        this.dismissFeedbackPrompt();
+        break;
+      case 'show-whats-new':
+        this.showReleaseNotes();
+        break;
+      case 'dismiss-whats-new':
+        this.dismissReleaseNotesPrompt();
+        break;
     }
+  }
+
+  async updateReleaseNotesPrompt() {
+    const prompt = this.panel?.querySelector('[data-release-prompt]');
+    const badge = this.panel?.querySelector('[data-release-badge]');
+    if (!prompt || typeof DANMAKU_RELEASE_NOTES === 'undefined') return;
+    try {
+      const show = await DANMAKU_RELEASE_NOTES.shouldShow();
+      prompt.hidden = !show;
+      if (badge) badge.hidden = !show;
+    } catch (error) {
+      prompt.hidden = true;
+      if (badge) badge.hidden = true;
+    }
+  }
+
+  async updateTranslationFeedbackPrompt() {
+    const prompt = this.panel?.querySelector('[data-translation-prompt]');
+    if (!prompt || !this.translationFeedbackLocale
+        || typeof DANMAKU_TRANSLATION_FEEDBACK === 'undefined') {
+      if (prompt) prompt.hidden = true;
+      return;
+    }
+    try {
+      prompt.hidden = await DANMAKU_TRANSLATION_FEEDBACK.hasSeen(
+        this.translationFeedbackLocale
+      );
+    } catch (error) {
+      prompt.hidden = true;
+    }
+  }
+
+  dismissTranslationFeedbackPrompt() {
+    const prompt = this.panel?.querySelector('[data-translation-prompt]');
+    if (prompt) prompt.hidden = true;
+    if (this.translationFeedbackLocale
+        && typeof DANMAKU_TRANSLATION_FEEDBACK !== 'undefined') {
+      DANMAKU_TRANSLATION_FEEDBACK.markSeen(this.translationFeedbackLocale).catch(() => {});
+    }
+  }
+
+  dismissReleaseNotesPrompt() {
+    const prompt = this.panel?.querySelector('[data-release-prompt]');
+    const badge = this.panel?.querySelector('[data-release-badge]');
+    if (prompt) prompt.hidden = true;
+    if (badge) badge.hidden = true;
+    if (typeof DANMAKU_RELEASE_NOTES !== 'undefined') {
+      DANMAKU_RELEASE_NOTES.dismiss().catch(() => {});
+    }
+  }
+
+  showReleaseNotes() {
+    const details = this.panel?.querySelector('[data-release-notes]');
+    if (details) {
+      details.open = true;
+      details.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    this.dismissReleaseNotesPrompt();
+  }
+
+  async updateFeedbackPrompt() {
+    const prompt = this.panel?.querySelector('[data-feedback-prompt]');
+    if (!prompt) return;
+    try {
+      prompt.hidden = !(await DANMAKU_ENGAGEMENT.shouldShowReviewPrompt());
+    } catch (error) {
+      prompt.hidden = true;
+    }
+  }
+
+  dismissFeedbackPrompt() {
+    const prompt = this.panel?.querySelector('[data-feedback-prompt]');
+    if (prompt) prompt.hidden = true;
+    DANMAKU_ENGAGEMENT.dismissReviewPrompt().catch(() => {});
   }
 
   async reset() {
@@ -857,7 +1085,7 @@ class DanmakuSettingsPanel {
   flashStatus(text) {
     const status = this.panel.querySelector('[data-status]');
     if (!status) return;
-    status.textContent = text;
+    status.textContent = settingsText(text);
     if (this._statusTimer) clearTimeout(this._statusTimer);
     this._statusTimer = setTimeout(() => {
       status.textContent = '';
@@ -871,6 +1099,9 @@ class DanmakuSettingsPanel {
   open() {
     this.panel.style.display = 'flex';
     this.opened = true;
+    this.updateTranslationFeedbackPrompt();
+    this.updateReleaseNotesPrompt();
+    this.updateFeedbackPrompt();
     this.updateDiagnostics();
     if (this._statsPollId === null) {
       this._statsPollId = setInterval(() => this.updateDiagnostics(), 1000);
@@ -895,19 +1126,25 @@ class DanmakuSettingsPanel {
 
     const stats = this.getStats();
     if (!stats) {
-      status.textContent = 'No stream attached.';
+      status.textContent = settingsText('No stream attached.');
       list.innerHTML = '';
       return;
     }
 
     const { recent } = stats;
     if (recent.total === 0) {
-      status.textContent = 'No messages dropped in the last 10 s.';
+      status.textContent = settingsText('No messages dropped in the last 10 s.');
       list.innerHTML = '';
       return;
     }
 
-    status.textContent = `${recent.total} message${recent.total === 1 ? '' : 's'} dropped in the last 10 s:`;
+    status.textContent = recent.total === 1
+      ? settingsMessage('diagnosticsDroppedOne', '1 message dropped in the last 10 s:')
+      : settingsMessage(
+          'diagnosticsDroppedMany',
+          `${recent.total} messages dropped in the last 10 s:`,
+          [String(recent.total)]
+        );
     const reasons = [
       {
         key: 'queue',
@@ -930,9 +1167,17 @@ class DanmakuSettingsPanel {
     for (const r of reasons.filter((r) => recent[r.key] > 0).sort((a, b) => recent[b.key] - recent[a.key])) {
       const li = document.createElement('li');
       const label = document.createElement('strong');
-      label.textContent = `${r.label} ×${recent[r.key]}`;
+      label.textContent = settingsMessage(
+        'diagnosticsReasonCount',
+        `${settingsText(r.label)} ×${recent[r.key]}`,
+        [settingsText(r.label), String(recent[r.key])]
+      );
       const hint = document.createElement('span');
-      hint.textContent = ` — ${r.hint}`;
+      hint.textContent = settingsMessage(
+        'diagnosticsHint',
+        ` — ${settingsText(r.hint)}`,
+        [settingsText(r.hint)]
+      );
       li.appendChild(label);
       li.appendChild(hint);
       list.appendChild(li);

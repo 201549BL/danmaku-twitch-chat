@@ -460,6 +460,202 @@
 #danmaku-settings-panel .dsp-diag-list li { padding-left: 8px; border-left: 2px solid #6d4b99; }
 #danmaku-settings-panel .dsp-diag-list strong { color: var(--dsp-text); }
 
+#danmaku-settings-panel .dsp-feedback-prompt {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #5e3d89;
+  border-radius: 7px;
+  background: rgba(145, 70, 255, 0.11);
+}
+
+#danmaku-settings-panel .dsp-translation-prompt {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #315f78;
+  border-radius: 7px;
+  background: rgba(29, 155, 209, 0.1);
+}
+
+#danmaku-settings-panel .dsp-translation-prompt > strong,
+#danmaku-settings-panel .dsp-translation-prompt > span { grid-column: 1; }
+
+#danmaku-settings-panel .dsp-translation-prompt > span {
+  color: var(--dsp-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+#danmaku-settings-panel .dsp-translation-prompt > .dsp-btn {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin-right: 20px;
+}
+
+#danmaku-settings-panel .dsp-translation-dismiss {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsp-muted);
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#danmaku-settings-panel .dsp-translation-dismiss:hover { color: var(--dsp-text); }
+
+#danmaku-settings-panel .dsp-release-prompt {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #315f78;
+  border-radius: 7px;
+  background: rgba(29, 155, 209, 0.1);
+}
+
+#danmaku-settings-panel .dsp-release-prompt > strong,
+#danmaku-settings-panel .dsp-release-prompt > span { grid-column: 1; }
+
+#danmaku-settings-panel .dsp-release-prompt > span {
+  color: var(--dsp-muted);
+  font-size: 11px;
+}
+
+#danmaku-settings-panel .dsp-release-prompt > .dsp-btn {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin-right: 20px;
+}
+
+#danmaku-settings-panel .dsp-release-dismiss {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsp-muted);
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#danmaku-settings-panel .dsp-release-dismiss:hover { color: var(--dsp-text); }
+
+#danmaku-settings-panel .dsp-summary-badge {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #2b5266;
+  color: #d9f4ff;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+#danmaku-settings-panel .dsp-release-heading {
+  display: block;
+  margin: 2px 0 7px;
+}
+
+#danmaku-settings-panel .dsp-release-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--dsp-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+#danmaku-settings-panel .dsp-release-link {
+  margin-top: 10px;
+}
+
+#danmaku-settings-panel .dsp-feedback-prompt > span {
+  padding-right: 18px;
+  color: var(--dsp-muted);
+  font-size: 11px;
+}
+
+#danmaku-settings-panel .dsp-feedback-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+#danmaku-settings-panel .dsp-feedback-dismiss {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsp-muted);
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#danmaku-settings-panel .dsp-feedback-dismiss:hover { color: var(--dsp-text); }
+
+#danmaku-settings-panel .dsp-help-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+#danmaku-settings-panel .dsp-translation-callout {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 11px;
+  padding: 10px;
+  border: 1px solid #315f78;
+  border-radius: 7px;
+  background: rgba(29, 155, 209, 0.08);
+}
+
+#danmaku-settings-panel .dsp-translation-callout > strong {
+  color: var(--dsp-text);
+  font-size: 12px;
+}
+
+#danmaku-settings-panel .dsp-translation-callout > p {
+  margin: 0;
+  color: var(--dsp-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+#danmaku-settings-panel .dsp-translation-callout > .dsp-btn {
+  justify-self: start;
+  margin-top: 2px;
+}
+
 #danmaku-settings-panel .dsp-footer {
   display: flex;
   align-items: center;

@@ -16,6 +16,7 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 - **Player controls toggle**: quick enable/disable button in the Twitch player controls bar
 - **Fullscreen-ready**: overlay reparents into the fullscreen element automatically
 - **Auto-save** of all settings; nothing leaves your device
+- **Gentle feedback request** after repeated successful use; eligibility and dismissal are stored only on your device
 
 ## Installation
 
@@ -95,7 +96,12 @@ danmaku-twitch-chat/
 │   │   └── service-worker.js
 │   └── shared/
 │       ├── constants.js
+│       ├── engagement.js
+│       ├── i18n.js
+│       ├── release-notes.js
+│       ├── translation-feedback.js
 │       └── settings.js
+├── _locales/              # Chrome-native UI translations
 └── assets/
     ├── icon.svg             # source
     ├── icon-16.png
@@ -110,13 +116,12 @@ danmaku-twitch-chat/
 Include only the files the extension needs at runtime:
 
 ```bash
-zip -r danmaku-twitch-chat.zip manifest.json src/ assets/ \
-  --exclude '*.DS_Store' --exclude 'assets/icon.svg'
+zip -r danmaku-twitch-chat.zip manifest.json src/ _locales/ \
+  assets/icon-16.png assets/icon-48.png assets/icon-128.png \
+  assets/text-effects/ember.webp
 ```
 
-(The SVG source is fine to ship but isn't referenced by Chrome — excluding keeps the zip smaller.)
-
-Exclude these in any case: `.git/`, `.claude/`, `.gitignore`, `README.md`, `PRIVACY.md`, `*.zip`.
+Store screenshots, promo artwork, design sources, and unused textures are intentionally omitted. Exclude these in any case: `.git/`, `.claude/`, `.gitignore`, `README.md`, `PRIVACY.md`, `*.zip`.
 
 ### Regenerating icons
 

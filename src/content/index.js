@@ -1,3 +1,9 @@
+const DANMAKU_TRANSLATION_FEEDBACK_URLS = Object.freeze({
+  ja: 'https://github.com/201549BL/danmaku-twitch-chat/issues/new?template=translation-feedback.yml&title=%5Bja%5D%20Translation%20feedback',
+  zh_CN: 'https://github.com/201549BL/danmaku-twitch-chat/issues/new?template=translation-feedback.yml&title=%5Bzh_CN%5D%20Translation%20feedback',
+  zh_TW: 'https://github.com/201549BL/danmaku-twitch-chat/issues/new?template=translation-feedback.yml&title=%5Bzh_TW%5D%20Translation%20feedback',
+});
+
 class DanmakuController {
   constructor() {
     this.detector = null;
@@ -13,6 +19,7 @@ class DanmakuController {
     this._videoEl = null;
     this._videoListeners = null;
     this._videoFindTimeoutId = null;
+    this._successfulSessionRecorded = false;
   }
 
   async start() {
@@ -139,6 +146,25 @@ class DanmakuController {
       onClearMessages: () => this.renderer?.clear(),
       onAutoMock: (on) => (on ? this.mockChat.start(1000) : this.mockChat.stop()),
       getStats: () => this.renderer?.getDropStats() || null,
+      onOpenReview: () => this.openExternalLink(
+        `https://chromewebstore.google.com/detail/${chrome.runtime.id}/reviews`
+      ),
+      onOpenFeedback: () => this.openExternalLink(
+        'https://github.com/201549BL/danmaku-twitch-chat/issues/new/choose'
+      ),
+      onOpenGuide: () => this.openExternalLink(
+        'https://github.com/201549BL/danmaku-twitch-chat#usage'
+      ),
+      onOpenPrivacy: () => this.openExternalLink(
+        'https://github.com/201549BL/danmaku-twitch-chat/blob/main/PRIVACY.md'
+      ),
+      onOpenChangelog: () => this.openExternalLink(
+        'https://github.com/201549BL/danmaku-twitch-chat/blob/main/CHANGELOG.md'
+      ),
+      onOpenTranslationFeedback: (locale) => {
+        const url = DANMAKU_TRANSLATION_FEEDBACK_URLS[locale];
+        if (url) this.openExternalLink(url);
+      },
     });
     this.settingsPanel.init();
   }
@@ -278,7 +304,20 @@ class DanmakuController {
     if (!danmakuSettings.get('enabled')) return;
     if (!this.renderer) return;
 
+    if (!this._successfulSessionRecorded) {
+      this._successfulSessionRecorded = true;
+      DANMAKU_ENGAGEMENT.recordSuccessfulSession().catch((error) => {
+        console.warn('[Danmaku] Failed to record a successful session:', error);
+      });
+    }
+
     this.renderer.addMessage(message);
+  }
+
+  openExternalLink(url) {
+    chrome.runtime.sendMessage({ action: 'open-external-link', url }).catch((error) => {
+      console.warn('[Danmaku] Failed to open link:', error);
+    });
   }
 
   onSettingsChange() {

@@ -42,7 +42,9 @@ The repo is set up so an agent can do everything up to (but not including) the C
    ```
    mkdir -p dist
    git archive --format=zip --output=dist/danmaku-<X.Y.Z>.zip \
-     v<X.Y.Z> manifest.json src assets
+     v<X.Y.Z> manifest.json src _locales \
+     assets/icon-16.png assets/icon-48.png assets/icon-128.png \
+     assets/text-effects/ember.webp
    ```
 5. Draft GitHub Release notes from the `[<X.Y.Z>]` section of `CHANGELOG.md` (use `gh release create v<X.Y.Z> --notes-file <(...)`).
 
@@ -60,7 +62,7 @@ The repo is set up so an agent can do everything up to (but not including) the C
 
 ## Testing
 
-There is no automated test suite. Before releasing, smoke-test in a real browser on:
+Run the automated suite with `node --test tests/*.test.cjs`. Before releasing, also smoke-test in a real browser on:
 
 - A live stream (chat panel visible).
 - A VOD (different DOM path; see `VOD_CHAT_*` selectors).

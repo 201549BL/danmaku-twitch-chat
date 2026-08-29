@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to Danmaku for Twitch</title>
+    <link rel="stylesheet" href="welcome.css" />
+  </head>
+  <body>
+    <main class="welcome-shell">
+      <section class="welcome-card" aria-labelledby="welcome-title">
+        <img class="welcome-icon" src="../../assets/icon-128.png" alt="" width="80" height="80" />
+        <p class="eyebrow">Danmaku for Twitch</p>
+        <h1 id="welcome-title">Keep watching. Keep up with chat.</h1>
+        <p class="intro">
+          Twitch chat now appears directly over the video as smooth, readable messages—including in theater and fullscreen modes.
+        </p>
+
+        <div class="refresh-notice" data-refresh-notice hidden>
+          <strong>One quick refresh</strong>
+          <span>This Twitch tab was already open when Danmaku started. Refresh it once to activate the overlay.</span>
+        </div>
+
+        <ol class="steps">
+          <li><span>1</span><div><strong>Open a Twitch stream</strong><small>The overlay starts automatically when chat is available.</small></div></li>
+          <li><span>2</span><div><strong>Follow chat on the video</strong><small>Click the Danmaku player button whenever you want to hide or restore the overlay.</small></div></li>
+          <li><span>3</span><div><strong>Make it yours</strong><small>Open settings to adjust placement, rows, text size, motion, and favorites.</small></div></li>
+        </ol>
+
+        <section class="settings-guide" aria-labelledby="settings-guide-title">
+          <div class="settings-guide-heading">
+            <p class="eyebrow">Quick tip</p>
+            <h2 id="settings-guide-title">Open settings anytime</h2>
+          </div>
+          <div class="settings-methods">
+            <article class="settings-method">
+              <img src="../../assets/icon-48.png" alt="" width="38" height="38" />
+              <div>
+                <strong>From Chrome</strong>
+                <span>On a Twitch tab, click the Danmaku extension icon. If it is hidden, open Extensions and pin it first.</span>
+              </div>
+            </article>
+            <article class="settings-method">
+              <span class="player-button-example" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M3 5h18v2H3V5zm0 6h12v2H3v-2zm0 6h18v2H3v-2z" />
+                </svg>
+              </span>
+              <div>
+                <strong>From the Twitch player</strong>
+                <span>Right-click the Danmaku button in the player controls. A normal click toggles the overlay.</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button class="primary-action" type="button" data-primary-action>Open Twitch</button>
+          <a href="https://github.com/201549BL/danmaku-twitch-chat#usage" target="_blank" rel="noreferrer">View usage guide</a>
+        </div>
+        <p class="privacy-note">No account, ads, analytics, or remote data collection. Your settings stay on this device.</p>
+        <p class="status" role="status" data-status></p>
+      </section>
+    </main>
+    <script src="../shared/i18n.js"></script>
+    <script src="welcome.js"></script>
+  </body>
+</html>

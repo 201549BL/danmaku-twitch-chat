@@ -60,6 +60,7 @@ class DanmakuPlayerToggle {
           <span class="danmaku-player-toggle-tooltip-hint">Right-click for settings</span>
         </span>
       `;
+      if (typeof DANMAKU_I18N !== 'undefined') DANMAKU_I18N.localizeTree(this.button);
 
       this.button.addEventListener('click', (e) => this.onClick(e));
       this.button.addEventListener('contextmenu', (e) => this.onRightClick(e));
@@ -89,7 +90,10 @@ class DanmakuPlayerToggle {
     this.button.classList.toggle('danmaku-player-toggle--off', !enabled);
     const titleEl = this.button.querySelector('[data-tooltip-title]');
     if (titleEl) {
-      titleEl.textContent = enabled ? 'Danmaku: ON' : 'Danmaku: OFF';
+      const source = enabled ? 'Danmaku: ON' : 'Danmaku: OFF';
+      titleEl.textContent = typeof DANMAKU_I18N === 'undefined'
+        ? source
+        : DANMAKU_I18N.text(source);
     }
   }
 

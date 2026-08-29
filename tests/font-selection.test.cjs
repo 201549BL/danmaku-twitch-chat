@@ -71,7 +71,12 @@ test('service worker returns a sorted, deduplicated installed-font list', async 
     console,
     chrome: {
       action: { onClicked: { addListener: () => {} } },
-      runtime: { onMessage: { addListener: (listener) => { messageListener = listener; } } },
+      runtime: {
+        id: 'test-extension-id',
+        getURL: (path) => `chrome-extension://test-extension-id/${path}`,
+        onInstalled: { addListener: () => {} },
+        onMessage: { addListener: (listener) => { messageListener = listener; } },
+      },
       tabs: { sendMessage: async () => {}, create: () => {} },
       fontSettings: {
         getFontList: async () => {
@@ -85,6 +90,7 @@ test('service worker returns a sorted, deduplicated installed-font list', async 
         },
       },
     },
+    URL,
   };
   vm.runInNewContext(source, context);
 

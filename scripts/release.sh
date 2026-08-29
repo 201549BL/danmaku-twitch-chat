@@ -71,7 +71,9 @@ Next steps:
   4. Build the Chrome Web Store zip:
        mkdir -p dist
        git archive --format=zip --output=dist/danmaku-$VERSION.zip \\
-         v$VERSION manifest.json src assets
+         v$VERSION manifest.json src _locales \\
+         assets/icon-16.png assets/icon-48.png assets/icon-128.png \\
+         assets/text-effects/ember.webp
   5. Upload dist/danmaku-$VERSION.zip on the Chrome Web Store dashboard
      (Package -> Upload new package).
   6. Paste the [$VERSION] section from CHANGELOG.md into the

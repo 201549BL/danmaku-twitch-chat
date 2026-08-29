@@ -1,0 +1,53 @@
+name: Translation feedback
+description: Report an inaccurate or unnatural translation in Danmaku for Twitch.
+title: "[translation] "
+labels:
+  - translation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve Danmaku. If you opened this form from the extension, the detected locale is included in the issue title.
+
+  - type: dropdown
+    id: location
+    attributes:
+      label: Where did you see the text?
+      options:
+        - Chrome Web Store listing
+        - Welcome page
+        - Settings panel
+        - Twitch player controls
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-wording
+    attributes:
+      label: Current wording
+      description: Copy the inaccurate or unnatural text here.
+      placeholder: Paste the current translation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-wording
+    attributes:
+      label: Suggested wording
+      description: Tell us how a native speaker would write it.
+      placeholder: Paste your suggested correction.
+    validations:
+      required: true
+
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Why is this better?
+      description: Optional context about meaning, tone, terminology, or formality is welcome.
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Optionally drag in a screenshot showing where the text appears.

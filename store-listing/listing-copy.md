@@ -6,29 +6,31 @@ Danmaku for Twitch — Chat Overlay
 
 ## Summary
 
-See Twitch chat on the video with smooth danmaku, modern emotes, smart busy-chat control, and private local settings.
+Watch Twitch fullscreen without missing chat. Adds a customizable danmaku overlay with Twitch, 7TV, BTTV, and FFZ emotes.
 
 ## Detailed description
 
-Keep your eyes on the stream without losing the conversation. Danmaku for Twitch turns live chat into readable animated messages across the Twitch player—in normal, theater, and fullscreen modes.
+Watch Twitch in fullscreen without losing the conversation. Danmaku for Twitch puts live chat directly over the video as smooth, readable animated messages. It works on live streams and VODs in normal, theater, and fullscreen modes.
 
-BUILT FOR MODERN TWITCH CHAT
+WHY YOU'LL LOVE IT
 
-• Stays readable when chat gets busy — Dynamic mode adapts message speed and throughput, buffers brief congestion, and prioritizes the people you care about.
+• Keep watching while you follow chat — No need to look away from the video or give up fullscreen.
 
-• Twitch, 7TV, BetterTTV, and FrankerFaceZ emotes — Emotes and optional badges appear inline with messages.
+• See the emotes your community uses — Twitch, 7TV, BetterTTV, and FrankerFaceZ emotes appear inline, with optional badges.
 
-• Five animation styles — Choose Scroll, Reverse, Drift, Pop & Fade, or Slide Up.
+• Stay readable when chat gets busy — Dynamic mode adapts message speed and throughput while prioritizing friends, mods, VIPs, and other people you care about.
 
-• Put chat exactly where you want it — Move and resize the overlay directly on the player, then adjust rows, size, opacity, and speed.
+• Put chat exactly where you want it — Move and resize the overlay on the player, then adjust rows, text size, opacity, font, and speed.
 
-• Never miss important people — Highlight favorite usernames, broadcaster/mod/VIP/subscriber roles, replies, and @mentions.
+• Choose your style — Use classic scrolling danmaku, Reverse, Drift, Pop & Fade, or Slide Up.
 
-• Quick player controls — Toggle the overlay without leaving the stream. Pause it on hover or automatically with Twitch VODs.
+• Never miss important people — Highlight favorite usernames, roles, replies, and @mentions.
+
+• Control it from the player — Toggle the overlay without leaving the stream, pause it on hover, or sync it with Twitch VOD playback.
 
 PRIVATE BY DESIGN
 
-No accounts, analytics, tracking, ads, or remote data collection. Your settings stay on your device.
+No accounts, ads, tracking, or remote data collection. Your settings stay on your device.
 
 OPEN SOURCE AND ACTIVELY MAINTAINED
 

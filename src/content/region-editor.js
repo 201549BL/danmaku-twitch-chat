@@ -53,6 +53,7 @@ class DanmakuRegionEditor {
         <button class="dre-settings-btn" type="button" data-action="open-settings" title="Open danmaku settings">⚙</button>
       </div>
     `;
+    if (typeof DANMAKU_I18N !== 'undefined') DANMAKU_I18N.localizeTree(this.container);
     this.overlay.container.appendChild(this.container);
 
     this.container.querySelectorAll('[data-edge]').forEach((handle) => {
@@ -119,7 +120,9 @@ class DanmakuRegionEditor {
       return;
     }
     badge.hidden = false;
-    badge.textContent = `⚠ ${n} dropped/10s`;
+    badge.textContent = typeof DANMAKU_I18N === 'undefined'
+      ? `⚠ ${n} dropped/10s`
+      : DANMAKU_I18N.t('regionDroppedShort', `⚠ ${n} dropped/10s`, [String(n)]);
     badge.classList.toggle('dre-drops-heavy', n >= 20);
   }
 
@@ -220,7 +223,9 @@ class DanmakuRegionEditor {
 
       const label = document.createElement('span');
       label.className = 'danmaku-row-guide-label';
-      label.textContent = `Row ${i + 1}`;
+      label.textContent = typeof DANMAKU_I18N === 'undefined'
+        ? `Row ${i + 1}`
+        : DANMAKU_I18N.t('regionRowNumber', `Row ${i + 1}`, [String(i + 1)]);
       guide.appendChild(label);
 
       this.rowGuides.appendChild(guide);

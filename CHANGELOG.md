@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added a first-run welcome page with a one-click recovery flow for Twitch tabs that were open before installation.
+- Added a dismissible review and feedback request after several successful viewing sessions.
+- Added an always-available Help & feedback section to the settings panel.
+- Added Japanese, Simplified Chinese, and Traditional Chinese localization across the extension interface.
+- Added one-time, version-aware release highlights and an always-available What's new section in settings.
+- Added a full changelog link to the What's new section.
+- Added locale-specific one-time and permanent callouts plus a correction form for improving new translations.
+
+### Changed
+- Reworked the store summary and description around the core fullscreen viewing benefit.
+- Reduced release packages by excluding store artwork and other non-runtime assets.
+- Expanded onboarding with visual instructions for opening settings from Chrome or the Twitch player.
+
 ## [1.6.0] - 2026-08-29
 
 ### Added

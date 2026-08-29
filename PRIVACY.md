@@ -7,6 +7,8 @@
 - Reads chat messages from the Twitch page DOM — the same messages your browser already displays in Twitch's chat panel.
 - Renders those messages as scrolling overlays on the video player.
 - Stores your preferences (font size, rows, region, animation mode, etc.) locally in your browser via `chrome.storage.local`.
+- Stores a small local counter and timestamps for successful viewing sessions solely to decide when to show a dismissible feedback request. This information never leaves your browser.
+- Stores which localized translation invitations you have dismissed so each language prompt is shown only once. This information never leaves your browser.
 - Reads the names of fonts installed on your device so you can select one for chat messages. The list stays inside the extension and is never transmitted.
 
 ## What the extension does NOT do
