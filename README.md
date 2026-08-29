@@ -48,6 +48,7 @@ All changes apply live and auto-save.
 | Pause on hover | Freeze animations when hovering the chat region |
 | Dynamic mode | Auto-boost rate and speed when chat activity spikes |
 | Highlight @mentions | Your Twitch username; messages mentioning you are highlighted |
+| Font | Choose any font installed on your device; font names remain local |
 | Font size | Reference pixel size at a 720p player; scales with the player |
 | Rows | Number of message lanes |
 | Region top / height | Where the chat band sits on the player, as % |

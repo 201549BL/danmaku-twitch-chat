@@ -48,7 +48,29 @@ class DanmakuOverlay {
     player.appendChild(this.container);
     this.appendTextEffectFilter();
 
+    this.updateAppearance();
     this.updateVisibility();
+  }
+
+  quoteFontFamily(value) {
+    const escaped = String(value)
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/[\n\r\f]/g, ' ');
+    return `"${escaped}"`;
+  }
+
+  updateAppearance() {
+    if (!this.container) return;
+    const fontFamily = danmakuSettings.get('fontFamily');
+    if (!fontFamily || fontFamily === 'system') {
+      this.container.style.removeProperty('--danmaku-font-family');
+      return;
+    }
+    this.container.style.setProperty(
+      '--danmaku-font-family',
+      this.quoteFontFamily(fontFamily)
+    );
   }
 
   appendTextEffectFilter() {

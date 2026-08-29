@@ -46,6 +46,60 @@ class DanmakuSettingsPanel {
     this.buildSignatureMixOptions();
     this.bindEvents();
     this.loadValues();
+    this.loadFontOptions();
+  }
+
+  async loadFontOptions() {
+    const select = this.panel?.querySelector('[data-setting="fontFamily"]');
+    const status = this.panel?.querySelector('[data-font-status]');
+    if (!select) return;
+
+    select.disabled = true;
+    select.innerHTML = '';
+    const loading = document.createElement('option');
+    loading.value = 'system';
+    loading.textContent = 'Loading installed fonts…';
+    select.appendChild(loading);
+    if (status) status.textContent = 'Reading fonts installed on this device…';
+
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'get-font-list' });
+      const fonts = Array.isArray(response?.fonts) ? response.fonts : [];
+      select.innerHTML = '';
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = 'system';
+      defaultOption.textContent = 'Default';
+      select.appendChild(defaultOption);
+
+      for (const font of fonts) {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        select.appendChild(option);
+      }
+
+      const selected = danmakuSettings.get('fontFamily');
+      const available = selected === 'system' || fonts.includes(selected);
+      if (!available) danmakuSettings.set('fontFamily', 'system');
+      select.value = available ? selected : 'system';
+      select.disabled = false;
+      if (status) {
+        status.textContent = response?.error
+          ? 'Installed fonts are unavailable; using Default.'
+          : 'Fonts are read from this device and never uploaded.';
+      }
+    } catch (error) {
+      select.innerHTML = '';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = 'system';
+      defaultOption.textContent = 'Default';
+      select.appendChild(defaultOption);
+      select.value = 'system';
+      select.disabled = false;
+      danmakuSettings.set('fontFamily', 'system');
+      if (status) status.textContent = 'Installed fonts are unavailable; using Default.';
+    }
   }
 
   buildBadgeChips() {
@@ -183,6 +237,13 @@ class DanmakuSettingsPanel {
         <details class="dsp-disclosure">
           <summary>Appearance</summary>
           <div class="dsp-disclosure-body">
+            <label class="dsp-field">
+              <span>Font</span>
+              <select data-setting="fontFamily" disabled>
+                <option value="system">Loading installed fonts…</option>
+              </select>
+              <small class="dsp-hint dsp-field-hint" data-font-status>Reading fonts installed on this device…</small>
+            </label>
             <div class="dsp-row dsp-row-vertical">
               <div class="dsp-row-label"><span>Text size</span><em data-display="fontSize"></em></div>
               <input type="range" data-setting="fontSize" min="12" max="48" step="1" />

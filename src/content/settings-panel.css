@@ -344,6 +344,7 @@
 }
 
 #danmaku-settings-panel .dsp-anim-desc { min-height: 16px; }
+#danmaku-settings-panel .dsp-field-hint { margin: 0; }
 #danmaku-settings-panel .dsp-hint-leading { margin-top: 0; }
 #danmaku-settings-panel .dsp-disclosure {
   margin: 0 -8px;

@@ -286,6 +286,7 @@ class DanmakuController {
       this.renderer.onSettingsChange();
     }
     if (this.overlay) {
+      this.overlay.updateAppearance();
       this.overlay.updateVisibility();
     }
     this._applyVideoPauseState();

@@ -55,7 +55,7 @@
 .danmaku-message {
   position: absolute;
   white-space: nowrap;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--danmaku-font-family, 'Segoe UI'), Tahoma, Geneva, Verdana, sans-serif;
   font-weight: 600;
   color: #ffffff;
   text-shadow:

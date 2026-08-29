@@ -93,6 +93,7 @@ class DanmakuSettings {
       ];
     }
     for (const key of [
+      'fontFamily',
       'usernameEffectStyle',
       'usernameEffect',
       'usernameEffectPalette',
@@ -176,6 +177,15 @@ class DanmakuSettings {
   clampValue(key, value) {
     const limits = DANMAKU_CONSTANTS.LIMITS;
     switch (key) {
+      case 'fontFamily': {
+        if (value === 'system') return value;
+        if (typeof value !== 'string') return 'system';
+        const family = value.trim();
+        if (!family || family.length > 200 || /[\u0000-\u001f\u007f]/.test(family)) {
+          return 'system';
+        }
+        return family;
+      }
       case 'fontSize':
         return Math.max(limits.minFontSize, Math.min(limits.maxFontSize, value));
       case 'rows':

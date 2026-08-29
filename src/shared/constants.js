@@ -24,6 +24,7 @@ const DANMAKU_CONSTANTS = {
   DEFAULTS: {
     enabled: true,
     fullscreenOnly: false,
+    fontFamily: 'system',
     fontSize: 24,
     rows: 3,
     duration: 10,

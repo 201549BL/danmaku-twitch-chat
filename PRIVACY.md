@@ -7,6 +7,7 @@
 - Reads chat messages from the Twitch page DOM — the same messages your browser already displays in Twitch's chat panel.
 - Renders those messages as scrolling overlays on the video player.
 - Stores your preferences (font size, rows, region, animation mode, etc.) locally in your browser via `chrome.storage.local`.
+- Reads the names of fonts installed on your device so you can select one for chat messages. The list stays inside the extension and is never transmitted.
 
 ## What the extension does NOT do
 
@@ -23,6 +24,7 @@ On live channels the extension reads chat from a hidden popout-chat iframe (`htt
 ## Permissions used
 
 - `storage` — to persist your preferences locally on your device.
+- `fontSettings` — to read the list of installed font names for the font selector. The extension does not change Chrome's global font settings.
 - `host_permissions: https://www.twitch.tv/*` — to read the Twitch chat DOM and inject the overlay on Twitch stream pages.
 
 No other websites are accessed by the extension.
