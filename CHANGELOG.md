@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-29
+
 ### Added
 - Added a first-run welcome page with a one-click recovery flow for Twitch tabs that were open before installation.
 - Added a dismissible review and feedback request after several successful viewing sessions.
