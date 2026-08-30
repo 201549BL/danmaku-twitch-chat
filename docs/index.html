@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a0810">
+    <meta
+      name="description"
+      content="Keep Twitch fullscreen without losing chat. Danmaku for Twitch puts customizable, private chat overlays directly on the video."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Danmaku for Twitch — Chat directly on the video">
+    <meta
+      property="og:description"
+      content="A customizable, private Twitch chat overlay for Chrome."
+    >
+    <meta
+      property="og:image"
+      content="https://201549bl.github.io/danmaku-twitch-chat/assets/marquee-promo.png"
+    >
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Danmaku for Twitch — Chat directly on the video">
+    <meta
+      name="twitter:description"
+      content="A customizable, private Twitch chat overlay for Chrome."
+    >
+    <meta
+      name="twitter:image"
+      content="https://201549bl.github.io/danmaku-twitch-chat/assets/marquee-promo.png"
+    >
+    <title>Danmaku for Twitch — Chat directly on the video</title>
+    <link rel="icon" type="image/png" href="assets/icon-128.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-i18n="skipLink">Skip to content</a>
+    <svg class="danmaku-effect-filter-defs" aria-hidden="true" width="0" height="0">
+      <filter id="danmaku-text-border-filter" x="-30%" y="-35%" width="160%" height="180%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor"></feMorphology>
+        <feComponentTransfer in="expandedColor" result="border">
+          <feFuncR type="linear" slope="0.24"></feFuncR>
+          <feFuncG type="linear" slope="0.24"></feFuncG>
+          <feFuncB type="linear" slope="0.24"></feFuncB>
+          <feFuncA type="identity"></feFuncA>
+        </feComponentTransfer>
+        <feOffset in="expandedColor" dy="1.6" result="depthShape"></feOffset>
+        <feComponentTransfer in="depthShape" result="depth">
+          <feFuncR type="linear" slope="0.08"></feFuncR>
+          <feFuncG type="linear" slope="0.08"></feFuncG>
+          <feFuncB type="linear" slope="0.08"></feFuncB>
+          <feFuncA type="linear" slope="0.98"></feFuncA>
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode in="depth"></feMergeNode>
+          <feMergeNode in="border"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+      <filter id="danmaku-text-border-flat-filter" x="-30%" y="-35%" width="160%" height="170%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceGraphic" operator="dilate" radius="1.15" result="expandedColor"></feMorphology>
+        <feComponentTransfer in="expandedColor" result="border">
+          <feFuncR type="linear" slope="0.24"></feFuncR>
+          <feFuncG type="linear" slope="0.24"></feFuncG>
+          <feFuncB type="linear" slope="0.24"></feFuncB>
+          <feFuncA type="identity"></feFuncA>
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode in="border"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+    </svg>
+
+    <header class="site-header" data-header>
+      <div class="shell header-inner">
+        <a class="brand" href="#top" aria-label="Danmaku for Twitch home">
+          <img src="assets/icon-128.png" alt="" width="42" height="42">
+          <span>Danmaku <span class="brand-muted">for Twitch</span></span>
+        </a>
+
+        <nav class="desktop-nav" aria-label="Primary navigation">
+          <a href="#features" data-i18n="navFeatures">Features</a>
+          <a href="#privacy" data-i18n="navPrivacy">Privacy</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="language-menu" data-language-menu>
+            <button
+              class="language-trigger"
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-label="Choose language"
+              data-language-trigger
+              data-i18n-aria="languageLabel"
+            >
+              <span class="locale-icon" aria-hidden="true"></span>
+              <span data-current-language>English</span>
+              <span class="language-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="language-popover" role="listbox" aria-label="Language" data-language-popover hidden>
+              <button type="button" role="option" data-locale="en" aria-selected="true">
+                <span>English</span><small>EN</small><i aria-hidden="true">✓</i>
+              </button>
+              <button type="button" role="option" data-locale="ja" aria-selected="false">
+                <span>日本語</span><small>JA</small><i aria-hidden="true">✓</i>
+              </button>
+              <p data-i18n="languageComing">More languages coming</p>
+            </div>
+          </div>
+          <a
+            class="button button-small button-primary header-cta"
+            href="https://chromewebstore.google.com/detail/bapmefpfibkpmbcokkbmgjcjphdnkhch"
+            data-i18n="navInstall"
+          >Add to Chrome</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="hero-glow hero-glow-one"></div>
+        <div class="hero-glow hero-glow-two"></div>
+        <div class="shell hero-grid">
+          <div class="hero-copy reveal">
+            <div class="hero-meta">
+              <div class="eyebrow">
+                <span class="status-dot"></span>
+                <span data-i18n="eyebrow">Open source · Free Chrome extension</span>
+              </div>
+              <a class="updated-tag" href="https://github.com/201549BL/danmaku-twitch-chat/blob/main/CHANGELOG.md">
+                <strong>v1.7.0</strong>
+                <span data-i18n="lastUpdated">Updated 29 Aug 2026</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+            <h1>
+              <span data-i18n="heroTitleOne">Keep the stream fullscreen.</span>
+              <span class="gradient-text" data-i18n="heroTitleTwo">Keep the chat in sight.</span>
+            </h1>
+            <p class="hero-lede" data-i18n="heroBody">
+              Follow every reaction without looking away. Danmaku for Twitch places smooth,
+              readable chat messages directly over live streams and VODs.
+            </p>
+            <div class="hero-actions">
+              <a
+                class="button button-primary button-large"
+                href="https://chromewebstore.google.com/detail/bapmefpfibkpmbcokkbmgjcjphdnkhch"
+              >
+                <span data-i18n="heroInstall">Add to Chrome — it's free</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+              <a class="button button-quiet button-large" href="#demo">
+                <span class="play-mark" aria-hidden="true">▶</span>
+                <span data-i18n="heroDemo">Watch the 30-sec demo</span>
+              </a>
+            </div>
+            <ul class="trust-row" aria-label="Highlights">
+              <li><span aria-hidden="true">✓</span><span data-i18n="trustNoAccount">No account</span></li>
+              <li><span aria-hidden="true">✓</span><span data-i18n="trustNoTracking">No tracking</span></li>
+              <li><span aria-hidden="true">✓</span><span data-i18n="trustEmotes">Twitch + 7TV + BTTV + FFZ</span></li>
+            </ul>
+          </div>
+
+          <div class="hero-product reveal" id="demo">
+            <div class="video-frame">
+              <div class="browser-bar" aria-hidden="true">
+                <div class="browser-dots"><i></i><i></i><i></i></div>
+                <div class="address-bar">twitch.tv / live</div>
+                <span class="live-pill">LIVE</span>
+              </div>
+              <video
+                autoplay
+                muted
+                loop
+                playsinline
+                poster="assets/01-normal-chat-smooth-pace.png"
+                aria-label="Danmaku for Twitch demonstration"
+                data-i18n-aria="demoLabel"
+              >
+                <source src="assets/danmaku-for-twitch-promo.mp4" type="video/mp4">
+              </video>
+              <div class="video-shine"></div>
+            </div>
+            <div class="floating-card floating-card-top">
+              <span class="floating-icon">↗</span>
+              <span><strong data-i18n="floatFullscreen">Fullscreen ready</strong><small data-i18n="floatFullscreenSub">Chat stays with the action</small></span>
+            </div>
+            <div class="floating-card floating-card-bottom">
+              <span class="floating-icon floating-icon-lock">◆</span>
+              <span><strong data-i18n="floatPrivate">Private by design</strong><small data-i18n="floatPrivateSub">Your settings stay local</small></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="shell compatibility" aria-label="Compatibility">
+          <span data-i18n="worksWith">Works with</span>
+          <strong>Twitch</strong>
+          <i></i>
+          <strong>7TV</strong>
+          <i></i>
+          <strong>BetterTTV</strong>
+          <i></i>
+          <strong>FrankerFaceZ</strong>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <span class="section-kicker" data-i18n="featureKicker">Built for the way Twitch moves</span>
+            <h2 data-i18n="featureTitle">Chat that keeps up—and stays out of the way.</h2>
+            <p data-i18n="featureIntro">Tune the overlay once, then let it adapt while you watch.</p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card feature-card-wide reveal">
+              <div class="feature-copy">
+                <h3 data-i18n="featureOneTitle">Readable when chat gets wild</h3>
+                <p data-i18n="featureOneBody">Dynamic mode responds to bursts by adjusting message speed and throughput instead of flooding the player.</p>
+                <span class="feature-tag" data-i18n="featureOneTag">Adapts automatically</span>
+              </div>
+              <div
+                class="dynamic-demo product-canvas"
+                role="img"
+                aria-label="Danmaku-style Dynamic mode preview with chat messages moving across the player"
+                data-i18n-aria="dynamicDemoLabel"
+              >
+                <span
+                  class="dynamic-chip"
+                  aria-label="Dynamic mode active at 2.4 times speed"
+                  data-i18n-aria="dynamicChipLabel"
+                >×2.4</span>
+                <div class="canvas-hud" aria-hidden="true">
+                  <span class="canvas-live">LIVE</span>
+                  <span>32 msg/s</span>
+                </div>
+                <div class="dynamic-chat-lanes" aria-hidden="true">
+                  <div class="product-chat-line chat-line-one"><b class="name-cyan">PixelPanda:</b><span>that timing was clean</span><img src="assets/emote-omegalul.png" alt=""></div>
+                  <div class="product-chat-line chat-line-two"><b class="name-pink">KappaKing:</b><span>POGGERS</span><img src="assets/emote-pepehands.png" alt=""></div>
+                  <div class="product-chat-line chat-line-three"><b class="name-yellow">ModMika:</b><span>clip that!</span><i>MOD</i></div>
+                  <div class="product-chat-line chat-line-four"><b class="name-green">Subwoofer:</b><span>GG WP</span><img src="assets/emote-monkas.png" alt=""></div>
+                  <div class="product-chat-line chat-line-five"><b class="name-green">LurkerXD:</b><span>streamer is cracked</span></div>
+                  <div class="product-chat-line chat-line-six"><b class="name-yellow">TeaSpill:</b><span>OMEGALUL</span><img src="assets/emote-omegalul.png" alt=""></div>
+                  <div class="product-chat-line chat-line-seven"><b class="name-cyan">ChatEnjoyer:</b><span>that save was clean</span></div>
+                  <div class="product-chat-line chat-line-eight"><b class="name-pink">PogChamp99:</b><span>no way</span><img src="assets/emote-pepehands.png" alt=""></div>
+                </div>
+                <div class="canvas-status" aria-hidden="true"><strong>Dynamic mode</strong><span>Busy chat → faster flow</span></div>
+              </div>
+            </article>
+
+            <article class="feature-card reveal">
+              <div class="emote-visual product-canvas">
+                <div class="provider-logos" aria-label="7TV, BetterTTV, and FrankerFaceZ providers">
+                  <span><img src="assets/provider-7tv.svg" alt="7TV"></span>
+                  <span><img src="assets/provider-bttv.png" alt="BetterTTV"></span>
+                  <span><img src="assets/provider-ffz.png" alt="FrankerFaceZ"></span>
+                </div>
+                <div class="emote-chat-stack">
+                  <div class="emote-chat emote-chat-one"><b class="name-cyan">PixelPanda:</b><span>that was</span><img src="assets/emote-omegalul.png" alt="OMEGALUL emote"></div>
+                  <div class="emote-chat emote-chat-two"><b class="name-green">LurkerXD:</b><img src="assets/emote-pepehands.png" alt="PepeHands emote"><span>nooo</span></div>
+                  <div class="emote-chat emote-chat-three"><b class="name-pink">KappaKing:</b><span>monkaS</span><img src="assets/emote-monkas.png" alt="monkaS emote"></div>
+                </div>
+              </div>
+              <h3 data-i18n="featureTwoTitle">The emotes your community uses</h3>
+              <p data-i18n="featureTwoBody">Twitch, 7TV, BetterTTV, and FrankerFaceZ emotes render inline with optional badges.</p>
+            </article>
+
+            <article class="feature-card reveal">
+              <div
+                class="people-preview product-canvas"
+                role="img"
+                aria-label="Danmaku-style preview highlighting a favorite viewer, moderator, and mention"
+                data-i18n-aria="peoplePreviewAlt"
+              >
+                <div class="priority-legend" aria-hidden="true">
+                  <span class="legend-favorite">★ Favorite</span>
+                  <span class="legend-mod">◆ Mod</span>
+                  <span class="legend-mention">@ You</span>
+                </div>
+                <div class="priority-chat" aria-hidden="true">
+                  <div class="priority-line priority-muted"><b>ChatEnjoyer:</b><span>nice play</span></div>
+                  <div class="priority-line priority-favorite"><i>★</i><b>FavoriteViewer:</b><span>you called it!</span></div>
+                  <div class="priority-line priority-mod"><i>MOD</i><b>ModSignal:</b><span>watch this</span></div>
+                  <div class="priority-line priority-mention"><b>ReplyGuy:</b><span>@you that was clean</span></div>
+                </div>
+              </div>
+              <h3 data-i18n="featureThreeTitle">Important people stay visible</h3>
+              <p data-i18n="featureThreeBody">Prioritize friends, moderators, VIPs, replies, and @mentions when the conversation accelerates.</p>
+            </article>
+
+            <article class="feature-card feature-card-wide username-feature reveal">
+              <div class="feature-copy">
+                <h3 data-i18n="featureFourTitle">Give every chatter a signature</h3>
+                <p data-i18n="featureFourBody">Use Flow, Ember, or Glitch for fixed styles—or let Personalized mode assign each chatter a consistent look.</p>
+                <span class="feature-tag" data-i18n="featureFourTag">Fixed or personalized</span>
+              </div>
+              <div
+                class="username-effects-demo product-canvas"
+                role="img"
+                aria-label="The same animated Flow, Ember, and Glitch username effects used by Danmaku"
+                data-i18n-aria="usernameDemoLabel"
+              >
+                <div class="username-effects-top" aria-hidden="true">
+                  <span data-i18n="usernameDemoHeading">Username effects</span>
+                  <strong data-i18n="usernameDemoMode">Personalized</strong>
+                </div>
+                <div class="username-effect-list" aria-hidden="true">
+                  <div class="username-effect-row">
+                    <span class="effect-name">Flow</span>
+                    <div class="effect-message">
+                      <strong
+                        class="danmaku-username-effect--duotoneFlow danmaku-username-effect--enhanced"
+                        data-danmaku-username-text="PixelPanda"
+                        style="--danmaku-username-color:#69e6d3;--danmaku-secondary-color:hsl(206 82% 70%);--danmaku-effect-duration-scale:.96;--danmaku-effect-delay:-2.1s;--danmaku-gradient-direction:alternate"
+                      >PixelPanda</strong>
+                    </div>
+                  </div>
+                  <div class="username-effect-row">
+                    <span class="effect-name">Ember</span>
+                    <div class="effect-message">
+                      <strong
+                        class="danmaku-username-effect--duotoneEmber danmaku-username-effect--enhanced"
+                        data-danmaku-username-text="ModMika"
+                        style="--danmaku-username-color:#ffd155;--danmaku-secondary-color:hsl(79 82% 68%);--danmaku-effect-texture:url('assets/text-effects/ember.webp');--danmaku-effect-duration-scale:1.04;--danmaku-effect-delay:-3.4s;--danmaku-texture-direction:normal"
+                      >ModMika</strong>
+                    </div>
+                  </div>
+                  <div class="username-effect-row">
+                    <span class="effect-name">Glitch</span>
+                    <div class="effect-message">
+                      <strong
+                        class="danmaku-username-effect--duotoneGlitch danmaku-username-effect--enhanced"
+                        data-danmaku-username-text="KappaKing"
+                        style="--danmaku-username-color:#f279cd;--danmaku-secondary-color:hsl(123 82% 70%);--danmaku-effect-duration-scale:.91;--danmaku-effect-delay:-1.7s"
+                      >KappaKing</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section privacy-section" id="privacy">
+        <div class="shell privacy-card reveal">
+          <div class="privacy-mark" aria-hidden="true">
+            <span>◆</span>
+            <i></i>
+          </div>
+          <div>
+            <span class="section-kicker" data-i18n="privacyKicker">Private by default. Not as a setting.</span>
+            <h2 data-i18n="privacyTitle">The stream is between you and Twitch.</h2>
+            <p data-i18n="privacyBody">Danmaku has no accounts, ads, analytics, telemetry, or remote data collection. Preferences stay in Chrome on your device.</p>
+          </div>
+          <div class="privacy-points">
+            <div><span>01</span><strong data-i18n="privacyOneTitle">Nothing uploaded</strong><small data-i18n="privacyOneBody">Chat and settings never reach our servers.</small></div>
+            <div><span>02</span><strong data-i18n="privacyTwoTitle">Minimal access</strong><small data-i18n="privacyTwoBody">The extension runs only on twitch.tv.</small></div>
+            <div><span>03</span><strong data-i18n="privacyThreeTitle">Open source</strong><small data-i18n="privacyThreeBody">Read the code and verify every claim.</small></div>
+          </div>
+          <a class="text-link" href="https://github.com/201549BL/danmaku-twitch-chat/blob/main/PRIVACY.md">
+            <span data-i18n="privacyLink">Read the plain-English privacy policy</span><span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="translation-section">
+        <div class="shell translation-card reveal">
+          <div class="translation-icon" aria-hidden="true">あ</div>
+          <div>
+            <h2 data-i18n="translationTitle">Help make the Japanese translation feel native.</h2>
+            <p data-i18n="translationBody">Some translations are new and may sound unnatural. If you speak Japanese, your corrections can make Danmaku better for everyone.</p>
+          </div>
+          <a
+            class="button button-quiet"
+            href="https://github.com/201549BL/danmaku-twitch-chat/issues/new?template=translation-feedback.yml"
+            data-i18n="translationAction"
+          >Suggest a correction</a>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div class="shell final-cta-inner reveal">
+          <img src="assets/icon-128.png" alt="" width="72" height="72">
+          <span class="section-kicker" data-i18n="finalKicker">Stay with the moment</span>
+          <h2 data-i18n="finalTitle">Your stream. Your chat. One view.</h2>
+          <p data-i18n="finalBody">Free, open source, and ready for your next Twitch session.</p>
+          <a
+            class="button button-primary button-large"
+            href="https://chromewebstore.google.com/detail/bapmefpfibkpmbcokkbmgjcjphdnkhch"
+          >
+            <span data-i18n="finalInstall">Add Danmaku to Chrome</span><span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <div class="brand footer-brand">
+          <img src="assets/icon-128.png" alt="" width="34" height="34">
+          <span>Danmaku <span class="brand-muted">for Twitch</span></span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/201549BL/danmaku-twitch-chat" data-i18n="footerSource">Source code</a>
+          <a href="https://github.com/201549BL/danmaku-twitch-chat/issues" data-i18n="footerSupport">Support</a>
+          <a href="https://github.com/201549BL/danmaku-twitch-chat/blob/main/PRIVACY.md" data-i18n="footerPrivacy">Privacy</a>
+        </div>
+        <p data-i18n="footerNote">Free and open source · Built for Twitch viewers</p>
+      </div>
+    </footer>
+  </body>
+</html>
