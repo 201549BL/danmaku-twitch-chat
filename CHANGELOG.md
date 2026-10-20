@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.0] - 2026-10-20
 
 ### Added
-- Added WebGPU as a new way to display chat during busy streams. Choose it in **Advanced > Renderer**.
-- With WebGPU, you can show up to 300 messages across 48 rows and allow up to 120 new messages per second. Animated usernames, emotes, and badges are supported.
+- Added WebGPU, a new way to display chat that uses your graphics card to help keep messages moving smoothly when chat gets busy. To try it, open **Settings > Advanced > Renderer** and choose **WebGPU**.
+- With WebGPU, you can show up to 300 messages at once and keep username animations on, alongside emotes and badges. You can use up to 48 rows and allow up to 120 new messages per second.
 - Added **Auto**, which uses WebGPU when supported and switches to the original renderer when needed. New installs use Auto. Existing users keep their current renderer setting.
 
 ### Improved

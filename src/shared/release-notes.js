@@ -3,15 +3,15 @@ const DANMAKU_RELEASE_NOTES = {
   ITEMS: [
     {
       key: 'releaseNoteWebgpu',
-      fallback: 'New WebGPU option for busy chat. Find it in Advanced > Renderer.',
+      fallback: 'Added WebGPU, a new way to display chat that uses your graphics card to help keep messages moving smoothly when chat gets busy.',
     },
     {
       key: 'releaseNoteDenseChat',
-      fallback: 'Show up to 300 messages across 48 rows, including animated usernames, emotes, and badges.',
+      fallback: 'You can show up to 300 messages at once and keep username animations on, alongside emotes and badges.',
     },
     {
       key: 'releaseNoteRendererChoice',
-      fallback: 'New installs use Auto. It switches to the original renderer if WebGPU is unavailable. Your current renderer setting stays the same.',
+      fallback: 'To try it, open Settings > Advanced > Renderer and choose WebGPU.',
     },
   ],
 

@@ -205,7 +205,7 @@
   "settingsRendererFallback": { "message": "GPU を利用できません。DOM レンダラーを使用しています。" },
   "settingsActiveMessages": { "message": "表示中のメッセージ数" },
   "settingsDensityHint": { "message": "狭い範囲では行が重なり、重なる行のガイドは赤く表示されます。DOM への切り替え時は最大 10 行、100 メッセージ、毎秒 20 メッセージに制限されます。" },
-  "releaseNoteWebgpu": { "message": "チャットが多い配信向けに WebGPU を追加しました。「詳細設定」の「レンダラー」で選べます。" },
-  "releaseNoteDenseChat": { "message": "最大 48 行に 300 件のメッセージを表示できます。ユーザー名のアニメーション、エモート、バッジにも対応しています。" },
-  "releaseNoteRendererChoice": { "message": "新規インストールでは「自動」を使用します。WebGPU が使えない場合は従来の表示方式に切り替わります。現在のレンダラー設定は変わりません。" }
+  "releaseNoteWebgpu": { "message": "チャットの表示にグラフィック機能を使う WebGPU を追加しました。メッセージが多いときも、チャットをなめらかに表示しやすくなります。" },
+  "releaseNoteDenseChat": { "message": "最大 300 件のメッセージを同時に表示できます。ユーザー名のアニメーションを有効にしたまま、エモートやバッジも表示できます。" },
+  "releaseNoteRendererChoice": { "message": "試すには、設定 > 詳細設定 > レンダラーで WebGPU を選んでください。" }
 }
