@@ -3,15 +3,15 @@ const DANMAKU_RELEASE_NOTES = {
   ITEMS: [
     {
       key: 'releaseNoteWebgpu',
-      fallback: 'Auto rendering for new installs, with automatic DOM fallback when WebGPU is unavailable.',
+      fallback: 'New WebGPU option for busy chat. Find it in Advanced > Renderer.',
     },
     {
       key: 'releaseNoteDenseChat',
-      fallback: 'Denser WebGPU chat with animated usernames, emotes, and badges.',
+      fallback: 'Show up to 300 messages across 48 rows, including animated usernames, emotes, and badges.',
     },
     {
       key: 'releaseNoteRendererChoice',
-      fallback: 'Find Renderer in Advanced. Your existing renderer choice stays unchanged.',
+      fallback: 'New installs use Auto. It switches to the original renderer if WebGPU is unavailable. Your current renderer setting stays the same.',
     },
   ],
 

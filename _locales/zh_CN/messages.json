@@ -205,7 +205,7 @@
   "settingsRendererFallback": { "message": "GPU 不可用。正在使用 DOM 渲染器。" },
   "settingsActiveMessages": { "message": "屏幕消息数量" },
   "settingsDensityHint": { "message": "区域较小时，消息行可以重叠，重叠行的辅助线会变红。切换到 DOM 后，最多支持 10 行、100 条屏幕消息和每秒 20 条消息。" },
-  "releaseNoteWebgpu": { "message": "新安装默认使用自动渲染，WebGPU 不可用时自动切换到 DOM。" },
-  "releaseNoteDenseChat": { "message": "WebGPU 支持更密集的聊天，并保留动态用户名、表情和徽章。" },
-  "releaseNoteRendererChoice": { "message": "渲染器位于高级设置中。现有的渲染器选择保持不变。" }
+  "releaseNoteWebgpu": { "message": "新增适合消息较多的直播间的 WebGPU 选项，可在“高级”中的“渲染器”里选择。" },
+  "releaseNoteDenseChat": { "message": "最多可在 48 行中同时显示 300 条消息，支持动态用户名、表情和徽章。" },
+  "releaseNoteRendererChoice": { "message": "新安装默认选择“自动”。如果 WebGPU 不可用，会切换回原来的显示方式。你当前的渲染器设置不会改变。" }
 }
