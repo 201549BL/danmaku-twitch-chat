@@ -194,5 +194,18 @@
   "whatsNewDismiss": { "message": "關閉更新說明" },
   "releaseNoteOnboarding": { "message": "新增引導歡迎頁，並可一鍵復原需要重新整理的 Twitch 分頁。" },
   "releaseNoteFeedback": { "message": "現在可隨時從設定中取得說明、傳送意見和評分。" },
-  "releaseNoteLocalization": { "message": "新增日文、簡體中文和繁體中文介面支援。" }
+  "releaseNoteLocalization": { "message": "新增日文、簡體中文和繁體中文介面支援。" },
+  "settingsRenderer": { "message": "算繪器" },
+  "settingsRendererAuto": { "message": "自動（預設）" },
+  "settingsRendererDom": { "message": "DOM" },
+  "settingsRendererWebgpu": { "message": "WebGPU" },
+  "settingsRendererActiveWebgpu": { "message": "目前算繪器：WebGPU" },
+  "settingsRendererActiveDom": { "message": "目前算繪器：DOM" },
+  "settingsRendererPreparing": { "message": "正在準備 GPU 算繪器" },
+  "settingsRendererFallback": { "message": "GPU 無法使用。正在使用 DOM 算繪器。" },
+  "settingsActiveMessages": { "message": "畫面訊息數量" },
+  "settingsDensityHint": { "message": "區域較小時，訊息列可以重疊，重疊列的輔助線會變紅。切換至 DOM 後，最多支援 10 列、100 則畫面訊息及每秒 20 則訊息。" },
+  "releaseNoteWebgpu": { "message": "新安裝預設使用自動算繪，WebGPU 無法使用時自動切換至 DOM。" },
+  "releaseNoteDenseChat": { "message": "WebGPU 支援更密集的聊天室訊息，並保留動態使用者名稱、表情符號和徽章。" },
+  "releaseNoteRendererChoice": { "message": "算繪器位於進階設定中。現有的算繪器選擇維持不變。" }
 }

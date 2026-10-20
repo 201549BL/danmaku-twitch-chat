@@ -21,7 +21,10 @@ const DANMAKU_CONSTANTS = {
     VOD_CHAT_TEXT: '.video-chat__message',
   },
 
+  RENDERERS: ['dom', 'webgpu', 'auto'],
+
   DEFAULTS: {
+    renderer: 'auto',
     enabled: true,
     fullscreenOnly: false,
     fontFamily: 'system',
@@ -132,7 +135,7 @@ const DANMAKU_CONSTANTS = {
     minFontSize: 12,
     maxFontSize: 48,
     minRows: 1,
-    maxRows: 10,
+    maxRows: 48,
     minDuration: 3,
     maxDuration: 30,
     minOpacity: 0.1,
@@ -143,7 +146,25 @@ const DANMAKU_CONSTANTS = {
     maxRegionHeight: 100,
     minPopFadeLifetime: 1,
     maxPopFadeLifetime: 15,
-    maxActiveMessages: 100,
+    maxActiveMessages: 300,
+    maxMessagesPerSecond: 120,
+  },
+
+  DENSITY: {
+    dom: { rows: 10, active: 100, rate: 20, burstRate: 30 },
+    gpu: { rows: 48, active: 300, rate: 120, burstRate: 120 },
+  },
+
+  laneGeometry(settings, playerHeight, gpu) {
+    const height = Math.max(0, playerHeight);
+    const footprint = settings.get('fontSize') * height / this.REFERENCE_PLAYER_HEIGHT * 1.4;
+    const top = Math.min(height, settings.get('regionTop') / 100 * height);
+    const regionHeight = Math.max(0, Math.min(height - top, settings.get('regionHeight') / 100 * height));
+    const count = Math.max(1, Math.min(settings.get('rows'), this.DENSITY[gpu ? 'gpu' : 'dom'].rows));
+    const start = Math.min(top, Math.max(0, height - footprint));
+    const space = Math.max(0, Math.min(regionHeight, height - start) - footprint);
+    const pitch = count > 1 ? space / (count - 1) : 0;
+    return { count, footprint, overlapping: count > 1 && pitch < footprint, top: index => start + (count === 1 ? space / 2 : index * pitch) };
   },
 
   REFERENCE_PLAYER_HEIGHT: 720,

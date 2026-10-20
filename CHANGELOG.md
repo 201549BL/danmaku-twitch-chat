@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-20
+
+- Moved WebGPU drawing, animated media, and animation clocks into a worker so Twitch page tasks do not pause active messages.
+- Added Auto, DOM, and WebGPU renderer options under Advanced. New installs default to Auto with DOM fallback; existing renderer choices are preserved, including DOM for older settings without a renderer choice.
+- Raised WebGPU limits to 48 rows, 300 active messages, and 120 admitted messages per second. Defaults remain 3 rows, 50 active messages, and 5 messages per second. DOM fallback retains its lower limits without overwriting saved choices.
+- Preserved the selected username effect scope in WebGPU during busy chat. Manual row counts are retained even when rows overlap, with red overlap guides.
+- Reused WebGPU draw data and cached effect colors and timing profiles to reduce garbage-collection hitches in dense animated chat.
+- Prepared queued WebGPU messages concurrently to prevent admission stalls during chat bursts, with bounded preparation and cancellation cleanup.
+- Matched Chrome's playback timing for animated emotes with zero or very short frame durations.
+- Queued GPU messages now use the latest appearance settings, and animated usernames keep the space before the message body.
+- Width-only player resizing keeps GPU messages and resources instead of briefly rebuilding through DOM.
+
 ## [1.7.0] - 2026-08-29
 
 ### Added

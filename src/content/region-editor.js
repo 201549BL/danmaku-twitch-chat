@@ -22,6 +22,7 @@ class DanmakuRegionEditor {
     this.overlay = overlay;
     this.build();
     danmakuSettings.addListener(this._settingsListener);
+    window.addEventListener('danmaku-renderer-status', this._settingsListener);
     document.addEventListener('mousemove', this._boundOnMouseMove);
     this.resizeObserver = new ResizeObserver(() => this.update());
     this.resizeObserver.observe(this.overlay.container);
@@ -196,28 +197,16 @@ class DanmakuRegionEditor {
 
   updateRowGuides() {
     if (!this.rowGuides || !this.overlay?.container) return;
-    const rows = danmakuSettings.get('rows');
-    const fontSize = danmakuSettings.get('fontSize');
-    const regionTop = danmakuSettings.get('regionTop');
-    const regionHeight = danmakuSettings.get('regionHeight');
-    const playerH = this.overlay.container.offsetHeight || 0;
-    const fontSizePx = (fontSize * playerH) / DANMAKU_CONSTANTS.REFERENCE_PLAYER_HEIGHT;
-    const regionTopPx = (regionTop / 100) * playerH;
-    const regionHeightPx = (regionHeight / 100) * playerH;
-    const laneSpacing = rows > 1 ? (regionHeightPx - fontSizePx) / (rows - 1) : 0;
-    const overlapping = rows > 1 && laneSpacing < fontSizePx;
+    const geometry = DANMAKU_CONSTANTS.laneGeometry(danmakuSettings, this.overlay.container.offsetHeight || 0, this.overlay.container.dataset?.danmakuRenderer === 'webgpu');
+    const rows = geometry.count;
+    const fontSizePx = geometry.footprint;
 
     this.rowGuides.innerHTML = '';
 
     for (let i = 0; i < rows; i++) {
-      const top =
-        rows <= 1
-          ? regionTopPx + Math.max(0, (regionHeightPx - fontSizePx) / 2)
-          : regionTopPx + i * laneSpacing;
-
+      const top = geometry.top(i);
       const guide = document.createElement('div');
-      guide.className = 'danmaku-row-guide';
-      if (overlapping) guide.classList.add('danmaku-row-guide-warn');
+      guide.className = `danmaku-row-guide${geometry.overlapping ? ' danmaku-row-guide-warn' : ''}`;
       guide.style.top = `${top}px`;
       guide.style.height = `${fontSizePx}px`;
 
@@ -295,6 +284,7 @@ class DanmakuRegionEditor {
 
   destroy() {
     danmakuSettings.removeListener(this._settingsListener);
+    window.removeEventListener('danmaku-renderer-status', this._settingsListener);
     document.removeEventListener('mousemove', this._boundOnMouseMove);
     if (this._hoverOffTimer !== null) {
       clearTimeout(this._hoverOffTimer);

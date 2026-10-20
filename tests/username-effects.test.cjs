@@ -235,7 +235,8 @@ test('loading snapshots personalization choices once instead of inheriting futur
     ['monochrome', 'analogous', 'complementary']
   );
   await alreadySnapshotted.settings.load();
-  assert.equal(alreadySnapshotted.storageWrites.length, 0);
+  assert.equal(alreadySnapshotted.storageWrites.length, 1);
+  assert.equal(alreadySnapshotted.storageWrites[0].danmakuSettings.renderer, 'dom');
 
   const newInstall = loadSettings(
     undefined,
@@ -465,7 +466,7 @@ function loadRenderer(
     danmakuSettings: { get: (key) => values[key] },
   };
   vm.runInNewContext(
-    `${usernameEffects}\n${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;globalThis.usernameEffects = DANMAKU_USERNAME_EFFECTS;`,
+    `${fs.readFileSync(new URL('../src/shared/constants.js', `file://${__filename}`), 'utf8')}\n${usernameEffects}\n${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;globalThis.usernameEffects = DANMAKU_USERNAME_EFFECTS;`,
     context
   );
   const renderer = new context.DanmakuRenderer({ container: { offsetHeight: 720 } });
@@ -679,7 +680,7 @@ test('favorite-only scope leaves ordinary chatter names lightweight', () => {
   assert.equal(username.classList.contains('danmaku-username-effect--duotoneFlow'), false);
 });
 
-test('busy chat restricts everyone scope to favorites', () => {
+test('busy chat retains effect decoration for reversible DOM suppression', () => {
   const renderer = loadRenderer('duotoneFlow', 'everyone');
   renderer._smoothedPressure = 0.8;
   const ordinary = renderer.createMessageElement(
@@ -696,7 +697,7 @@ test('busy chat restricts everyone scope to favorites', () => {
   const ordinaryName = ordinary.children.find((child) => child.className === 'danmaku-username');
   const favoriteName = favorite.children.find((child) => child.className === 'danmaku-username');
 
-  assert.equal(ordinaryName.classList.contains('danmaku-username-effect--duotoneFlow'), false);
+  assert.equal(ordinaryName.classList.contains('danmaku-username-effect--duotoneFlow'), true);
   assert.equal(favoriteName.classList.contains('danmaku-username-effect--duotoneFlow'), true);
 });
 

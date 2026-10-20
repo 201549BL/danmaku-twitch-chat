@@ -11,7 +11,6 @@ const DYNAMIC_LOAD_FLOOR = 0.75;
 const DYNAMIC_LOAD_CEIL = 2.5;
 const DYNAMIC_QUEUE_FULL_PRESSURE = 12;
 const DYNAMIC_RATE_MULTIPLIER_MAX = 4;
-const DYNAMIC_RATE_CAP = 30;
 const DYNAMIC_DURATION_REDUCTION_MAX = 0.55;
 const DYNAMIC_LIFETIME_REDUCTION_MAX = 0.45;
 const DYNAMIC_MIN_DURATION = 2.5;
@@ -32,6 +31,9 @@ class DanmakuRenderer {
     this.lastRenderTime = 0;
     this._rafId = null;
     this._tick = () => this.processQueue();
+    this._clock = {revision:0,epochMs:this._epochNow(),logicalMs:0,paused:false};
+    this._lastLogicalMs = 0;
+    this._presentation = null;
 
     this._messageTimes = [];
     this._smoothedPressure = 0;
@@ -67,17 +69,32 @@ class DanmakuRenderer {
   }
 
   init() {
+    if (typeof DANMAKU_PRESENTATION !== 'undefined') this._presentation = new DANMAKU_PRESENTATION.Owner(this);
     this.updateLanes();
     this._buildDynamicTag();
     this._dynamicTickId = setInterval(() => this._tickDynamic(), 500);
   }
 
   _effectiveMaxMessagesPerSecond() {
-    const base = danmakuSettings.get('maxMessagesPerSecond');
-    const p = this._smoothedPressure;
-    if (p <= 0) return base;
-    const boost = 1 + (DYNAMIC_RATE_MULTIPLIER_MAX - 1) * p;
-    return Math.min(DYNAMIC_RATE_CAP, base * boost);
+    const policy = this.densityPolicy();
+    const base = Math.min(policy.rate, danmakuSettings.get('maxMessagesPerSecond'));
+    const boost = 1 + (DYNAMIC_RATE_MULTIPLIER_MAX - 1) * this._smoothedPressure;
+    return Math.min(policy.burstRate, base * Math.max(1, boost));
+  }
+
+  densityPolicy() {
+    return DANMAKU_CONSTANTS.DENSITY[this._presentation?.state === 'gpu' ? 'gpu' : 'dom'];
+  }
+
+  laneGeometry() {
+    const height = this.overlay?.container?.offsetHeight || DANMAKU_CONSTANTS.REFERENCE_PLAYER_HEIGHT;
+    const gpu = this._presentation?.state === 'gpu';
+    const key = `${height}:${gpu}:${danmakuSettings.get('fontSize')}:${danmakuSettings.get('rows')}:${danmakuSettings.get('regionTop')}:${danmakuSettings.get('regionHeight')}`;
+    if (this._laneGeometryKey !== key) {
+      this._laneGeometryKey = key;
+      this._laneGeometry = DANMAKU_CONSTANTS.laneGeometry(danmakuSettings, height, gpu);
+    }
+    return this._laneGeometry;
   }
 
   _effectiveDuration() {
@@ -95,15 +112,31 @@ class DanmakuRenderer {
   }
 
   updateLanes() {
-    const rows = danmakuSettings.get('rows');
-    this.lanes = [];
-    for (let i = 0; i < rows; i++) {
-      this.lanes.push({
-        index: i,
-        lastMessageEndTime: 0,
-        occupants: [],
-      });
+    const geometry = this.laneGeometry();
+    const hardCap = this.densityPolicy().active;
+    const baseCap = Math.min(hardCap, danmakuSettings.get('maxActiveMessages'));
+    const key = `${this._laneGeometryKey}:${baseCap}`;
+    if (this._lanePolicyKey === key) return;
+    this._lanePolicyKey = key;
+    const fontSize = this.getFontSizePx();
+    if (this._laneFontSize !== undefined && this._laneFontSize !== fontSize) {
+      for (const record of [...this.activeMessages]) this.removeMessage(record.element, record);
+      for (const lane of this.lanes) {
+        lane.lastMessageEndTime = 0;
+        lane.occupants = [];
+      }
     }
+    this._laneFontSize = fontSize;
+    const cap = Math.min(hardCap, baseCap + Math.min(10, this.activeMessages.filter(record => record.favorite).length));
+    for (const record of [...this.activeMessages]) {
+      if (record.lane.index >= geometry.count) this.removeMessage(record.element, record);
+    }
+    while (this.activeMessages.length > cap) {
+      const record = this.activeMessages.find(record => !record.favorite) || this.activeMessages[0];
+      this.removeMessage(record.element, record);
+    }
+    this.lanes = Array.from({length: geometry.count}, (_, index) => this.lanes[index] || {index, lastMessageEndTime: 0, occupants: []});
+    for (const record of this.activeMessages) if (record.element) record.element.style.top = `${geometry.top(record.lane.index)}px`;
   }
 
   isSelfMention(message) {
@@ -154,43 +187,77 @@ class DanmakuRenderer {
   }
 
   getLaneTopPx(laneIndex) {
-    const rows = danmakuSettings.get('rows');
-    const regionTop = danmakuSettings.get('regionTop');
-    const regionHeight = danmakuSettings.get('regionHeight');
-    const playerH = this.overlay?.container?.offsetHeight || 0;
-    const regionTopPx = (regionTop / 100) * playerH;
-    const regionHeightPx = (regionHeight / 100) * playerH;
-    const fontSizePx = this.getFontSizePx();
-    if (rows <= 1) {
-      return regionTopPx + Math.max(0, (regionHeightPx - fontSizePx) / 2);
+    return this.laneGeometry().top(laneIndex);
+  }
+
+  _observeClock() {
+    const container=this.overlay?.container;
+    if(container===this._clockContainer)return;
+    this._clockObserver?.disconnect();
+    this._clockContainer=container;
+    if(container && typeof MutationObserver!=='undefined') {
+      this._clockObserver=new MutationObserver(()=>this.presentationClock());
+      this._clockObserver.observe(container,{attributes:true,attributeFilter:['class']});
     }
-    const laneSpacing = (regionHeightPx - fontSizePx) / (rows - 1);
-    return regionTopPx + laneIndex * laneSpacing;
   }
 
   _scheduleTick() {
+    this._observeClock();
     if (this._rafId !== null) return;
     this._rafId = requestAnimationFrame(this._tick);
   }
 
+  _epochNow() {
+    return typeof performance === 'undefined' ? Date.now() : performance.timeOrigin+performance.now();
+  }
+
+  presentationClock() {
+    const paused=Boolean(this.overlay?.container?.classList?.contains('danmaku-paused') || this.overlay?.container?.classList?.contains('danmaku-paused-video'));
+    if(paused!==this._clock.paused) {
+      const now=this._epochNow();
+      const logicalMs=this._clock.logicalMs+(this._clock.paused ? 0 : Math.max(0,now-this._clock.epochMs));
+      this._clock={revision:this._clock.revision+1,epochMs:now,logicalMs,paused};
+    }
+    return this._clock;
+  }
+
+  logicalTime() {
+    const clock=this.presentationClock();
+    return clock.logicalMs+(clock.paused ? 0 : Math.max(0,this._epochNow()-clock.epochMs));
+  }
+
   processQueue() {
     this._rafId = null;
-    if (this.messageQueue.length === 0) return;
+    this.updateLanes();
+    const logical=this.logicalTime();
+    for (const record of [...this.activeMessages]) {
+      record.startedAt ??= this._lastLogicalMs-(record.elapsedMs || 0);
+      record.elapsedMs = Math.max(0,logical-record.startedAt);
+      if (record.durationMs && record.elapsedMs >= record.durationMs) this.removeMessage(record.element, record);
+    }
+    this._lastLogicalMs=logical;
+    this._presentation?.frame();
 
-    const maxPerSecond = this._effectiveMaxMessagesPerSecond();
-    const minInterval = 1000 / maxPerSecond;
-
-    while (this.messageQueue.length > 0) {
-      const now = Date.now();
-      if (now - this.lastRenderTime < minInterval) break;
-      const message = this.messageQueue[0];
-      if (!message) break;
-      if (!this.renderMessage(message)) break;
-      this.messageQueue.shift();
-      this.lastRenderTime = now;
+    const now = Date.now();
+    const interval = 1000 / this._effectiveMaxMessagesPerSecond();
+    const elapsed = Math.max(0, now - (this._admissionFrame ?? now));
+    this._admissionFrame = now;
+    if (!this.messageQueue.length || this.presentationClock().paused) {
+      this._admissionCredits = 0;
+    } else {
+      const stalled = elapsed > Math.max(interval, 100);
+      const accrual = this._admissionBlocked ? 0 : elapsed / interval;
+      this._admissionCredits = stalled ? 1 : Math.min(8, (this._admissionCredits ?? 1) + accrual);
+      this._admissionBlocked = false;
+      for (let admitted = 0; admitted < 8 && this.messageQueue.length && this._admissionCredits >= 1; admitted++) {
+        if (!this.renderMessage(this.messageQueue[0])) { this._admissionCredits = 1; this._admissionBlocked = true; break; }
+        this.messageQueue.shift();
+        this._admissionCredits--;
+        this.lastRenderTime = now;
+      }
     }
 
-    if (this.messageQueue.length > 0) this._scheduleTick();
+    if (this.messageQueue.length > 0 || this.activeMessages.length > 0 || (this._presentation?.wantsGPU && this._presentation.state !== 'failed')) this._scheduleTick();
   }
 
   addMessage(message) {
@@ -312,9 +379,10 @@ class DanmakuRenderer {
   renderMessage(message) {
     if (!this.overlay || !this.overlay.container) return false;
 
-    const maxActive = danmakuSettings.get('maxActiveMessages');
+    const hardCap = this.densityPolicy().active;
+    const maxActive = Math.min(hardCap, danmakuSettings.get('maxActiveMessages'));
     const favorite = this.isFavorite(message);
-    const activeCap = favorite ? maxActive + 10 : maxActive;
+    const activeCap = Math.min(hardCap, favorite ? maxActive + 10 : maxActive);
     if (this.activeMessages.length >= activeCap) {
       return false;
     }
@@ -327,23 +395,29 @@ class DanmakuRenderer {
       return false;
     }
 
-    const element = this.createMessageElement(message, lane, mode, favorite);
-    this.overlay.container.appendChild(element);
+    const content = this._presentation ? DANMAKU_PRESENTATION.content(this, message, mode, favorite) : null;
+    const gpu = this._presentation?.state === 'gpu';
+    const ticket = gpu ? this._presentation.prepare(message, content) : null;
+    if (gpu && ticket?.state !== 'ready') return false;
+    const element = gpu ? null : this.createMessageElement(message, lane, mode, favorite);
+    if (element) this.overlay.container.appendChild(element);
 
     const containerWidth = this.overlay.container.offsetWidth;
-    const msgWidth = element.offsetWidth;
+    const msgWidth = gpu ? ticket.layout.width : element.offsetWidth;
+    let xLeft = 0;
+    const durationMs = (isStationary ? this._effectiveStationaryLifetime() : this._effectiveDuration()) * 1000;
 
     if (isStationary) {
-      const xLeft = this.pickStationaryX(lane, msgWidth, containerWidth);
+      xLeft = this.pickStationaryX(lane, msgWidth, containerWidth);
       const offset = xLeft + msgWidth / 2 - containerWidth / 2;
-      element.style.setProperty('--xoffset', `${offset}px`);
+      element?.style.setProperty('--xoffset', `${offset}px`);
 
       const lifetime = this._effectiveStationaryLifetime() * 1000;
       const endTime = Date.now() + lifetime;
       lane.occupants.push({ leftPx: xLeft, rightPx: xLeft + msgWidth, endTime });
       lane.lastMessageEndTime = endTime;
     } else {
-      element.style.setProperty('--scroll-distance', `${containerWidth + msgWidth}px`);
+      element?.style.setProperty('--scroll-distance', `${containerWidth + msgWidth}px`);
       const duration = this._effectiveDuration() * 1000;
       lane.lastMessageEndTime = Date.now() + (duration * msgWidth) / (containerWidth + msgWidth);
     }
@@ -353,11 +427,13 @@ class DanmakuRenderer {
       message,
       lane,
       startTime: Date.now(),
+      content: ticket?.content || content, mode, favorite, width: msgWidth, xLeft, durationMs, elapsedMs: 0, startedAt:this.logicalTime(),
     });
 
-    element.addEventListener('animationend', (event) => {
+    element?.addEventListener('animationend', (event) => {
       this._handleMessageAnimationEnd(element, event);
     });
+    this._scheduleTick();
     return true;
   }
 
@@ -514,8 +590,8 @@ class DanmakuRenderer {
         usernameEffect !== 'none' &&
         DANMAKU_USERNAME_EFFECTS.shouldApply(
           danmakuSettings.get('usernameEffectScope'),
-          danmakuSettings.get('dynamicMode'),
-          this._smoothedPressure,
+          false,
+          0,
           favorite
         )
       ) {
@@ -603,23 +679,28 @@ class DanmakuRenderer {
     parent.textContent = displayText;
   }
 
-  removeMessage(element) {
-    const index = this.activeMessages.findIndex((m) => m.element === element);
+  removeMessage(element, record) {
+    const index = this.activeMessages.findIndex((m) => record ? m === record : m.element === element);
     if (index !== -1) {
       this.activeMessages.splice(index, 1);
     }
-    element.remove();
+    element?.remove();
   }
 
   _handleMessageAnimationEnd(element, event) {
     if (event.target !== element) return;
-    this.removeMessage(element);
+    if (!this._presentation) this.removeMessage(element);
   }
 
   clear() {
-    this.activeMessages.forEach((m) => m.element.remove());
+    this.activeMessages.forEach((m) => m.element?.remove());
     this.activeMessages = [];
     this.messageQueue = [];
+    this._admissionCredits = 0;
+    this._admissionFrame = Date.now();
+    this._admissionBlocked = false;
+    this._presentation?.clear();
+    this._lastLogicalMs = this.logicalTime();
     this.lanes.forEach((lane) => {
       lane.lastMessageEndTime = 0;
       lane.occupants = [];
@@ -627,6 +708,7 @@ class DanmakuRenderer {
   }
 
   destroy() {
+    this._clockObserver?.disconnect();
     if (this._rafId !== null) {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
@@ -640,12 +722,15 @@ class DanmakuRenderer {
       this._dynamicTag = null;
     }
     this.clear();
+    this._presentation?.destroy();
     this.lanes = [];
     this._messageTimes = [];
     this._smoothedPressure = 0;
   }
 
   onSettingsChange() {
+    this._presentation?.select(danmakuSettings.get('renderer'));
+    this._presentation?.invalidateQueued();
     this.updateLanes();
     this._updateDynamicTag();
     this._syncUsernameEffectPressureMode();

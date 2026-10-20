@@ -2,16 +2,16 @@ const DANMAKU_RELEASE_NOTES = {
   STORAGE_KEY: 'danmakuReleaseNotes',
   ITEMS: [
     {
-      key: 'releaseNoteOnboarding',
-      fallback: 'A guided welcome page and one-click recovery for Twitch tabs that need a refresh.',
+      key: 'releaseNoteWebgpu',
+      fallback: 'Auto rendering for new installs, with automatic DOM fallback when WebGPU is unavailable.',
     },
     {
-      key: 'releaseNoteFeedback',
-      fallback: 'Always-available help, feedback, and rating links in settings.',
+      key: 'releaseNoteDenseChat',
+      fallback: 'Denser WebGPU chat with animated usernames, emotes, and badges.',
     },
     {
-      key: 'releaseNoteLocalization',
-      fallback: 'Japanese, Simplified Chinese, and Traditional Chinese interface support.',
+      key: 'releaseNoteRendererChoice',
+      fallback: 'Find Renderer in Advanced. Your existing renderer choice stays unchanged.',
     },
   ],
 

@@ -5,6 +5,8 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 ## Features
 
 - **Five animation modes**: Scroll, Reverse, Drift (slow vertical wobble), Pop & fade, Slide up
+- **Auto renderer**: new installs try WebGPU and fall back to DOM when unavailable. Existing renderer choices are preserved.
+- **Dense WebGPU chat**: up to 48 rows and 300 active messages, with animated usernames, emotes, and badges
 - **Dynamic mode**: ramps message throughput and animation speed during bursts or sustained fast chat, while buffering brief lane congestion
 - **Configurable region** with on-player drag handles — define exactly where chat appears; scales correctly across windowed, theater, and fullscreen
 - **In-region toolbar** (hover the chat area on the player) for quick rows / font-size adjustments and a settings shortcut
@@ -34,16 +36,17 @@ A Chrome extension that displays Twitch chat as scrolling overlays on the video 
 
 ## Settings
 
-All changes apply live and auto-save.
+Settings auto-save. Appearance changes apply as new messages appear.
 
 | Setting | Description |
 |---|---|
 | Enable overlay | Master on/off |
 | Fullscreen only | Hide overlay outside fullscreen |
+| Renderer (Advanced) | Auto tries WebGPU with DOM fallback; DOM and WebGPU can also be selected manually. Auto is the default for new installs. |
 | Usernames | Show names for everyone, favorite chatters only, or nobody |
 | Animated usernames | Turn effects off, give each chatter a consistent Personalized look, or use one Fixed treatment. Personalization options can be narrowed to preferred effects and color pairings. |
 | Fixed effect and color pairing | Choose Flow, Ember, or Glitch with same-hue, nearby-hue, or opposite-hue colors |
-| Show effects for | Apply effects to favorites or all chatters; all chatters falls back to favorites in busy chat |
+| Show effects for | Apply effects to favorites or all chatters. DOM reduces effects to favorites during busy chat; WebGPU preserves the selected scope. |
 | Favorite chatters | Prioritize listed usernames and selected badge roles when chat gets busy |
 | Show badges | Display subscriber, moderator, etc. badges |
 | Pause on hover | Freeze animations when hovering the chat region |
@@ -51,13 +54,14 @@ All changes apply live and auto-save.
 | Highlight @mentions | Your Twitch username; messages mentioning you are highlighted |
 | Font | Choose any font installed on your device; font names remain local |
 | Font size | Reference pixel size at a 720p player; scales with the player |
-| Rows | Number of message lanes |
+| Rows | Number of message lanes, up to 48 with WebGPU or 10 with DOM. Rows may overlap; overlapping guides turn red. |
 | Region top / height | Where the chat band sits on the player, as % |
 | Opacity | Message transparency |
 | Animation mode | Scroll / Reverse / Drift / Pop & fade / Slide up |
 | Duration | Scroll-style modes traversal time (seconds) |
 | Lifetime | Stationary modes (pop & fade, slide up) on-screen duration |
-| Max msgs / sec | Rate limit for new messages |
+| Active messages (Advanced) | Up to 300 with WebGPU or 100 with DOM. Defaults to 50. |
+| Max msgs / sec | Admission limit up to 120 with WebGPU or 20 with DOM. Dynamic mode can boost DOM to 30. Actual throughput also depends on available lanes and message preparation. |
 | Max msg length | Truncate long messages |
 
 ## Privacy
@@ -68,6 +72,7 @@ See [`PRIVACY.md`](PRIVACY.md). Short version: the extension does not collect, t
 
 - Relies on Twitch's chat DOM structure. If Twitch ships major DOM changes the extension may need a selector update.
 - On live streams, chat is read from a hidden popout iframe to avoid interfering with the main chat panel. If Twitch changes the popout URL structure, the extension falls back to the main page chat.
+- GPU startup, device, or media failures switch to DOM. DOM limits apply during fallback without overwriting your chosen settings.
 
 ## Development
 
@@ -85,6 +90,11 @@ danmaku-twitch-chat/
 │   │   ├── twitch-detector.js
 │   │   ├── chat-observer.js
 │   │   ├── renderer.js
+│   │   ├── message-presentation.js
+│   │   ├── gpu-presentation.js
+│   │   ├── gpu-worker.js
+│   │   ├── gpu-scene.js
+│   │   ├── gpu-media.js
 │   │   ├── overlay.js
 │   │   ├── region-editor.js
 │   │   ├── mock-chat.js

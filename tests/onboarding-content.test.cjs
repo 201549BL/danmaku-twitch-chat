@@ -25,7 +25,7 @@ test('settings keeps the timed prompt near the top and permanent help near diagn
     console,
     setTimeout,
     clearTimeout,
-    DANMAKU_CONSTANTS: {},
+    DANMAKU_CONSTANTS: { LIMITS: {maxRows:48,maxActiveMessages:300,maxMessagesPerSecond:120} },
   };
   vm.runInNewContext(`${source}\nglobalThis.Panel = DanmakuSettingsPanel;`, context);
   const html = new context.Panel().template();
@@ -60,7 +60,7 @@ test('translation feedback callout only appears for supported localized interfac
     console,
     setTimeout,
     clearTimeout,
-    DANMAKU_CONSTANTS: {},
+    DANMAKU_CONSTANTS: { LIMITS: {maxRows:48,maxActiveMessages:300,maxMessagesPerSecond:120} },
     DANMAKU_I18N: {
       getLocale: () => locale,
       text: (value) => value,
@@ -116,7 +116,7 @@ test('top translation prompt remains hidden after acknowledgement', async () => 
     console,
     setTimeout,
     clearTimeout,
-    DANMAKU_CONSTANTS: {},
+    DANMAKU_CONSTANTS: { LIMITS: {maxRows:48,maxActiveMessages:300,maxMessagesPerSecond:120} },
     DANMAKU_I18N: {
       getLocale: () => 'ja',
       text: (value) => value,

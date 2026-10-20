@@ -194,5 +194,18 @@
   "whatsNewDismiss": { "message": "关闭更新说明" },
   "releaseNoteOnboarding": { "message": "新增引导欢迎页，并可一键恢复需要刷新的 Twitch 标签页。" },
   "releaseNoteFeedback": { "message": "现在可随时从设置中获取帮助、发送反馈和评分。" },
-  "releaseNoteLocalization": { "message": "新增日语、简体中文和繁体中文界面支持。" }
+  "releaseNoteLocalization": { "message": "新增日语、简体中文和繁体中文界面支持。" },
+  "settingsRenderer": { "message": "渲染器" },
+  "settingsRendererAuto": { "message": "自动（默认）" },
+  "settingsRendererDom": { "message": "DOM" },
+  "settingsRendererWebgpu": { "message": "WebGPU" },
+  "settingsRendererActiveWebgpu": { "message": "当前渲染器：WebGPU" },
+  "settingsRendererActiveDom": { "message": "当前渲染器：DOM" },
+  "settingsRendererPreparing": { "message": "正在准备 GPU 渲染器" },
+  "settingsRendererFallback": { "message": "GPU 不可用。正在使用 DOM 渲染器。" },
+  "settingsActiveMessages": { "message": "屏幕消息数量" },
+  "settingsDensityHint": { "message": "区域较小时，消息行可以重叠，重叠行的辅助线会变红。切换到 DOM 后，最多支持 10 行、100 条屏幕消息和每秒 20 条消息。" },
+  "releaseNoteWebgpu": { "message": "新安装默认使用自动渲染，WebGPU 不可用时自动切换到 DOM。" },
+  "releaseNoteDenseChat": { "message": "WebGPU 支持更密集的聊天，并保留动态用户名、表情和徽章。" },
+  "releaseNoteRendererChoice": { "message": "渲染器位于高级设置中。现有的渲染器选择保持不变。" }
 }
