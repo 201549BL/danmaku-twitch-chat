@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Restored the normal username outline and shadow when busy chat temporarily turns off animations in the DOM renderer.
+
 ## [1.8.0] - 2026-10-20
 
 ### Added
