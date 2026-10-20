@@ -1,4 +1,15 @@
 const DANMAKU_I18N_SOURCE_KEYS = new Map(Object.entries({
+  'Active messages': 'settingsActiveMessages',
+  'Rows may overlap in small regions; overlapping row guides turn red. DOM fallback supports 10 rows, 100 active messages and 20 messages per second.': 'settingsDensityHint',
+  'Renderer': 'settingsRenderer',
+  'Auto (default)': 'settingsRendererAuto',
+  'DOM': 'settingsRendererDom',
+  'WebGPU': 'settingsRendererWebgpu',
+  'Active renderer: WebGPU': 'settingsRendererActiveWebgpu',
+  'Active renderer: DOM': 'settingsRendererActiveDom',
+  'Preparing GPU renderer': 'settingsRendererPreparing',
+  'GPU unavailable. Using DOM renderer.': 'settingsRendererFallback',
+
   'Adapt to busy chat': 'settingsAdaptBusyChat',
   'Adapts message rate and speed when chat gets busy': 'settingsAdaptBusyChatTitle',
   'Advanced': 'settingsAdvanced',

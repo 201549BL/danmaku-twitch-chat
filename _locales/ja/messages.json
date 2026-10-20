@@ -194,5 +194,18 @@
   "whatsNewDismiss": { "message": "リリースノートを閉じる" },
   "releaseNoteOnboarding": { "message": "初回ガイドと、更新が必要なTwitchタブのワンクリック復旧を追加しました。" },
   "releaseNoteFeedback": { "message": "設定からいつでもヘルプ、フィードバック、評価を利用できます。" },
-  "releaseNoteLocalization": { "message": "日本語、簡体字中国語、繁体字中国語に対応しました。" }
+  "releaseNoteLocalization": { "message": "日本語、簡体字中国語、繁体字中国語に対応しました。" },
+  "settingsRenderer": { "message": "レンダラー" },
+  "settingsRendererAuto": { "message": "自動（既定）" },
+  "settingsRendererDom": { "message": "DOM" },
+  "settingsRendererWebgpu": { "message": "WebGPU" },
+  "settingsRendererActiveWebgpu": { "message": "使用中のレンダラー: WebGPU" },
+  "settingsRendererActiveDom": { "message": "使用中のレンダラー: DOM" },
+  "settingsRendererPreparing": { "message": "GPU レンダラーを準備中" },
+  "settingsRendererFallback": { "message": "GPU を利用できません。DOM レンダラーを使用しています。" },
+  "settingsActiveMessages": { "message": "表示中のメッセージ数" },
+  "settingsDensityHint": { "message": "狭い範囲では行が重なり、重なる行のガイドは赤く表示されます。DOM への切り替え時は最大 10 行、100 メッセージ、毎秒 20 メッセージに制限されます。" },
+  "releaseNoteWebgpu": { "message": "チャットの表示にグラフィック機能を使う WebGPU を追加しました。メッセージが多いときも、チャットをなめらかに表示しやすくなります。" },
+  "releaseNoteDenseChat": { "message": "最大 300 件のメッセージを同時に表示できます。ユーザー名のアニメーションを有効にしたまま、エモートやバッジも表示できます。" },
+  "releaseNoteRendererChoice": { "message": "試すには、設定 > 詳細設定 > レンダラーで WebGPU を選んでください。" }
 }

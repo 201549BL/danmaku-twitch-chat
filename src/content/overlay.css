@@ -223,7 +223,10 @@
 .danmaku-overlay.danmaku-effects-favorites-only
   .danmaku-message:not(.danmaku-message--favorite)
   .danmaku-username-effect--duotoneGlitch {
+  background-color: transparent;
   background-image: none;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: inherit;
   filter: none;
   animation: none;
 }

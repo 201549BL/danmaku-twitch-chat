@@ -194,5 +194,18 @@
   "whatsNewDismiss": { "message": "Dismiss release notes" },
   "releaseNoteOnboarding": { "message": "A guided welcome page and one-click recovery for Twitch tabs that need a refresh." },
   "releaseNoteFeedback": { "message": "Always-available help, feedback, and rating links in settings." },
-  "releaseNoteLocalization": { "message": "Japanese, Simplified Chinese, and Traditional Chinese interface support." }
+  "releaseNoteLocalization": { "message": "Japanese, Simplified Chinese, and Traditional Chinese interface support." },
+  "settingsRenderer": { "message": "Renderer" },
+  "settingsRendererAuto": { "message": "Auto (default)" },
+  "settingsRendererDom": { "message": "DOM" },
+  "settingsRendererWebgpu": { "message": "WebGPU" },
+  "settingsRendererActiveWebgpu": { "message": "Active renderer: WebGPU" },
+  "settingsRendererActiveDom": { "message": "Active renderer: DOM" },
+  "settingsRendererPreparing": { "message": "Preparing GPU renderer" },
+  "settingsRendererFallback": { "message": "GPU unavailable. Using DOM renderer." },
+  "settingsActiveMessages": { "message": "Active messages" },
+  "settingsDensityHint": { "message": "Rows may overlap in small regions; overlapping row guides turn red. DOM fallback supports 10 rows, 100 active messages and 20 messages per second." },
+  "releaseNoteWebgpu": { "message": "Added WebGPU, a new way to display chat that uses your graphics card to help keep messages moving smoothly when chat gets busy." },
+  "releaseNoteDenseChat": { "message": "You can show up to 300 messages at once and keep username animations on, alongside emotes and badges." },
+  "releaseNoteRendererChoice": { "message": "To try it, open Settings > Advanced > Renderer and choose WebGPU." }
 }

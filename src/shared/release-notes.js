@@ -2,16 +2,16 @@ const DANMAKU_RELEASE_NOTES = {
   STORAGE_KEY: 'danmakuReleaseNotes',
   ITEMS: [
     {
-      key: 'releaseNoteOnboarding',
-      fallback: 'A guided welcome page and one-click recovery for Twitch tabs that need a refresh.',
+      key: 'releaseNoteWebgpu',
+      fallback: 'Added WebGPU, a new way to display chat that uses your graphics card to help keep messages moving smoothly when chat gets busy.',
     },
     {
-      key: 'releaseNoteFeedback',
-      fallback: 'Always-available help, feedback, and rating links in settings.',
+      key: 'releaseNoteDenseChat',
+      fallback: 'You can show up to 300 messages at once and keep username animations on, alongside emotes and badges.',
     },
     {
-      key: 'releaseNoteLocalization',
-      fallback: 'Japanese, Simplified Chinese, and Traditional Chinese interface support.',
+      key: 'releaseNoteRendererChoice',
+      fallback: 'To try it, open Settings > Advanced > Renderer and choose WebGPU.',
     },
   ],
 

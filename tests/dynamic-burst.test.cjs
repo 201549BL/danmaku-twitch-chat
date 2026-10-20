@@ -5,6 +5,7 @@ const vm = require('node:vm');
 
 function loadRenderer(overrides = {}) {
   const values = {
+    rows: 3, fontSize: 24, regionTop: 0, regionHeight: 13, maxActiveMessages: 50,
     maxMessagesPerSecond: 5,
     duration: 10,
     popFadeLifetime: 4,
@@ -28,7 +29,7 @@ function loadRenderer(overrides = {}) {
     danmakuSettings: { get: (key) => values[key] },
   };
   vm.runInNewContext(
-    `${usernameEffects}\n${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;`,
+    `${fs.readFileSync(new URL('../src/shared/constants.js', `file://${__filename}`), 'utf8')}\n${usernameEffects}\n${source}\nglobalThis.DanmakuRenderer = DanmakuRenderer;`,
     context
   );
   const renderer = new context.DanmakuRenderer({

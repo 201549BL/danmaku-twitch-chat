@@ -17,7 +17,8 @@ class DanmakuSettings {
         !Object.prototype.hasOwnProperty.call(raw, 'signatureKnownEffects') ||
         !Object.prototype.hasOwnProperty.call(raw, 'signatureKnownPalettes');
       this.settings = this.normalizeSettings(raw);
-      if (needsPersonalizationSnapshot) {
+      const needsRendererMigration = raw && !Object.prototype.hasOwnProperty.call(raw, 'renderer');
+      if (needsPersonalizationSnapshot || needsRendererMigration) {
         await chrome.storage.local.set({ danmakuSettings: this.settings });
       }
     } catch (e) {
@@ -60,6 +61,9 @@ class DanmakuSettings {
   normalizeSettings(raw) {
     const source = raw || {};
     const normalized = { ...DANMAKU_CONSTANTS.DEFAULTS, ...source };
+    if (raw && !Object.prototype.hasOwnProperty.call(source, 'renderer')) {
+      normalized.renderer = 'dom';
+    }
     if (raw && !Object.prototype.hasOwnProperty.call(source, 'usernameEffectStyle')) {
       const knownLegacyEffect = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).some(
         (effect) => effect.key === source.usernameEffect
@@ -93,6 +97,10 @@ class DanmakuSettings {
       ];
     }
     for (const key of [
+      'rows',
+      'maxActiveMessages',
+      'maxMessagesPerSecond',
+      'renderer',
       'fontFamily',
       'usernameEffectStyle',
       'usernameEffect',
@@ -176,7 +184,14 @@ class DanmakuSettings {
 
   clampValue(key, value) {
     const limits = DANMAKU_CONSTANTS.LIMITS;
+    if (['rows', 'maxActiveMessages', 'maxMessagesPerSecond'].includes(key)) {
+      const maximum = key === 'rows' ? limits.maxRows : limits[key];
+      const number = Number(value);
+      return Math.max(1, Math.min(maximum, Number.isFinite(number) ? Math.floor(number) : DANMAKU_CONSTANTS.DEFAULTS[key]));
+    }
     switch (key) {
+      case 'renderer':
+        return DANMAKU_CONSTANTS.RENDERERS.includes(value) ? value : 'dom';
       case 'fontFamily': {
         if (value === 'system') return value;
         if (typeof value !== 'string') return 'system';
@@ -188,8 +203,6 @@ class DanmakuSettings {
       }
       case 'fontSize':
         return Math.max(limits.minFontSize, Math.min(limits.maxFontSize, value));
-      case 'rows':
-        return Math.max(limits.minRows, Math.min(limits.maxRows, value));
       case 'duration':
         return Math.max(limits.minDuration, Math.min(limits.maxDuration, value));
       case 'opacity':
@@ -238,8 +251,6 @@ class DanmakuSettings {
         return this.clampKnownOptions(value, DANMAKU_CONSTANTS.TEXT_EFFECTS);
       case 'signatureKnownPalettes':
         return this.clampKnownOptions(value, DANMAKU_CONSTANTS.TEXT_EFFECT_PALETTES);
-      case 'maxActiveMessages':
-        return Math.max(1, Math.min(limits.maxActiveMessages, value));
       case 'highlightBadges': {
         const known = new Set(
           (DANMAKU_CONSTANTS.HIGHLIGHT_BADGE_ROLES || []).map((r) => r.key)

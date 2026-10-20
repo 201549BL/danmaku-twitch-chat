@@ -18,6 +18,11 @@ class DanmakuSettingsPanel {
     this.callbacks = callbacks;
     this.getStats = callbacks.getStats || (() => null);
     this.panel = null;
+    this.rendererStatus = globalThis.window?.__danmakuRendererStatus || null;
+    this._boundRendererStatus = (event) => {
+      this.rendererStatus = event.detail;
+      this.updateRendererStatus();
+    };
     this.optionPreview = null;
     this.translationFeedbackLocale = null;
     this.opened = false;
@@ -285,7 +290,7 @@ class DanmakuSettingsPanel {
             </div>
             <div class="dsp-row dsp-row-vertical">
               <div class="dsp-row-label"><span>Message rows</span><em data-display="rows"></em></div>
-              <input type="range" data-setting="rows" min="1" max="10" step="1" />
+              <input type="range" data-setting="rows" min="1" max="${DANMAKU_CONSTANTS.LIMITS.maxRows}" step="1" />
             </div>
             <div class="dsp-row dsp-row-vertical">
               <div class="dsp-row-label"><span>Opacity</span><em data-display="opacity"></em></div>
@@ -439,6 +444,15 @@ class DanmakuSettingsPanel {
         <details class="dsp-disclosure">
           <summary>Advanced</summary>
           <div class="dsp-disclosure-body">
+            <label class="dsp-field">
+              <span>Renderer</span>
+              <select data-setting="renderer">
+                <option value="dom">DOM</option>
+                <option value="auto">Auto (default)</option>
+                <option value="webgpu">WebGPU</option>
+              </select>
+            </label>
+            <p class="dsp-hint" data-renderer-status role="status" aria-live="polite"></p>
             <div class="dsp-row dsp-row-vertical" data-motion-control="scroll">
               <div class="dsp-row-label"><span>Travel time</span><em data-display="duration"></em></div>
               <input type="range" data-setting="duration" min="3" max="30" step="1" />
@@ -448,8 +462,13 @@ class DanmakuSettingsPanel {
               <input type="range" data-setting="popFadeLifetime" min="1" max="15" step="0.5" />
             </div>
             <div class="dsp-row dsp-row-vertical">
+              <div class="dsp-row-label"><span>Active messages</span><em data-display="maxActiveMessages"></em></div>
+              <input type="range" data-setting="maxActiveMessages" min="1" max="${DANMAKU_CONSTANTS.LIMITS.maxActiveMessages}" step="1" />
+              <p class="dsp-hint">Rows may overlap in small regions; overlapping row guides turn red. DOM fallback supports 10 rows, 100 active messages and 20 messages per second.</p>
+            </div>
+            <div class="dsp-row dsp-row-vertical">
               <div class="dsp-row-label"><span>Messages per second</span><em data-display="maxMessagesPerSecond"></em></div>
-              <input type="range" data-setting="maxMessagesPerSecond" min="1" max="20" step="1" />
+              <input type="range" data-setting="maxMessagesPerSecond" min="1" max="${DANMAKU_CONSTANTS.LIMITS.maxMessagesPerSecond}" step="1" />
             </div>
             <div class="dsp-row dsp-row-vertical">
               <div class="dsp-row-label"><span>Message length</span><em data-display="maxMessageLength"></em></div>
@@ -597,11 +616,13 @@ class DanmakuSettingsPanel {
     document.addEventListener('fullscreenchange', this._boundOnFullscreen);
     document.addEventListener('webkitfullscreenchange', this._boundOnFullscreen);
 
+    window.addEventListener('danmaku-renderer-status', this._boundRendererStatus);
     danmakuSettings.addListener(this._settingsListener);
   }
 
   loadValues() {
     if (!this.panel) return;
+    this.updateRendererStatus();
     this.panel.querySelectorAll('[data-setting]').forEach((input) => {
       const key = input.getAttribute('data-setting');
       const value = danmakuSettings.get(key);
@@ -651,6 +672,18 @@ class DanmakuSettingsPanel {
     else if (key === 'fontSize') display.textContent = `${value}px`;
     else if (key === 'regionTop' || key === 'regionHeight') display.textContent = `${Math.round(value)}%`;
     else display.textContent = value;
+  }
+
+  updateRendererStatus() {
+    const status = this.panel?.querySelector('[data-renderer-status]');
+    if (!status) return;
+    const snapshot = this.rendererStatus;
+    const effective = snapshot?.effective === 'webgpu' ? 'webgpu' : 'dom';
+    const label = settingsText(effective === 'webgpu' ? 'Active renderer: WebGPU' : 'Active renderer: DOM');
+    const reason = snapshot?.reason || (!snapshot && ['auto', 'webgpu'].includes(danmakuSettings.get('renderer'))
+      ? 'Preparing GPU renderer'
+      : '');
+    status.textContent = reason ? `${label} — ${settingsText(reason)}` : label;
   }
 
   updateAnimationControls() {
@@ -1227,6 +1260,7 @@ class DanmakuSettingsPanel {
   }
 
   destroy() {
+    window.removeEventListener('danmaku-renderer-status', this._boundRendererStatus);
     danmakuSettings.removeListener(this._settingsListener);
     document.removeEventListener('mousemove', this._boundOnMouseMove);
     document.removeEventListener('mouseup', this._boundOnMouseUp);

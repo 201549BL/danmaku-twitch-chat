@@ -1,4 +1,5 @@
-const DANMAKU_USERNAME_EFFECTS = {
+function DANMAKU_USERNAME_EFFECTS_FACTORY() {
+  return {
   FAVORITES_ONLY_PRESSURE: 0.35,
   EFFECT_MIX: [
     { key: 'duotoneFlow', weight: 50 },
@@ -57,35 +58,6 @@ const DANMAKU_USERNAME_EFFECTS = {
     if (palette !== 'auto') return palette;
     const options = this.allowedOptions(this.PALETTE_MIX, allowedKeys);
     return this.chooseRendezvous(options, `palette:${username}`);
-  },
-
-  decorateElement(
-    element,
-    { username, text = username, color, effect, palette, mode = 'scroll', enhanced = false }
-  ) {
-    const effectDefinition = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).find(
-      (entry) => entry.key === effect
-    );
-    if (!element || !effectDefinition) return false;
-
-    element.classList.add(`danmaku-username-effect--${effect}`);
-    if (enhanced) element.classList.add('danmaku-username-effect--enhanced');
-    element.dataset.danmakuUsernameEffect = effect;
-    element.dataset.danmakuUsernamePalette = palette;
-    element.dataset.danmakuUsernameText = text;
-    element.style.color = color;
-    element.style.setProperty('--danmaku-username-color', color || '#ffffff');
-    element.style.setProperty('--danmaku-secondary-color', this.getSecondaryColor(color, palette));
-    if (effectDefinition.texture) {
-      const textureUrl = chrome.runtime.getURL(effectDefinition.texture);
-      element.style.setProperty('--danmaku-effect-texture', `url("${textureUrl}")`);
-    }
-    const profile = this.getProfile(username, mode);
-    element.style.setProperty('--danmaku-effect-duration-scale', profile.durationScale);
-    element.style.setProperty('--danmaku-effect-delay', profile.delay);
-    element.style.setProperty('--danmaku-gradient-direction', profile.gradientDirection);
-    element.style.setProperty('--danmaku-texture-direction', profile.textureDirection);
-    return true;
   },
 
   getProfile(username, mode) {
@@ -163,3 +135,35 @@ const DANMAKU_USERNAME_EFFECTS = {
     return !this.shouldLimitToFavorites(scope, dynamicMode, pressure) || favorite;
   },
 };
+}
+const DANMAKU_USERNAME_EFFECTS = DANMAKU_USERNAME_EFFECTS_FACTORY();
+Object.assign(DANMAKU_USERNAME_EFFECTS, {
+  decorateElement(
+    element,
+    { username, text = username, color, effect, palette, mode = 'scroll', enhanced = false }
+  ) {
+    const effectDefinition = (DANMAKU_CONSTANTS.TEXT_EFFECTS || []).find(
+      (entry) => entry.key === effect
+    );
+    if (!element || !effectDefinition) return false;
+
+    element.classList.add(`danmaku-username-effect--${effect}`);
+    if (enhanced) element.classList.add('danmaku-username-effect--enhanced');
+    element.dataset.danmakuUsernameEffect = effect;
+    element.dataset.danmakuUsernamePalette = palette;
+    element.dataset.danmakuUsernameText = text;
+    element.style.color = color;
+    element.style.setProperty('--danmaku-username-color', color || '#ffffff');
+    element.style.setProperty('--danmaku-secondary-color', this.getSecondaryColor(color, palette));
+    if (effectDefinition.texture) {
+      const textureUrl = chrome.runtime.getURL(effectDefinition.texture);
+      element.style.setProperty('--danmaku-effect-texture', `url("${textureUrl}")`);
+    }
+    const profile = this.getProfile(username, mode);
+    element.style.setProperty('--danmaku-effect-duration-scale', profile.durationScale);
+    element.style.setProperty('--danmaku-effect-delay', profile.delay);
+    element.style.setProperty('--danmaku-gradient-direction', profile.gradientDirection);
+    element.style.setProperty('--danmaku-texture-direction', profile.textureDirection);
+    return true;
+  }
+});
