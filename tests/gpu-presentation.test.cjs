@@ -169,3 +169,18 @@ test('plain text and image draws skip username profile and secondary color work'
   assert.equal(h.writes.at(-1).snapshot[16], 0);
   h.session.destroy();
 });
+
+
+test('transferred SVG image uploads once and keeps image alignment without an animation decoder',async()=>{
+  const h=await harness();let closed=0;
+  const bitmap={width:101,height:51,close(){closed++;}};
+  h.context.DANMAKU_GPU_MEDIA.open=async()=>{throw new Error('Unexpected image decoder');};
+  const content={fontSize:24,opacity:1,runs:[{type:'image',src:'rasterized',bitmap,width:67.2,height:33.6}]};
+  const layout=await h.session.prepare(content);
+  assert.equal(closed,1);assert.equal(layout.width,71.2);assert.equal(layout.items[0].width,67.2);assert.equal(layout.items[0].height,33.6);
+  assert.equal(layout.items[0].media,null);assert.equal(h.uploads.at(-1).source,bitmap);
+  const before=h.uploads.length;
+  h.record.layout=layout;h.draw();await flush();
+  assert.equal(h.uploads.length,before);assert.equal(h.pendingFrames.length,0);
+  layout.close();assert.equal(closed,1);h.session.destroy();
+});

@@ -14,7 +14,7 @@ async function harness({ready=true}={}) {
     document:{baseURI:'https://example.test/src/content/',createElement:()=>canvas,fonts:{ready:Promise.resolve(),addEventListener:(name,fn)=>fontListeners.set(name,fn),removeEventListener:name=>fontListeners.delete(name)}},
     chrome:{runtime:{getURL:()=> 'https://example.test/ember.webp'}},
     Worker:class {constructor(){worker=this;this.terminated=0;}postMessage(value){sent.push(value);if(value.type==='init' && ready)queueMicrotask(()=>this.onmessage({data:{type:'ready',maxDimension:8192}}));}terminate(){this.terminated++;}},
-    OffscreenCanvas:class {constructor(width,height){this.width=width;this.height=height;surfaces.push([width,height]);}transferToImageBitmap(){const bitmap={width:this.width,height:this.height,closed:0,close(){this.closed++;}};bitmaps.push(bitmap);return bitmap;}getContext(){return {measureText:value=>({width:value.length*8,actualBoundingBoxAscent:20,actualBoundingBoxDescent:4}),scale(){},fillText(){}};}},
+    OffscreenCanvas:class {constructor(width,height){this.width=width;this.height=height;surfaces.push([width,height]);}transferToImageBitmap(){const bitmap={width:this.width,height:this.height,closed:0,close(){this.closed++;}};bitmaps.push(bitmap);return bitmap;}getContext(){return {measureText:value=>({width:value.length*8,actualBoundingBoxAscent:20,actualBoundingBoxDescent:4}),scale(){},fillText(){},drawImage(){}};}},
   };
   vm.runInNewContext(fs.readFileSync('src/content/gpu-presentation.js','utf8')+'\nglobalThis.api=DANMAKU_GPU;',context);
   const abort=new AbortController();
@@ -113,4 +113,68 @@ test('viewport resizing preserves raster identity and sends the changed viewport
   const dprKey = h.session.geometry(); h.fontListeners.get('loadingdone')();
   assert.notEqual(h.session.geometry(), dprKey);
   h.session.destroy();
+});
+
+function svgSource(h,{width=36,height=36,decode=async()=>{},bytes=32}={}) {
+  const images=[],requests=[];
+  h.context.Image=class {
+    constructor(){this.naturalWidth=width;this.naturalHeight=height;images.push(this);}
+    decode(){return decode();}
+  };
+  h.context.fetch=async (url,options)=>{
+    requests.push({url,options});
+    return new Response(new Uint8Array(bytes),{headers:{'content-type':'image/svg+xml'}});
+  };
+  return {images,requests};
+}
+
+test('SVG emoji transfers a bounded raster at display resolution and preserves its aspect ratio',async()=>{
+  const h=await harness(),svg=svgSource(h,{width:36,height:18});
+  h.context.window.devicePixelRatio=2;
+  const result=h.session.prepare({fontSize:25,runs:[{type:'image',src:'https://emoji.test/confetti.SVG?version=2#icon'}]});
+  await flush();
+  const request=h.sent.at(-1),run=request.content.runs[0];
+  assert.equal(request.type,'prepare');assert.equal(run.width,70);assert.equal(run.height,35);
+  assert.equal(run.bitmap.width,140);assert.equal(run.bitmap.height,70);
+  assert.equal(svg.requests[0].options.mode,'cors');assert.equal(svg.requests[0].options.credentials,'omit');
+  assert.equal(svg.images[0].src,'');assert.equal(h.revoked,2);
+  h.reply({type:'prepared',id:request.id,width:74,height:35});await result;h.session.destroy();
+});
+
+test('SVG byte and raster budgets fail before large canvas allocation',async()=>{
+  for(const options of [{bytes:8*1024*1024+1},{width:100000,height:1},{width:0,height:0}]) {
+    const h=await harness();svgSource(h,options);
+    await assert.rejects(h.session.prepare({fontSize:24,runs:[{type:'image',src:'https://emoji.test/icon.svg'}]}),/budget|dimensions/);
+    assert.ok(h.surfaces.every(([width])=>width===1));assert.equal(h.bitmaps.length,0);h.session.destroy();
+  }
+});
+
+test('SVG decoding cancellation and teardown revoke blobs and cannot upload late images',async()=>{
+  for(const action of ['cancel','destroy']) {
+    const h=await harness();let finish;
+    const svg=svgSource(h,{decode:()=>new Promise(resolve=>finish=resolve)});
+    const abort=new AbortController();
+    const result=h.session.prepare({fontSize:24,runs:[{type:'image',src:'https://emoji.test/icon.svg'}]},{signal:abort.signal});
+    await flush();
+    if(action==='cancel')abort.abort();else h.session.destroy();
+    await assert.rejects(result,/cancelled|closed/);
+    assert.equal(svg.requests[0].options.signal.aborted,true);assert.equal(svg.images[0].src,'');
+    finish();await flush();
+    assert.equal(h.bitmaps.length,0);assert.equal(h.sent.filter(message=>message.type==='prepare').length,0);
+    assert.equal(h.revoked,2);h.session.destroy();
+  }
+});
+
+test('a raster media URL with SVG text only in its query stays on the animated decoder path',async()=>{
+  const h=await harness();const svg=svgSource(h);
+  const result=h.session.prepare({fontSize:24,runs:[{type:'image',src:'https://emoji.test/animated.webp?name=icon.svg'}]});await flush();
+  const request=h.sent.at(-1);assert.equal(request.content.runs[0].bitmap,undefined);assert.equal(svg.requests.length,0);
+  h.reply({type:'prepared',id:request.id,width:38,height:34});await result;h.session.destroy();
+});
+
+
+test('SVG decode failure closes preceding text rasters',async()=>{
+  const h=await harness();svgSource(h,{decode:async()=>{throw new Error('invalid SVG');}});
+  await assert.rejects(h.session.prepare({fontSize:24,runs:[{type:'text',value:'hi'},{type:'image',src:'https://emoji.test/broken.svg'}]}),/invalid SVG/);
+  assert.equal(h.bitmaps.length,1);assert.equal(h.bitmaps[0].closed,1);assert.equal(h.revoked,2);h.session.destroy();
 });

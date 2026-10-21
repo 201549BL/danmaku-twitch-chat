@@ -4,14 +4,16 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../src/content/gpu-media.js'), 'utf8');
 
-function harness({ durations = [100000, 200000, 300000], repetitions = Infinity, width = 24, bytes = Buffer.from('GIF89a'), supported = true, stallDecode } = {}) {
+function harness({ durations = [100000, 200000, 300000], repetitions = Infinity, width = 24, bytes = Buffer.from('GIF89a'), type = 'image/gif', preferAnimation = true, supported = true, stallDecode } = {}) {
   const frames = [];
   const decoders = [];
   const requests = [];
   class ImageDecoder {
-    static async isTypeSupported(type) { assert.equal(type, 'image/gif'); return supported; }
+    static async isTypeSupported(actual) { assert.equal(actual, type); return supported; }
     constructor(options) {
-      assert.equal(options.preferAnimation, true);
+      assert.equal(options.type, type);
+      assert.deepEqual(Buffer.from(options.data), bytes);
+      assert.equal(options.preferAnimation, preferAnimation);
       this.tracks = { ready: Promise.resolve(), selectedTrack: { frameCount: durations.length, repetitionCount: repetitions } };
       this.closed = 0;
       decoders.push(this);
@@ -98,6 +100,71 @@ test('unsupported signatures and codecs cannot silently become static images', a
   const codec = harness({ supported: false });
   await assert.rejects(codec.api.open('image'), /unsupported decoder/);
   assert.equal(codec.decoders.length, 0);
+});
+
+function fileType(major, compatible = [], { extended = false, version = '\0\0\0\0' } = {}) {
+  const header = extended ? 16 : 8;
+  const bytes = Buffer.alloc(header + 8 + compatible.length * 4);
+  bytes.writeUInt32BE(extended ? 1 : bytes.length);
+  bytes.write('ftyp', 4);
+  if (extended) bytes.writeUInt32BE(bytes.length, 12);
+  bytes.write(major + version + compatible.join(''), header, 'ascii');
+  return bytes;
+}
+
+test('AVIF file type brands select the AVIF decoder for stills and animations', async () => {
+  for (const [bytes, preferAnimation] of [
+    [fileType('avif'), false], [fileType('avis'), true],
+    [fileType('mif1', ['miaf', 'avif']), false],
+    [fileType('msf1', ['miaf', 'avis']), true],
+    [fileType('mif1', ['avif'], { extended: true }), false],
+    [fileType('avif', ['avis']), true], [fileType('avis', ['avif']), true],
+    [fileType('mif1', ['avif', 'avis']), true],
+    [fileType('avif', [], { version: 'avis' }), false],
+    [Buffer.concat([fileType('avif'), Buffer.from('avis')]), false],
+  ]) {
+    const h = harness({ bytes, type: 'image/avif', preferAnimation });
+    const media = await h.api.open('https://cdn.example/emote.webp');
+    assert.equal((await media.frame(100)).index, 1);
+    media.close();
+    assert.ok(h.frames.every(frame => frame.closed === 1));
+  }
+});
+
+test('real still and animated AVIF bytes reach the decoder unchanged', async () => {
+  for (const [name, durations, preferAnimation] of [['red.avif', [null], false], ['red-blue.avif', [100000, 200000], true]]) {
+    const bytes = fs.readFileSync(require('node:path').join(__dirname, 'fixtures', name));
+    const h = harness({ bytes, type: 'image/avif', durations, preferAnimation });
+    const media = await h.api.open('image');
+    assert.equal(media.byteLength, bytes.length);
+    assert.equal((await media.frame(100)).index, durations.length - 1);
+    media.close();
+  }
+});
+
+test('AVIF sniffing rejects unrelated formats, malformed boxes and misplaced brands', async () => {
+  const truncated = fileType('avif').subarray(0, 15);
+  const oversized = fileType('avif');
+  oversized.writeUInt32BE(4096);
+  const misaligned = Buffer.concat([fileType('mif1', ['avif']), Buffer.from([0])]);
+  misaligned.writeUInt32BE(misaligned.length);
+  for (const bytes of [
+    Buffer.from('<html>avif</html>'), Buffer.from('<svg>avis</svg>'),
+    fileType('heic', ['mif1']), fileType('isom', ['mp41']),
+    fileType('mif1', [], { version: 'avif' }),
+    Buffer.concat([fileType('mif1'), Buffer.from('avif')]),
+    truncated, oversized, misaligned,
+  ]) {
+    const h = harness({ bytes });
+    await assert.rejects(h.api.open('image'), /unsupported image signature/);
+    assert.equal(h.decoders.length, 0);
+  }
+});
+
+test('unsupported AVIF decoder still fails explicitly', async () => {
+  const h = harness({ bytes: fileType('avif'), type: 'image/avif', supported: false });
+  await assert.rejects(h.api.open('image'), /unsupported decoder image\/avif/);
+  assert.equal(h.decoders.length, 0);
 });
 
 test('byte and decoded pixel budgets reject oversized input', async () => {

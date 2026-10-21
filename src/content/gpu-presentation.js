@@ -1,5 +1,44 @@
 const DANMAKU_GPU_RASTER = (() => {
-  async function prepare(content, {fontFamily,dpr,maxDimension,reserve,check}) {
+  async function rasterSvg(run,{size,dpr,maxDimension,reserve,check,signal}) {
+    let image,url,reader;
+    const cancel=()=>{if(image)image.src='';if(url){URL.revokeObjectURL(url);url=null;}};
+    signal?.addEventListener('abort',cancel,{once:true});
+    try {
+      check();
+      const response=await fetch(run.src,{mode:'cors',credentials:'omit',signal});
+      check();
+      if(!response.ok || response.type==='opaque')throw new Error('GPU SVG is not CORS-accessible');
+      if(!response.body)throw new Error('GPU SVG response has no readable body');
+      reader=response.body.getReader();
+      if(Number(response.headers.get('content-length'))>8*1024*1024)throw new Error('GPU SVG byte budget exceeded');
+      const chunks=[];let length=0;
+      while(true) {
+        const {done,value}=await reader.read();check();
+        if(done)break;
+        length+=value.byteLength;
+        if(length>8*1024*1024)throw new Error('GPU SVG byte budget exceeded');
+        chunks.push(value);
+      }
+      image=new Image();
+      url=URL.createObjectURL(new Blob(chunks,{type:'image/svg+xml'}));
+      image.src=url;
+      await image.decode();check();
+      const height=size*(run.badge ? 1 : 1.4),width=height*image.naturalWidth/image.naturalHeight;
+      const pixelWidth=Math.ceil(width*dpr),pixelHeight=Math.ceil(height*dpr);
+      if(!Number.isFinite(width) || pixelWidth<1 || pixelHeight<1 || pixelWidth>maxDimension || pixelHeight>maxDimension || pixelWidth*pixelHeight>4*1024*1024)throw new Error('GPU SVG raster dimensions exceeded');
+      reserve(pixelWidth*pixelHeight*4);
+      const surface=new OffscreenCanvas(pixelWidth,pixelHeight);
+      surface.getContext('2d').drawImage(image,0,0,pixelWidth,pixelHeight);
+      return {...run,bitmap:surface.transferToImageBitmap(),width,height};
+    } catch(error) {
+      await reader?.cancel().catch(()=>{});
+      throw error;
+    } finally {
+      reader?.releaseLock();cancel();
+      signal?.removeEventListener('abort',cancel);
+    }
+  }
+  async function prepare(content, {fontFamily,dpr,maxDimension,reserve,check,signal}) {
     if(document.fonts?.ready) await document.fonts.ready;
     check();
     const size=content.fontSize, runs=[];
@@ -13,7 +52,10 @@ const DANMAKU_GPU_RASTER = (() => {
     try {
       for(const run of content.runs) {
         check();
-        if(run.type==='image') {runs.push(run);continue;}
+        if(run.type==='image') {
+          runs.push(/\.svg$/i.test(run.src.split(/[?#]/,1)[0]) ? await rasterSvg(run,{size,dpr,maxDimension,reserve,check,signal}) : run);
+          continue;
+        }
         measure.font=font(run,size);
         const effect=run.effect && run.effect!=='none';
         const value=effect && run.username ? run.value.trimEnd() : run.value;
@@ -79,7 +121,7 @@ const DANMAKU_GPU = (() => {
       worker?.terminate();
       const error=new Error('GPU session closed');
       rejectStartup(error);
-      for(const entry of pending.values())entry.reject(error);
+      for(const entry of pending.values()){entry.abort.abort();entry.reject(error);}
       for(const entry of diagnostics.values())entry.reject(error);
       pending.clear();diagnostics.clear();
       canvas.remove();container.dataset.danmakuRenderer='dom';
@@ -133,13 +175,14 @@ const DANMAKU_GPU = (() => {
       if(pending.size>=20)throw new Error('GPU preparation limit exceeded');
       const id=++nextId;
       let transferred=false,reserved=0,raster;
+      const abort=new AbortController();
       const check=()=>{if(disposed || prepareSignal?.aborted)throw new Error('GPU preparation cancelled');};
-      const promise=new Promise((resolve,reject)=>pending.set(id,{resolve,reject,signal:prepareSignal}));
+      const promise=new Promise((resolve,reject)=>pending.set(id,{resolve,reject,signal:prepareSignal,abort}));
       promise.catch(()=>{});
-      const cancel=()=>{if(transferred && !disposed)worker.postMessage({type:'cancel',id});else {pending.get(id)?.reject(new Error('GPU preparation cancelled'));pending.delete(id);}};
+      const cancel=()=>{abort.abort();if(transferred && !disposed)worker.postMessage({type:'cancel',id});else {pending.get(id)?.reject(new Error('GPU preparation cancelled'));pending.delete(id);}};
       prepareSignal?.addEventListener('abort',cancel,{once:true});
       try {
-        const rasterWork=DANMAKU_GPU_RASTER.prepare(content,{fontFamily:fontFamily(),dpr:window.devicePixelRatio || 1,maxDimension,check,reserve(bytes){if(stagingBytes+bytes>64*1024*1024)throw new Error('GPU raster budget exceeded');stagingBytes+=bytes;reserved+=bytes;}}).then(result=>{
+        const rasterWork=DANMAKU_GPU_RASTER.prepare(content,{fontFamily:fontFamily(),dpr:window.devicePixelRatio || 1,maxDimension,check,signal:abort.signal,reserve(bytes){if(stagingBytes+bytes>64*1024*1024)throw new Error('GPU raster budget exceeded');stagingBytes+=bytes;reserved+=bytes;}}).then(result=>{
           try {check();} catch(error) {for(const run of result.runs)run.bitmap?.close();throw error;}
           raster=result;return result;
         });

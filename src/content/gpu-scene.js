@@ -207,12 +207,13 @@ fn expanded(uv:vec2f) -> vec4f {
           for(const run of content.runs) {
             if(disposed || signal?.aborted) throw new Error('GPU session closed');
             if(run.type==='image') {
-              const media=await openMedia(run.src,signal); resources.push(media);
+              const media=run.bitmap ? null : await openMedia(run.src,signal); if(media)resources.push(media);
               if(disposed || signal?.aborted) throw new Error('GPU session closed');
-              const height=size*(run.badge ? 1 : 1.4), width=height*media.width/media.height;
-              const tex=texture(media.width,media.height); resources.push(tex);
-              const image=await media.frame(0);
-              device.queue.copyExternalImageToTexture({source:image},{texture:tex.resource,premultipliedAlpha:true},[media.width,media.height]);
+              const height=run.bitmap ? run.height : size*(run.badge ? 1 : 1.4), width=run.bitmap ? run.width : height*media.width/media.height;
+              const source=run.bitmap || media;
+              const tex=texture(source.width,source.height); resources.push(tex);
+              const image=run.bitmap || await media.frame(0);
+              device.queue.copyExternalImageToTexture({source:image},{texture:tex.resource,premultipliedAlpha:true},[source.width,source.height]);
               items.push({run,tex,media,x:x+(run.badge ? 0 : 2),y:base-xHeight/2-height/2,width,height,lastFrame:image,pending:false});
               lineAscent=Math.max(lineAscent,height/2+xHeight/2);lineDescent=Math.max(lineDescent,height/2-xHeight/2);
               x+=width+4;
