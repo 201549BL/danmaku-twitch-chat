@@ -7,12 +7,31 @@ function DANMAKU_GPU_MEDIA_FACTORY(root) {
 
   function failure(message) { return new Error(`GPU media: ${message}`); }
   function aborted() { return new DOMException('Media loading aborted', 'AbortError'); }
-  function typeOf(bytes) {
+  function formatOf(bytes) {
     const ascii = (offset, count) => String.fromCharCode(...bytes.subarray(offset, offset + count));
-    if (bytes.length >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => bytes[i] === v)) return 'image/png';
-    if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return 'image/jpeg';
-    if (ascii(0, 6) === 'GIF87a' || ascii(0, 6) === 'GIF89a') return 'image/gif';
-    if (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') return 'image/webp';
+    if (bytes.length >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => bytes[i] === v)) return { type: 'image/png', preferAnimation: true };
+    if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return { type: 'image/jpeg', preferAnimation: true };
+    if (ascii(0, 6) === 'GIF87a' || ascii(0, 6) === 'GIF89a') return { type: 'image/gif', preferAnimation: true };
+    if (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') return { type: 'image/webp', preferAnimation: true };
+    if (bytes.length >= 16 && ascii(4, 4) === 'ftyp') {
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      let size = view.getUint32(0);
+      let header = 8;
+      if (size === 1 && bytes.length >= 24) {
+        size = view.getUint32(8) * 0x100000000 + view.getUint32(12);
+        header = 16;
+      } else if (size === 0) size = bytes.length;
+      if (size >= header + 8 && size <= bytes.length && (size - header) % 4 === 0) {
+        let still = false;
+        for (let offset = header; offset < size; offset += 4) {
+          if (offset === header + 4) continue; // The minor version is not a brand.
+          const brand = ascii(offset, 4);
+          if (brand === 'avis') return { type: 'image/avif', preferAnimation: true };
+          if (brand === 'avif') still = true;
+        }
+        if (still) return { type: 'image/avif', preferAnimation: false };
+      }
+    }
     throw failure('unsupported image signature');
   }
 
@@ -64,10 +83,10 @@ function DANMAKU_GPU_MEDIA_FACTORY(root) {
       const response = await root.fetch(url, { mode: 'cors', credentials: 'omit', signal });
       check();
       const bytes = await readBytes(response, check);
-      const type = typeOf(bytes);
+      const { type, preferAnimation } = formatOf(bytes);
       if (!await root.ImageDecoder.isTypeSupported(type)) throw failure(`unsupported decoder ${type}`);
       check();
-      decoder = new root.ImageDecoder({ data: bytes, type, preferAnimation: true });
+      decoder = new root.ImageDecoder({ data: bytes, type, preferAnimation });
       await decoder.tracks.ready;
       check();
       const track = decoder.tracks.selectedTrack;

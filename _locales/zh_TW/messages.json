@@ -205,7 +205,6 @@
   "settingsRendererFallback": { "message": "GPU 無法使用。正在使用 DOM 算繪器。" },
   "settingsActiveMessages": { "message": "畫面訊息數量" },
   "settingsDensityHint": { "message": "區域較小時，訊息列可以重疊，重疊列的輔助線會變紅。切換至 DOM 後，最多支援 10 列、100 則畫面訊息及每秒 20 則訊息。" },
-  "releaseNoteWebgpu": { "message": "新增 WebGPU 顯示方式，利用顯示卡幫助聊天室訊息在彈幕較多時也能流暢移動。" },
-  "releaseNoteDenseChat": { "message": "你可以同時顯示多達 300 則訊息，並保留使用者名稱動畫、表情符號和徽章。" },
-  "releaseNoteRendererChoice": { "message": "想試試的話，請開啟「設定 > 進階 > 算繪器」，選擇 WebGPU。" }
+  "releaseNoteMediaFix": { "message": "SVG 和 AVIF 表情符號現在可在 WebGPU 中顯示，不會再導致彈幕切換到 DOM 並被限制為 10 行。" },
+  "releaseNoteStartupFix": { "message": "修正聊天室訊息較多時 WebGPU 啟動卡住的問題。" }
 }

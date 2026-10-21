@@ -17,9 +17,9 @@ function harness(overrides = {}) {
   settings.setMany(overrides);
   const renderer = new Renderer({container});
   renderer._scheduleTick = () => {};
-  renderer.createMessageElement = () => {restored++; return {style: {setProperty() {}}, querySelector() {return null;}, remove() {}};};
+  renderer.createMessageElement = () => {restored++; return {offsetWidth: 50, style: {setProperty() {}}, querySelector() {return null;}, remove() {}, addEventListener() {}};};
   renderer.updateLanes();
-  return {renderer, settings, constants, presentation, classes, container,
+  return {renderer, settings, constants, presentation, classes, container, context,
     step(ms) {now += ms; renderer.processQueue();}, restored: () => restored,
     storage(value) {storageChanged({danmakuSettings: {newValue: value}}, 'local');},
   };
@@ -208,4 +208,39 @@ test('renderer settings notifications discard queued layouts without replacing a
   assert.equal(closed, 1); assert.equal(ticket.abort.signal.aborted, true);
   assert.equal(owner.tickets.has(message), false); assert.equal(owner.tickets.get(active), activeTicket);
   assert.equal(owner.state, 'gpu');
+});
+
+for (const requested of ['webgpu', 'auto']) test(`${requested} startup completes with busy chat while GPU layouts are still preparing`, async () => {
+  const h = harness({renderer:requested, rows:24, regionHeight:100, duration:3, maxActiveMessages:100, maxMessagesPerSecond:20, showUsernames:false});
+  const preparations = [];
+  let elapsed = 0;
+  h.context.DANMAKU_GPU = {create: async () => ({
+    geometry: () => 'stable', destroy() {}, show() {}, present() {return true;},
+    prepare() {return new Promise(resolve => preparations.push({at:elapsed + 100, resolve}));},
+  })};
+  h.renderer._presentation = new h.presentation.Owner(h.renderer);
+  h.renderer.messageQueue.push({text:'initial'});
+  h.step(0);
+  await Promise.resolve();
+  assert.equal(h.renderer._presentation.state, 'preparing');
+  assert.equal(h.renderer.lanes.length, 10);
+  for (elapsed = 50; elapsed <= 10500 && h.renderer._presentation.state !== 'gpu'; elapsed += 50) {
+    for (const pending of preparations.splice(0)) {
+      if (pending.at <= elapsed) pending.resolve({width:50, close() {}});
+      else preparations.push(pending);
+    }
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    h.renderer.messageQueue.push({text:`message ${elapsed}`});
+    h.step(50);
+  }
+  assert.equal(h.renderer._presentation.state, 'gpu');
+  assert.equal(h.renderer.lanes.length, 24);
+  assert.equal(h.settings.get('rows'), 24);
+  assert.ok(h.renderer.messageQueue.length > 0);
+  for (let i = 0; i < 4; i++) {
+    for (const pending of preparations.splice(0)) pending.resolve({width:50, close() {}});
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    h.step(50);
+  }
+  assert.ok(h.renderer.activeMessages.some(record => record.element === null), 'queued messages render on GPU after promotion');
 });

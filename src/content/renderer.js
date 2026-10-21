@@ -378,6 +378,7 @@ class DanmakuRenderer {
 
   renderMessage(message) {
     if (!this.overlay || !this.overlay.container) return false;
+    if (this._presentation?.state === 'preparing') return false;
 
     const hardCap = this.densityPolicy().active;
     const maxActive = Math.min(hardCap, danmakuSettings.get('maxActiveMessages'));
