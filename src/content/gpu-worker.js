@@ -55,7 +55,7 @@ function DANMAKU_GPU_WORKER_RUNTIME(scope, sceneFactory, mediaFactory, effectsFa
           const layout=await session.prepare(data.content,{signal:abort.signal});
           if(disposed || abort.signal.aborted) {layout.close();post({type:'prepared',id:data.id,error:'GPU preparation cancelled'});}
           else {layouts.set(data.id,layout);post({type:'prepared',id:data.id,width:layout.width,height:layout.height});}
-        } catch(error) {post({type:'prepared',id:data.id,error:String(error.message || error)});}
+        } catch(error) {post({type:'prepared',id:data.id,error:String(error.message || error),errorCode:error.code});}
         finally {pending.delete(data.id);}
       } else if(data.type==='cancel') {pending.get(data.id)?.abort();}
       else if(data.type==='release') {layouts.get(data.id)?.close();layouts.delete(data.id);if(scene)scene.records=scene.records.filter(record=>record.id!==data.id);schedule();}

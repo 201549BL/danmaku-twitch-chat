@@ -207,3 +207,14 @@ test('close while a cache miss is decoding disposes late output', async () => {
   assert.ok(h.frames.every(frame => frame.closed === 1));
   assert.equal(h.decoders[0].closed, 1);
 });
+
+
+test('fetch rejection is a local media failure while abort stays unclassified', async () => {
+  const context = {DOMException, ImageDecoder: {}, fetch: async () => {throw new TypeError('Failed to fetch');}};
+  vm.runInNewContext(source, context);
+  await assert.rejects(context.DANMAKU_GPU_MEDIA.open('https://cdn.betterttv.net/emote/560577560874de34757d2dc0/1x.webp'), {code:'GPU_MEDIA_UNAVAILABLE', message:'Failed to fetch'});
+  const abort = new AbortController(); abort.abort();
+  await assert.rejects(context.DANMAKU_GPU_MEDIA.open('image', {signal:abort.signal}), error => error.name === 'AbortError' && error.code !== 'GPU_MEDIA_UNAVAILABLE');
+  const invalid = harness({bytes:Buffer.from('invalid')});
+  await assert.rejects(invalid.api.open('image'), {code:'GPU_MEDIA_UNAVAILABLE'});
+});

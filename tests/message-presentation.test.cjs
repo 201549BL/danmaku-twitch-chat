@@ -86,6 +86,36 @@ test('migration retains all DOM records until every layout is ready, and preserv
   h.owner.frame(); assert.equal(h.starts.length, 1, 'failed backend must not retry every frame');
 });
 
+test('media failure retains its DOM while ready records promote only after acknowledgment', async () => {
+  const h = harness(requested), a = h.record(), b = h.record(), original = [a.element,b.element];
+  const gpu = await h.start(); let drawn = false;
+  gpu.present = records => {gpu.draws.push(records); return drawn;};
+  h.owner.frame();
+  h.preparations[0].reject(Object.assign(new Error('Failed to fetch'), {code:'GPU_MEDIA_UNAVAILABLE'}));
+  h.preparations[1].resolve(h.layout()); await flush(); h.owner.frame();
+  const ticket = h.owner.tickets.get(a.message);
+  assert.equal(ticket.state,'dom');assert.equal(ticket.abort.signal.aborted,true);
+  assert.equal(h.owner.state,'preparing');assert.ok(original.every(el=>el.removed===0));
+  assert.equal(gpu.draws.at(-1).length,1);assert.equal(gpu.draws.at(-1)[0].message,b.message);
+  drawn = true;h.owner.frame();
+  assert.equal(h.owner.state,'gpu');assert.equal(a.element,original[0]);assert.equal(original[0].removed,0);
+  assert.equal(b.element,null);assert.equal(original[1].removed,1);assert.equal(gpu.destroyed,0);
+  const pending = h.record();h.owner.frame();
+  assert.equal(gpu.draws.at(-1).length,1,'pending active media does not stop ready scene updates');
+  h.renderer.activeMessages = h.renderer.activeMessages.filter(record=>record!==pending);h.owner.frame();
+  h.preparations[2].reject(Object.assign(new Error('late failed media'),{code:'GPU_MEDIA_UNAVAILABLE'}));await flush();
+  assert.equal(h.owner.state,'gpu');
+});
+
+test('all DOM media starts GPU with an empty acknowledged scene', async () => {
+  const h = harness(requested), record = h.record(), original = record.element;
+  const gpu = await h.start();h.owner.frame();
+  h.preparations[0].reject(Object.assign(new Error('CORS'),{code:'GPU_MEDIA_UNAVAILABLE'}));await flush();h.owner.frame();
+  assert.equal(h.owner.state,'gpu');assert.equal(gpu.draws.at(-1).length,0);
+  assert.equal(gpu.shown,1);assert.equal(record.element,original);assert.equal(original.removed,0);
+  h.owner.select('dom');assert.equal(original.removed,0);assert.equal(gpu.destroyed,1);
+});
+
 test('preparation rejection preserves visible DOM and prevents partial GPU migration', async () => {
   const h = harness(requested); const a = h.record(), b = h.record(); const original = [a.element, b.element];
   const gpu = await h.start(); h.owner.frame();

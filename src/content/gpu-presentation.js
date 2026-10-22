@@ -1,6 +1,7 @@
 const DANMAKU_GPU_RASTER = (() => {
   async function rasterSvg(run,{size,dpr,maxDimension,reserve,check,signal}) {
     let image,url,reader;
+    let mediaReady=false;
     const cancel=()=>{if(image)image.src='';if(url){URL.revokeObjectURL(url);url=null;}};
     signal?.addEventListener('abort',cancel,{once:true});
     try {
@@ -26,13 +27,15 @@ const DANMAKU_GPU_RASTER = (() => {
       const height=size*(run.badge ? 1 : 1.4),width=height*image.naturalWidth/image.naturalHeight;
       const pixelWidth=Math.ceil(width*dpr),pixelHeight=Math.ceil(height*dpr);
       if(!Number.isFinite(width) || pixelWidth<1 || pixelHeight<1 || pixelWidth>maxDimension || pixelHeight>maxDimension || pixelWidth*pixelHeight>4*1024*1024)throw new Error('GPU SVG raster dimensions exceeded');
+      mediaReady=true;
       reserve(pixelWidth*pixelHeight*4);
       const surface=new OffscreenCanvas(pixelWidth,pixelHeight);
       surface.getContext('2d').drawImage(image,0,0,pixelWidth,pixelHeight);
       return {...run,bitmap:surface.transferToImageBitmap(),width,height};
     } catch(error) {
       await reader?.cancel().catch(()=>{});
-      throw error;
+      if(mediaReady || signal?.aborted || error.name==='AbortError')throw error;
+      throw Object.assign(new Error(error.message || String(error)),{code:'GPU_MEDIA_UNAVAILABLE',cause:error});
     } finally {
       reader?.releaseLock();cancel();
       signal?.removeEventListener('abort',cancel);
@@ -152,7 +155,7 @@ const DANMAKU_GPU = (() => {
           const entry=pending.get(data.id);
           if(!entry){if(!data.error)worker.postMessage({type:'release',id:data.id});return;}
           pending.delete(data.id);
-          if(data.error)entry.reject(new Error(data.error));
+          if(data.error)entry.reject(Object.assign(new Error(data.error),{code:data.errorCode}));
           else if(entry.signal?.aborted){worker.postMessage({type:'release',id:data.id});entry.reject(new Error('GPU preparation cancelled'));}
           else {
             let closed=false;

@@ -391,20 +391,21 @@ class DanmakuRenderer {
     const mode = danmakuSettings.get('animationMode');
     const isStationary = DANMAKU_CONSTANTS.STATIONARY_MODES.includes(mode);
 
-    const lane = isStationary ? this.findStationaryLane() : this.findScrollLane();
-    if (!lane) {
-      return false;
-    }
-
     const content = this._presentation ? DANMAKU_PRESENTATION.content(this, message, mode, favorite) : null;
     const gpu = this._presentation?.state === 'gpu';
     const ticket = gpu ? this._presentation.prepare(message, content) : null;
-    if (gpu && ticket?.state !== 'ready') return false;
-    const element = gpu ? null : this.createMessageElement(message, lane, mode, favorite);
+    if (gpu && ticket?.state !== 'ready' && ticket?.state !== 'dom') return false;
+    if (ticket?.state === 'dom' && this.activeMessages.filter(record => record.element).length >= DANMAKU_CONSTANTS.DENSITY.dom.active) {
+      this._recordDrop('active');
+      return true;
+    }
+    const lane = isStationary ? this.findStationaryLane() : this.findScrollLane();
+    if (!lane) return false;
+    const element = gpu && ticket.state === 'ready' ? null : this.createMessageElement(message, lane, mode, favorite);
     if (element) this.overlay.container.appendChild(element);
 
     const containerWidth = this.overlay.container.offsetWidth;
-    const msgWidth = gpu ? ticket.layout.width : element.offsetWidth;
+    const msgWidth = element ? element.offsetWidth : ticket.layout.width;
     let xLeft = 0;
     const durationMs = (isStationary ? this._effectiveStationaryLifetime() : this._effectiveDuration()) * 1000;
 

@@ -178,3 +178,32 @@ test('SVG decode failure closes preceding text rasters',async()=>{
   await assert.rejects(h.session.prepare({fontSize:24,runs:[{type:'text',value:'hi'},{type:'image',src:'https://emoji.test/broken.svg'}]}),/invalid SVG/);
   assert.equal(h.bitmaps.length,1);assert.equal(h.bitmaps[0].closed,1);assert.equal(h.revoked,2);h.session.destroy();
 });
+
+
+test('worker media failure code survives transport without failing the session',async()=>{
+  const h=await harness();
+  const preparation=h.session.prepare({fontSize:24,runs:[]});await flush();
+  h.reply({type:'prepared',id:h.sent.at(-1).id,error:'Failed to fetch',errorCode:'GPU_MEDIA_UNAVAILABLE'});
+  await assert.rejects(preparation,{code:'GPU_MEDIA_UNAVAILABLE',message:'Failed to fetch'});
+  assert.equal(h.failures.length,0);assert.equal(h.worker.terminated,0);
+  (await h.layout()).close();h.session.destroy();
+});
+
+test('SVG fetch and decode errors carry the media code and release preceding rasters',async()=>{
+  for(const stage of ['fetch','decode']) {
+    const h=await harness();svgSource(h,{decode:async()=>{throw new Error('decode failed');}});
+    if(stage==='fetch')h.context.fetch=async()=>{throw new TypeError('Failed to fetch');};
+    await assert.rejects(h.session.prepare({fontSize:24,runs:[{type:'text',value:'hi'},{type:'image',src:'https://emoji.test/broken.svg'}]}),{code:'GPU_MEDIA_UNAVAILABLE'});
+    assert.ok(h.bitmaps.every(bitmap=>bitmap.closed===1));assert.equal(h.failures.length,0);h.session.destroy();
+  }
+});
+
+test('SVG canvas failure remains a renderer error instead of a media fallback',async()=>{
+  const h=await harness();svgSource(h);
+  const Canvas=h.context.OffscreenCanvas;
+  h.context.OffscreenCanvas=class extends Canvas {
+    getContext() {const context=super.getContext();context.drawImage=()=>{throw new Error('canvas unavailable');};return context;}
+  };
+  await assert.rejects(h.session.prepare({fontSize:24,runs:[{type:'image',src:'https://emoji.test/icon.svg'}]}),error=>error.message==='canvas unavailable' && error.code===undefined);
+  h.session.destroy();
+});

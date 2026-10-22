@@ -205,6 +205,5 @@
   "settingsRendererFallback": { "message": "GPU 不可用。正在使用 DOM 渲染器。" },
   "settingsActiveMessages": { "message": "屏幕消息数量" },
   "settingsDensityHint": { "message": "区域较小时，消息行可以重叠，重叠行的辅助线会变红。切换到 DOM 后，最多支持 10 行、100 条屏幕消息和每秒 20 条消息。" },
-  "releaseNoteMediaFix": { "message": "SVG 和 AVIF 表情现在可以在 WebGPU 中显示，不会再导致弹幕切换到 DOM 并被限制为 10 行。" },
-  "releaseNoteStartupFix": { "message": "修复了聊天繁忙时 WebGPU 启动卡住的问题。" }
+  "releaseNoteEmoteFallback": { "message": "WebGPU 无法加载的表情不再导致其停用或将弹幕限制为 10 行。仅受影响的消息使用 DOM 渲染器。" }
 }
