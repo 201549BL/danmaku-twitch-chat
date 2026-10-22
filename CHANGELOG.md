@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-10-22
+
 ### Fixed
 - Fixed blocked or unreadable emotes disabling WebGPU and forcing the entire overlay to DOM. Only affected messages now use the DOM renderer.
 
