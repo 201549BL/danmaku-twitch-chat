@@ -155,11 +155,15 @@ const DANMAKU_PRESENTATION = (() => {
       const generation = this.generation;
       this.pendingPreparations.add(ticket);
       this.session.prepare(descriptor,{signal:ticket.abort.signal}).then(layout => {
-        if (generation !== this.generation || ticket.state === 'cancelled') {layout.close(); return;}
+        if (generation !== this.generation || ticket.state !== 'pending') {layout.close(); return;}
         ticket.state = 'ready'; ticket.layout = layout;
       }).catch(error => {
         const live = this.renderer.messageQueue.includes(key) || this.renderer.activeMessages.some(record => record.message === key);
-        if (generation === this.generation && ticket.state !== 'cancelled' && live) this.fail(error);
+        if (generation !== this.generation || ticket.state !== 'pending' || !live) return;
+        if (error.code === 'GPU_MEDIA_UNAVAILABLE') {
+          ticket.state = 'dom';
+          ticket.abort.abort();
+        } else this.fail(error);
       }).finally(() => {
         this.pendingPreparations.delete(ticket);
       });
@@ -207,17 +211,18 @@ const DANMAKU_PRESENTATION = (() => {
         if (this.pendingPreparations.size >= MAX_PENDING_PREPARATIONS) break;
         if (!this.tickets.has(message)) this.prepare(message,content(this.renderer,message,danmakuSettings.get('animationMode'),this.renderer.isFavorite(message)));
       }
-      const ready = staging.every(ticket => ticket?.state === 'ready');
+      const settled = staging.every(ticket => ticket?.state === 'ready' || ticket?.state === 'dom');
       for (const ticket of this.pendingPreparations) if (Date.now()-ticket.started > 10000) {this.fail(new Error('Media preparation timed out')); return;}
-      if (!ready) return;
-      for (const record of records) record.width = this.tickets.get(record.message).layout.width;
+      if (this.state === 'preparing' && !settled) return;
+      const gpuRecords = records.filter(record => this.tickets.get(record.message)?.state === 'ready');
+      for (const record of gpuRecords) record.width = this.tickets.get(record.message).layout.width;
       try {
-        const drawn = this.session.present(records.map(record => ({...record,layout:this.tickets.get(record.message).layout})),this.renderer);
+        const drawn = this.session.present(gpuRecords.map(record => ({...record,layout:this.tickets.get(record.message).layout})),this.renderer);
         if (this.state === 'preparing') {
           if (drawn === false) return;
           this.state = 'gpu';
           this.renderer.updateLanes?.();
-          for (const record of records) {record.element?.remove(); record.element = null;}
+          for (const record of gpuRecords) {record.element?.remove(); record.element = null;}
           this.session.show(); this.status();
         }
       } catch (error) {this.fail(error);}

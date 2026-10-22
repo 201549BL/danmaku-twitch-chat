@@ -244,3 +244,38 @@ for (const requested of ['webgpu', 'auto']) test(`${requested} startup completes
   }
   assert.ok(h.renderer.activeMessages.some(record => record.element === null), 'queued messages render on GPU after promotion');
 });
+
+for (const requested of ['webgpu','auto']) test(`${requested} failed media stays visible alongside queued GPU text and 24 lanes`, async () => {
+  const h = harness({renderer:requested,rows:24,regionHeight:100,maxActiveMessages:300,maxMessagesPerSecond:120,showUsernames:false});
+  const preparations = [];
+  h.context.DANMAKU_GPU = {create:async()=>({geometry:()=> 'stable',destroy(){},show(){},present(){return true;},prepare(content){return new Promise((resolve,reject)=>preparations.push({content,resolve,reject}));}})};
+  h.renderer._presentation = new h.presentation.Owner(h.renderer);
+  h.step(0);await Promise.resolve();h.step(10);
+  const failed = {segments:[{type:'image',src:'https://cdn.betterttv.net/emote/560577560874de34757d2dc0/1x.webp'}]}, text = {text:'GPU text'};
+  h.renderer.messageQueue.push(failed,text);h.step(10);
+  const snapshot = h.renderer._presentation.tickets.get(failed).content;
+  preparations[0].reject(Object.assign(new Error('Failed to fetch'),{code:'GPU_MEDIA_UNAVAILABLE'}));
+  preparations[1].resolve({width:123,close(){}});
+  await Promise.resolve();await Promise.resolve();await Promise.resolve();await Promise.resolve();
+  h.step(10);h.step(10);
+  assert.equal(h.renderer.messageQueue.length,0);assert.equal(h.renderer.activeMessages.length,2);
+  const [dom,gpu] = h.renderer.activeMessages;
+  assert.ok(dom.element);assert.equal(dom.width,50);assert.equal(dom.content,snapshot);
+  assert.equal(gpu.element,null);assert.equal(gpu.width,123);
+  assert.equal(h.renderer._presentation.state,'gpu');assert.equal(h.renderer.lanes.length,24);
+});
+
+test('DOM subset cap drops failed media and lets the queue reach GPU messages', () => {
+  const h = harness({rows:24,regionHeight:100,maxActiveMessages:300,maxMessagesPerSecond:120,showUsernames:false});
+  const failed = {text:'failed'}, text = {text:'GPU'};
+  const tickets = new Map([[failed,{state:'dom',content:{runs:[]}}],[text,{state:'ready',content:{runs:[]},layout:{width:123}}]]);
+  h.renderer._presentation = {state:'gpu',frame(){},prepare:message=>tickets.get(message)};
+  h.renderer.updateLanes();
+  for(let i=0;i<100;i++)h.renderer.activeMessages.push({element:{style:{}},message:{},lane:h.renderer.lanes[0],favorite:false});
+  h.renderer.messageQueue.push(failed,text);h.step(0);h.step(10);
+  assert.equal(h.renderer.dropsActive,1);assert.equal(h.renderer.messageQueue.length,0);
+  assert.equal(h.renderer.activeMessages.filter(record=>record.element).length,100);
+  assert.equal(h.renderer.activeMessages.length,101);assert.equal(h.renderer.activeMessages.at(-1).message,text);
+  assert.equal(h.renderer.activeMessages.at(-1).element,null);
+  assert.equal(h.renderer.lanes.length,24);
+});

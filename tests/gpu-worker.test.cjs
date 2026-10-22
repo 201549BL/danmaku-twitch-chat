@@ -11,7 +11,7 @@ function harness({defer=false,onDraw=()=>{}}={}) {
   const core={create:async()=>({maxTextureDimension2D:8192,prepare(content,{signal}) {
     const layout={width:20,height:20,closed:0,close(){this.closed++;}};layouts.push(layout);
     if(!defer)return Promise.resolve(layout);
-    return new Promise(resolve=>preparations.push({signal,resolve:()=>resolve(layout)}));
+    return new Promise((resolve,reject)=>preparations.push({signal,reject,resolve:()=>resolve(layout)}));
   },draw(records){onDraw();draws.push(records.map(record=>({elapsedMs:record.elapsedMs,id:record.id})));},destroy(){destroyed++;}})};
   context.runtime(scope,()=>core,()=>({}),()=>({}));
   const send=data=>scope.onmessage({data});
@@ -72,4 +72,13 @@ test('worker acknowledges each paused scene only after drawing it once', async (
     assert.equal(h.scheduled, false);
   }
   assert.deepEqual(acknowledgementsAtDraw, [0, 1]);
+});
+
+
+test('worker preserves preparation media codes without reporting a session error',async()=>{
+  const h=harness({defer:true});await h.send({type:'init'});
+  const work=h.send({type:'prepare',id:1,content:{runs:[]}});
+  h.preparations[0].reject(Object.assign(new Error('Failed to fetch'),{code:'GPU_MEDIA_UNAVAILABLE'}));await work;
+  assert.equal(h.messages.at(-1).type,'prepared');assert.equal(h.messages.at(-1).errorCode,'GPU_MEDIA_UNAVAILABLE');
+  assert.equal(h.messages.some(message=>message.type==='error'),false);assert.equal(h.destroyed,0);
 });

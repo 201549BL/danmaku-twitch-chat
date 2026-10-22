@@ -159,7 +159,11 @@ function DANMAKU_GPU_MEDIA_FACTORY(root) {
         },
         close,
       };
-    } catch (error) { close(); throw error; }
+    } catch (error) {
+      close();
+      if (signal?.aborted || error.name === 'AbortError') throw error;
+      throw Object.assign(new Error(error.message || String(error)), {code: 'GPU_MEDIA_UNAVAILABLE', cause: error});
+    }
   }
   return Object.freeze({ open });
 }

@@ -2,12 +2,8 @@ const DANMAKU_RELEASE_NOTES = {
   STORAGE_KEY: 'danmakuReleaseNotes',
   ITEMS: [
     {
-      key: 'releaseNoteMediaFix',
-      fallback: 'SVG and AVIF emoji now display in WebGPU without switching the overlay to DOM or limiting it to 10 rows.',
-    },
-    {
-      key: 'releaseNoteStartupFix',
-      fallback: 'Fixed WebGPU startup getting stuck when chat is busy.',
+      key: 'releaseNoteEmoteFallback',
+      fallback: 'Emotes that WebGPU cannot load no longer disable it or limit chat to 10 rows. Only the affected messages use the DOM renderer.',
     },
   ],
 

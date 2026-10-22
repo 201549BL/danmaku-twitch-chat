@@ -205,6 +205,5 @@
   "settingsRendererFallback": { "message": "GPU を利用できません。DOM レンダラーを使用しています。" },
   "settingsActiveMessages": { "message": "表示中のメッセージ数" },
   "settingsDensityHint": { "message": "狭い範囲では行が重なり、重なる行のガイドは赤く表示されます。DOM への切り替え時は最大 10 行、100 メッセージ、毎秒 20 メッセージに制限されます。" },
-  "releaseNoteMediaFix": { "message": "SVG と AVIF の絵文字が WebGPU で表示されるようになりました。DOM への切り替えや、表示が 10 行に制限される問題を修正しました。" },
-  "releaseNoteStartupFix": { "message": "チャットが多いときに WebGPU の起動が完了しない問題を修正しました。" }
+  "releaseNoteEmoteFallback": { "message": "WebGPU で読み込めないエモートがあっても、WebGPU が無効になったり、表示が 10 行に制限されたりしなくなりました。該当するメッセージのみ DOM レンダラーで表示します。" }
 }

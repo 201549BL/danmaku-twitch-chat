@@ -205,6 +205,5 @@
   "settingsRendererFallback": { "message": "GPU unavailable. Using DOM renderer." },
   "settingsActiveMessages": { "message": "Active messages" },
   "settingsDensityHint": { "message": "Rows may overlap in small regions; overlapping row guides turn red. DOM fallback supports 10 rows, 100 active messages and 20 messages per second." },
-  "releaseNoteMediaFix": { "message": "SVG and AVIF emoji now display in WebGPU without switching the overlay to DOM or limiting it to 10 rows." },
-  "releaseNoteStartupFix": { "message": "Fixed WebGPU startup getting stuck when chat is busy." }
+  "releaseNoteEmoteFallback": { "message": "Emotes that WebGPU cannot load no longer disable it or limit chat to 10 rows. Only the affected messages use the DOM renderer." }
 }
